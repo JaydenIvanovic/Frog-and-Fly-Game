@@ -5,7 +5,8 @@ using System.Collections;
 public enum BType 
 {
 	Seek, 
-	Flee
+	Flee,
+	Arrive
 }
 
 // The class which should be attached to a gameobject.
@@ -29,6 +30,9 @@ public class SteeringBehaviour : MonoBehaviour
 			case BType.Flee:
 				steering = new Steering(targetObj.transform.position, transform.position);
 				break;
+			case BType.Arrive:
+				steering = new ArriveSteering(transform.position, targetObj.transform.position);
+				break;
 			default:
 				break;
 		}
@@ -41,6 +45,15 @@ public class SteeringBehaviour : MonoBehaviour
 	{
 		SteeringOutput so = steering.getSteering();
 
+		// If we should ignore this behaviour.
+		// e.g. we have arrived at our target.
+		if(so.ignore)
+		{
+			rigidbody.velocity = Vector3.zero;
+			rigidbody.angularVelocity = Vector3.zero;
+			return;
+		}
+
 		// Update the position and orientation of the gameobject.
 		transform.position += rigidbody.velocity * Time.deltaTime;
 		// Multiply as rotation is a quaternion
@@ -49,17 +62,17 @@ public class SteeringBehaviour : MonoBehaviour
 		// Update the rigidbody velocities for next update.
 		rigidbody.velocity += so.linearVel * Time.deltaTime;
 		// Cos for z as we would rather rotate around the z-axis rather than the x-axis from our ortho perspective
-		rigidbody.angularVelocity += new Vector3(0f, Mathf.Sin(so.angularVel), Mathf.Cos(so.angularVel)) * Time.deltaTime;
+		//rigidbody.angularVelocity += new Vector3(0f, Mathf.Sin(so.angularVel), Mathf.Cos(so.angularVel)) * Time.deltaTime;
 
 		// During "Seek" the character moves so we must update their position in the steering class.
-		if (selectedBehaviour == BType.Seek)
+		if (selectedBehaviour == BType.Seek || selectedBehaviour == BType.Arrive)
 			steering.updatePlayerPosition(transform.position);
 	}
 	
 	// For testing given an arbitrary initial velocity
 	private void SetDefaults()
 	{
-		rigidbody.velocity = Vector3.left * 4f; 
+		rigidbody.velocity = Vector3.down; 
 		rigidbody.angularVelocity = Vector3.zero;
 	}
 }

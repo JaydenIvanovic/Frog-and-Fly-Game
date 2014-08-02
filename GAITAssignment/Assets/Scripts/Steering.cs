@@ -5,26 +5,40 @@ public struct SteeringOutput
 {
 	public Vector3 linearVel;
 	public float angularVel;
+	public bool ignore;
 }
 
 public class Steering 
 {
-	private Vector3 character, target;
-	public float maxAcceleration = 5f;
+	private Vector3 _character;
+	private Vector3 _target;
+	public float maxAcceleration = 3f;
+
+	public Vector3 character
+	{
+		get{return _character;}
+		set{_character = value;}
+	}
+
+	public Vector3 target
+	{
+		get{return _target;}
+		set{_target = value;}
+	}
 
 	public Steering(Vector3 character, Vector3 target)
 	{
-		this.character = character;
-		this.target = target;
+		this._character = character;
+		this._target = target;
 	}
 
-	public SteeringOutput getSteering()
+	public virtual SteeringOutput getSteering()
 	{
 		var steering = new SteeringOutput();
 
 		// Get direction to target and make it a unit length
 		// vector before heading there at maximum speed.
-		steering.linearVel = target - character;
+		steering.linearVel = _target - _character;
 		steering.linearVel.Normalize();
 		steering.linearVel *= maxAcceleration;
 
@@ -35,11 +49,13 @@ public class Steering
 		// behaviours such as 'align'.
 		steering.angularVel = 0f;
 
+		steering.ignore = false;
+
 		return steering;
 	}
 
 	public void updatePlayerPosition(Vector3 position)
 	{
-		character = position;
+		_character = position;
 	}
 }
