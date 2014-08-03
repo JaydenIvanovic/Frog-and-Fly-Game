@@ -36,16 +36,15 @@ public class Flocking : MonoBehaviour
 
 		agents.Add(gameObject);
 
-		InvokeRepeating("randomizeDirection", 3f, 3f);
+		InvokeRepeating("randomizeDirection", 4f, 4f);
 	}
 	
 	// Update is called once per frame
 	void Update () 
 	{
-		Vector3 vel = computeAlignment();
+		Vector3 vel = computeAlignment() * alignmentWeight + computeCohesion() * cohesionWeight + computeSeperation() * seperationWeight;
 		vel.Normalize();
 		vel *= defaultSpeed;
-		//vel *= alignmentWeight;
 
 		Debug.Log("RV: " + rigidbody.velocity);
 		Debug.Log(vel.ToString());
@@ -80,18 +79,65 @@ public class Flocking : MonoBehaviour
 		return velocity;
 	}
 
-	private void computeCohesion()
+	private Vector3 computeCohesion()
 	{
+		Vector3 velocity = Vector3.zero;
+		uint neighbourCount = 0;
 		
+		foreach (GameObject agent in agents)
+		{
+			if (agent == gameObject)
+				continue;
+			
+			if ( Vector3.Distance(agent.transform.position, transform.position) < neighbourDist )
+			{
+				Debug.Log("Found neighbour");
+				velocity += agent.rigidbody.position;
+				neighbourCount += 1;
+			}
+		}
+		
+		if (neighbourCount == 0)
+			return velocity;
+		
+		velocity /= neighbourCount;
+		Vector3 vectorToMass = velocity - transform.position;
+		vectorToMass.Normalize();
+		
+		return vectorToMass;
 	}
 
-	private void computeSeperation()
+	private Vector3 computeSeperation()
 	{
+		Vector3 velocity = Vector3.zero;
+		uint neighbourCount = 0;
 		
+		foreach (GameObject agent in agents)
+		{
+			if (agent == gameObject)
+				continue;
+			
+			if ( Vector3.Distance(agent.transform.position, transform.position) < neighbourDist )
+			{
+				Debug.Log("Found neighbour");
+				velocity += agent.rigidbody.position - transform.position;
+				neighbourCount += 1;
+			}
+		}
+		
+		if (neighbourCount == 0)
+			return velocity;
+		
+		velocity /= neighbourCount;
+		velocity *= -1;
+		velocity.Normalize();
+		
+		return velocity;
 	}
 
 	private void randomizeDirection()
 	{
+		Debug.Log("Randomizing Directions");
 		foreach (GameObject agent in agents)
 		{
 			int i = Random.Range(0, 4);

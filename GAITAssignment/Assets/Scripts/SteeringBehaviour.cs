@@ -6,7 +6,8 @@ public enum BType
 {
 	Seek, 
 	Flee,
-	Arrive
+	Arrive,
+	None
 }
 
 // The class which should be attached to a gameobject.
@@ -33,6 +34,8 @@ public class SteeringBehaviour : MonoBehaviour
 			case BType.Arrive:
 				steering = new ArriveSteering(transform.position, targetObj.transform.position);
 				break;
+			case BType.None:
+				return;
 			default:
 				break;
 		}
@@ -43,6 +46,9 @@ public class SteeringBehaviour : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
+		if (selectedBehaviour == BType.None)
+			return;
+
 		SteeringOutput so = steering.getSteering();
 
 		// If we should ignore this behaviour.
