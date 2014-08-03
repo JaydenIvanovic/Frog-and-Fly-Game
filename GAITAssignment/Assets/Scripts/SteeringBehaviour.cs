@@ -72,7 +72,7 @@ public class SteeringBehaviour : MonoBehaviour
 	// For testing given an arbitrary initial velocity
 	private void SetDefaults()
 	{
-		rigidbody.velocity = Vector3.down; 
+		rigidbody.velocity = Vector3.left; 
 		rigidbody.angularVelocity = Vector3.zero;
 	}
 }

@@ -3,10 +3,10 @@ using System.Collections;
 
 public class ArriveSteering : Steering 
 {
-	private float maxSpeed = 3f;
-	private float slowRadius = 15f; // should slow at this point
-	private float targetRadius = 2f; // can stop now
-	private float timeToTarget = 0.1f; // the time in which we should achieve the target speed.
+	private float maxSpeed = 0.8f;
+	private float slowRadius = 20f; // should slow at this point
+	private float targetRadius = 6f; // can stop now
+	private float timeToTarget = 0.25f; // the time in which we should achieve the target speed.
 
 	public ArriveSteering(Vector3 character, Vector3 target):
 		base(character, target)
@@ -33,14 +33,22 @@ public class ArriveSteering : Steering
 		// We are outside the slow radius, therefore we should
 		// move as fast as we can!
 		if (distance > slowRadius)
+		{
 			steering.linearVel *= maxSpeed;
+		}
 		else
+		{
+			Debug.Log("Slowing...");
 			// The shorter the distance, the less speed we have.
 			steering.linearVel *= maxSpeed * distance / slowRadius; 
+		}
 
-		//
+		// Get distance to target velocity and scale it
+		// by the time in which we wish to achieve target speed.
 		steering.linearVel = steering.linearVel - character;
+		Debug.Log(steering.linearVel.ToString());
 		steering.linearVel /= timeToTarget;
+		Debug.Log(steering.linearVel.magnitude);
 
 		// Clip acceleration to the maximum
 		if (steering.linearVel.magnitude > maxAcceleration)

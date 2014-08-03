@@ -12,7 +12,7 @@ public class Steering
 {
 	private Vector3 _character;
 	private Vector3 _target;
-	public float maxAcceleration = 3f;
+	public float maxAcceleration = 1.2f;
 
 	public Vector3 character
 	{
