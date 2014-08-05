@@ -24,7 +24,7 @@ public class Flocking : MonoBehaviour
 	void Start () 
 	{
 		// Get boundaries: TODO when the flock is near the boundary, alter trajectory.
-		boundaries.AddRange(GameObject.FindGameObjectsWithTag(BOUNDARIES));
+		//boundaries.AddRange(GameObject.FindGameObjectsWithTag(BOUNDARIES));
 
 		agents.Add(gameObject);
 

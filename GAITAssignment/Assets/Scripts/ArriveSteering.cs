@@ -5,7 +5,7 @@ public class ArriveSteering : Steering
 {
 	private float maxSpeed = 0.8f;
 	private float slowRadius = 20f; // should slow at this point
-	private float targetRadius = 6f; // can stop now
+	private float targetRadius = 2f; // can stop now
 	private float timeToTarget = 0.25f; // the time in which we should achieve the target speed.
 
 	public ArriveSteering(Vector3 character, Vector3 target):
