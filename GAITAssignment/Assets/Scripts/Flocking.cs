@@ -8,10 +8,10 @@ using System.Collections.Generic;
 public class Flocking : MonoBehaviour 
 {
 	private const string BOUNDARIES = "boundaries";
-	public float alignmentWeight = 0.1f;
-	public float cohesionWeight = 0.1f;
-	public float seperationWeight = 0.1f;
-	public float neighbourDist = 30;
+	public float alignmentWeight = 0.3f;
+	public float cohesionWeight = 0.5f;
+	public float seperationWeight = 0.5f;
+	public float neighbourDist = 3f;
 	public float defaultSpeed = 4f;
 	public float maxVelocity = 7f;
 	private static List<GameObject> boundaries = new List<GameObject>();
@@ -40,7 +40,8 @@ public class Flocking : MonoBehaviour
 		vel.Normalize();
 		vel *= defaultSpeed;
 
-		rigidbody.velocity += vel;
+		// Get the difference between our current velocity and target velocity and add it to the current velocity.
+		rigidbody.velocity += vel - rigidbody.velocity;
 
 		// Cap rigidbody velocity.
 		if(rigidbody.velocity.magnitude > maxVelocity)
