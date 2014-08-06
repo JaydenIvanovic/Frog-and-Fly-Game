@@ -14,6 +14,6 @@ public class FlyObstacleAvoid : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
-		RaycastHit2D hit = Physics2D.Raycast(transform.position, rigidbody2D.velocity.magnitude, distToCol); 
+		//RaycastHit2D hit = Physics2D.Raycast(transform.position, rigidbody2D.velocity.magnitude, distToCol); 
 	}
 }
