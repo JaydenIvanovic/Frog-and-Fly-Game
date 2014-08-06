@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(Rigidbody2D))]
 public class Movement : MonoBehaviour 
 {
 	public float speed = 3f;
@@ -16,11 +16,11 @@ public class Movement : MonoBehaviour
 		// Give it some speed.
 		velocity *= speed;
 
-		var accel = (velocity - rigidbody.velocity) * acceleration;
+		var accel = ((Vector2)velocity - rigidbody2D.velocity) * acceleration;
 		// Square acceleration as we have the sqrMagnitude of accel.
 		if (accel.sqrMagnitude > acceleration * acceleration)
 			accel = accel.normalized * acceleration;
 
-		rigidbody.velocity += accel * Time.deltaTime;
+		rigidbody2D.velocity += accel * Time.deltaTime;
 	}
 }
