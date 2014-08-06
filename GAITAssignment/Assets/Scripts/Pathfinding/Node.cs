@@ -3,16 +3,26 @@ using System.Collections;
 using System;
 
 public class Node {
-	
+
+	private static float DEBUG_DRAW_RADIUS = 0.4f;
+
+	// Storing the actual row and column of the node in the grid (as opposed to just the
+	// node's world position) is useful for testing equality and writing a nice hash function
 	private int gridRow;
 	private int gridColumn;
+
+	// The world position of the node
 	private Vector2 position;
+
+	// A* variables
 	private float fScore = float.MaxValue;
 	private float gScore = float.MaxValue;
 	private Node parent = null;
-	
+
+	// The adjacency list
 	private Node[] neighbours = new Node[(int)NodeDirections.Last + 1];
-	
+
+	// Getters
 	public int GetGridRow() {
 		return gridRow;
 	}
@@ -40,7 +50,8 @@ public class Node {
 	public Node[] GetNeighbours() {
 		return neighbours;
 	}
-	
+
+	// Setters
 	public void SetFScore(float fScore) {
 		this.fScore = fScore;
 	}
@@ -56,7 +67,9 @@ public class Node {
 	public void SetNeighbours(Node[] neighbours) {
 		this.neighbours = neighbours;
 	}
-	
+
+	// We don't want to match nodes by reference in A*. If their posiitons are the same then they're
+	// equal for our purposes.
 	public override bool Equals(object other)
 	{
 		if (other == null)
@@ -65,7 +78,7 @@ public class Node {
 			return ((gridRow == ((Node)other).GetGridRow()) && (gridColumn == ((Node)other).GetGridColumn()));
 	}
 	
-	// Several examples on the net calculate the hash this way
+	// Several examples on the net calculate the hash this way. It seems to work well.
 	public override int GetHashCode() {
 		
 		unchecked // We don't care if the hash overflows
@@ -76,27 +89,31 @@ public class Node {
 			return hash;
 		}
 	}
-	
+
+	// Constructor
 	public Node(int gridRow, int gridColumn, Vector2 position) {
 		this.gridRow = gridRow;
 		this.gridColumn = gridColumn;
 		this.position = position;
 	}
-	
+
+	// For drawing in an Update() method
 	public void DebugDraw(float gridDivisionSize) {
-		Debug.DrawLine(position + new Vector2(-0.4f, 0.4f) * gridDivisionSize, position + new Vector2(0.4f, 0.4f) * gridDivisionSize, Color.red);
-		Debug.DrawLine(position + new Vector2(0.4f, 0.4f) * gridDivisionSize, position + new Vector2(0.4f, -0.4f) * gridDivisionSize, Color.red);
-		Debug.DrawLine(position + new Vector2(0.4f, -0.4f) * gridDivisionSize, position + new Vector2(-0.4f, -0.4f) * gridDivisionSize, Color.red);
-		Debug.DrawLine(position + new Vector2(-0.4f, -0.4f) * gridDivisionSize, position + new Vector2(-0.4f, 0.4f) * gridDivisionSize, Color.red);
+		Debug.DrawLine(position + new Vector2(-DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, Color.red);
+		Debug.DrawLine(position + new Vector2(DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, Color.red);
+		Debug.DrawLine(position + new Vector2(DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(-DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, Color.red);
+		Debug.DrawLine(position + new Vector2(-DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(-DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, Color.red);
 	}
-	
+
+	// For drawing as a once off
 	public void DebugDraw(float gridDivisionSize, float drawTime) {
-		Debug.DrawLine(position + new Vector2(-0.4f, 0.4f) * gridDivisionSize, position + new Vector2(0.4f, 0.4f) * gridDivisionSize, Color.blue, drawTime);
-		Debug.DrawLine(position + new Vector2(0.4f, 0.4f) * gridDivisionSize, position + new Vector2(0.4f, -0.4f) * gridDivisionSize, Color.blue, drawTime);
-		Debug.DrawLine(position + new Vector2(0.4f, -0.4f) * gridDivisionSize, position + new Vector2(-0.4f, -0.4f) * gridDivisionSize, Color.blue, drawTime);
-		Debug.DrawLine(position + new Vector2(-0.4f, -0.4f) * gridDivisionSize, position + new Vector2(-0.4f, 0.4f) * gridDivisionSize, Color.blue, drawTime);
+		Debug.DrawLine(position + new Vector2(-DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, Color.blue, drawTime);
+		Debug.DrawLine(position + new Vector2(DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, Color.blue, drawTime);
+		Debug.DrawLine(position + new Vector2(DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(-DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, Color.blue, drawTime);
+		Debug.DrawLine(position + new Vector2(-DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(-DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, Color.blue, drawTime);
 	}
-	
+
+	// This method is used by JPS. It just returns the neighbouring node in the direction we're travelling.
 	public Node getNextNode(int directionX, int directionY) {
 		
 		Node nextNode = null;
@@ -130,7 +147,10 @@ public class Node {
 		
 		return nextNode;
 	}
-	
+
+	// By using the position of the parent node, we can determine which direction we're travelling in.
+	// When we expand the current node, we can intelligently ignore some neighbours by taking into account
+	// the current direction. This method returns the neighbours that we DO have to consider.
 	public ArrayList GetJPSNeighbours(Grid g) {
 		
 		ArrayList result = new ArrayList();
@@ -144,10 +164,12 @@ public class Node {
 			}
 			return result;
 		}
-		
+
+		// Determine direction of travel
 		int directionX = (int)Math.Round((position.x - parent.GetPosition().x) / g.GetDivisionSize());
 		int directionY = (int)Math.Round((position.y - parent.GetPosition().y) / g.GetDivisionSize());
-		
+
+		// Set up different types of neighbouring nodes, based on the direction we're travelling
 		Node directionXNode = null, directionYNode = null, reverseXNode = null, reverseYNode = null, directionYRightNode = null, directionYLeftNode = null, directionXTopNode = null, directionXBottomNode = null;
 		
 		if (directionX > 0) {
@@ -197,6 +219,11 @@ public class Node {
 				reverseYForwardXNode = neighbours[(int)NodeDirections.TopLeft];
 			}
 			
+			// For diagonal movement we have to try moving up/down & left/right as well, since we
+			// may have now moved in line with the goal. This is not the case for non-diagonal movement
+			// (i.e. we don't have to check diagonals) because if moving diagonally was best then we
+			// would have done it on the previous step, but we didn't.
+
 			// Left/right
 			if (!g.IsBlocked(directionXNode)) {
 				result.Add(directionXNode);

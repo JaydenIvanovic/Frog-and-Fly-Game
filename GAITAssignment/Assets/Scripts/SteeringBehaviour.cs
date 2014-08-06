@@ -41,9 +41,9 @@ public class SteeringBehaviour : MonoBehaviour
 	{
 		Vector2? target = targeter.GetTarget();
 
-		Debug.Log ("Target is " + ((Vector2)target).x + ", " + ((Vector2)target).y);
-		
 		if (target != null) {
+
+			//Debug.Log ("Target is " + ((Vector2)target).x + ", " + ((Vector2)target).y);
 			
 			switch(selectedBehaviour)
 			{
@@ -63,7 +63,7 @@ public class SteeringBehaviour : MonoBehaviour
 			}
 		}
 
-		if (selectedBehaviour == BType.None)
+		if (selectedBehaviour == BType.None || steering == null)
 			return;
 
 		SteeringOutput so = steering.getSteering();

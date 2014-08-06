@@ -22,6 +22,7 @@ public enum Mode
 	AStarWithJPS
 }
 
+[RequireComponent(typeof(Collider2D))]
 public class AStarTargeter : Targeter {
 	
 	private ArrayList path = null;
@@ -31,7 +32,6 @@ public class AStarTargeter : Targeter {
 	private Targeter targeter;
 	private float timeSinceUpdate = 0.0f;
 
-	public static string OBSTACLES_LAYER_NAME = "Obstacles";
 	public static int SEARCH_LIMIT = 10000;
 
 	public float updateFrequency;
@@ -71,7 +71,26 @@ public class AStarTargeter : Targeter {
 
 		// Initialise the grid of nodes used for A*
 		// TO DO: Fix magic numbers!
-		grid = new Grid(-20.0f, 20.0f, -20.0f, 20.0f, (float)gridDivisionsPerSquare);
+
+		Collider2D collider = GetComponent<Collider2D>();
+		float blockDetectionRadius;
+
+		// Assume all scaling is the same (i.e. x scaling = y scaling)
+		if (collider.GetType() == typeof(CircleCollider2D)) {
+			blockDetectionRadius = ((CircleCollider2D)collider).radius * transform.localScale.x;
+		} else if (collider.GetType() == typeof(BoxCollider2D)) {
+			blockDetectionRadius = ((BoxCollider2D)collider).size.x * transform.localScale.x;
+		} else {
+			Debug.Log("ERROR: Unsupported collider type!");
+			blockDetectionRadius = 0.0f;
+		}
+		 
+		grid = new Grid(GameObject.Find("LeftBoundary").transform.position.x,
+		                GameObject.Find("RightBoundary").transform.position.x,
+		                GameObject.Find("BottomBoundary").transform.position.y,
+		                GameObject.Find("TopBoundary").transform.position.y,
+		                (float)gridDivisionsPerSquare,
+		                blockDetectionRadius);
 		
 		// Set the goal at the player's position so that they won't start moving immediately
 		goalNode = grid.GetClosestSquare(transform.position);
@@ -115,6 +134,7 @@ public class AStarTargeter : Targeter {
 
 			if (tempTarget != null) {
 
+				// TO DO: If the closest square is blocked then return the nearest unblocked square
 				Node tempGoal = grid.GetClosestSquare((Vector2)tempTarget);
 				if ((tempGoal != null) && (!tempGoal.Equals (goalNode))) {
 					goalNode = tempGoal;
@@ -167,6 +187,12 @@ public class AStarTargeter : Targeter {
 		grid.Reset();
 		
 		Node startPoint = grid.GetClosestSquare((Vector2)transform.position);
+
+		if (startPoint == null) {
+			Debug.Log("WARNING: Starting point is outside the grid.");
+			return null;
+		}
+
 		startPoint.SetFScore(DistanceFromGoal((Vector2)transform.position));
 		startPoint.SetGScore(0.0f);
 		
@@ -213,7 +239,7 @@ public class AStarTargeter : Targeter {
 				path.Reverse();
 				
 				// Remove redundant waypoints
-				int layerMask = 1 << LayerMask.NameToLayer(OBSTACLES_LAYER_NAME);
+				int layerMask = 1 << LayerMask.NameToLayer(Grid.OBSTACLES_LAYER_NAME);
 				
 				for (int i = 0; i < path.Count - 2; i++) {
 					
@@ -333,7 +359,7 @@ public class AStarTargeter : Targeter {
 			searchTime++;
 		}
 		
-		Debug.Log("ERROR: Couldn't find a path!");
+		// Couldn't find a path (this may be ok, e.g. predators can't reach you)
 		return null;
 	}
 	

@@ -168,7 +168,7 @@ public class Flocking : MonoBehaviour
 	{
 		int i = Random.Range(0, 4);
 
-		Debug.Log("New direction: " + i);
+		//Debug.Log("New direction: " + i);
 
 		switch (i)
 		{
