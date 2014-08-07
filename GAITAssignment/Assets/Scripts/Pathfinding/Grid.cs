@@ -12,7 +12,8 @@ public class Grid {
 	private float gridDivisionsPerUnit;
 	private float divisionSize;
 	private Hashtable blockedSet;
-	
+	Hashtable gridAreas = new Hashtable(); // <Node, setOfConnectedNodes>
+
 	// These are in terms of divisions, not world distance
 	private int gridWidth;
 	private int gridHeight;
@@ -54,6 +55,59 @@ public class Grid {
 			return true;
 		else
 			return blockedSet.Contains(n);
+	}
+
+	public bool IsConnected(Node n1, Node n2) {
+
+		if ((n1 == null) || (n2 == null)) {
+			return false;
+		}
+
+		foreach (object o in gridAreas.Values) {
+
+			if (((Hashtable)o).Contains(n1)) {
+				if (((Hashtable)o).Contains(n2)) {
+					return true;
+				} else {
+					return false;
+				}
+			} else if (((Hashtable)o).Contains(n2)) {
+				return false;
+			}
+		}
+
+		return false;
+	}
+
+	public Node GetClosestUnblockedNode(Node start) {
+
+		if (start == null) {
+			return null;
+		}
+
+		Queue openSet = new Queue();
+		openSet.Enqueue(start);
+
+		Node current;
+		
+		while (openSet.Count > 0) {
+			
+			current = (Node)(openSet.Dequeue());
+
+			if (!blockedSet.Contains(current)) {
+				return current;
+			}
+
+			Node[] neighbours = current.GetNeighbours();
+			
+			foreach (Node n in neighbours) {
+				if ((n != null) && (!openSet.Contains(n))) {
+					openSet.Enqueue(n);
+				}
+			}
+		}
+
+		return null;
 	}
 	
 	public void DebugDrawBlocked() {
@@ -159,6 +213,53 @@ public class Grid {
 		foreach (object o in cornerBlocked) {
 			Node n = (Node)o;
 			blockedSet.Add(n, n);
+		}
+
+		bool found;
+
+		for (int i = 0; i < gridWidth; i++) {
+			for (int j = 0; j < gridHeight; j++) {
+
+				if (blockedSet.Contains(squares[i][j])) {
+					continue;
+				}
+
+				found = false;
+
+				foreach (object o in gridAreas.Values) {
+					if (((Hashtable)o).Contains(squares[i][j])) {
+						found = true;
+						gridAreas.Add(squares[i][j], o);
+						break;
+					}
+				}
+
+				if (!found) {
+
+					Hashtable connectedNodes = new Hashtable();
+					Queue openSet = new Queue();
+					Node current;
+
+					openSet.Enqueue(squares[i][j]);
+
+					while (openSet.Count > 0) {
+
+						current = (Node)(openSet.Dequeue());
+
+						connectedNodes.Add(current, current);
+
+						Node[] neighbours = current.GetNeighbours();
+
+						foreach (Node n in neighbours) {
+							if ((n != null) && (!blockedSet.Contains(n)) && (!connectedNodes.Contains(n)) && (!openSet.Contains(n))) {
+								openSet.Enqueue(n);
+							}
+						}
+					}
+
+					gridAreas.Add(squares[i][j], connectedNodes);
+				}
+			}
 		}
 	}
 }

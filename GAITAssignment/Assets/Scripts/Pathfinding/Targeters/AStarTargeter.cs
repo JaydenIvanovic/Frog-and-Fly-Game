@@ -136,6 +136,8 @@ public class AStarTargeter : Targeter {
 
 				// TO DO: If the closest square is blocked then return the nearest unblocked square
 				Node tempGoal = grid.GetClosestSquare((Vector2)tempTarget);
+				tempGoal = grid.GetClosestUnblockedNode(tempGoal);
+
 				if ((tempGoal != null) && (!tempGoal.Equals (goalNode))) {
 					goalNode = tempGoal;
 
@@ -187,6 +189,7 @@ public class AStarTargeter : Targeter {
 		grid.Reset();
 		
 		Node startPoint = grid.GetClosestSquare((Vector2)transform.position);
+		startPoint = grid.GetClosestUnblockedNode(startPoint);
 
 		if (startPoint == null) {
 			Debug.Log("WARNING: Starting point is outside the grid.");
@@ -205,6 +208,10 @@ public class AStarTargeter : Targeter {
 			return null;
 		
 		openSet.Add(startPoint);
+
+		if (!grid.IsConnected(startPoint, goalNode)) {
+			return null;
+		}
 		
 		int searchTime = 0;
 		
