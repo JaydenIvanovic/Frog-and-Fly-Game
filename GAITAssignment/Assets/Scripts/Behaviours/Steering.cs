@@ -26,6 +26,10 @@ public class Steering
 		set{_target = value;}
 	}
 
+	public Steering ()
+	{
+	}
+
 	public Steering(Vector3 character, Vector3 target)
 	{
 		this._character = character;
@@ -54,8 +58,9 @@ public class Steering
 		return steering;
 	}
 
-	public void updatePlayerPosition(Vector3 position)
+	public void updatePositions(Vector3 chaser, Vector3 tar)
 	{
-		_character = position;
+		_character = chaser;
+		_target = tar;
 	}
 }

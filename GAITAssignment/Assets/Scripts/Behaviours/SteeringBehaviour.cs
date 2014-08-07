@@ -7,6 +7,8 @@ public enum BType
 	Seek, 
 	Flee,
 	Arrive,
+	Wander,
+	Flocking,
 	None
 }
 
@@ -19,6 +21,7 @@ public class SteeringBehaviour : MonoBehaviour
 	public BType selectedBehaviour;
 	private Steering steering;
 	private Targeter targeter;
+	private Movement movement;
 
 	// Use this for initialization
 	void Start () 
@@ -28,10 +31,12 @@ public class SteeringBehaviour : MonoBehaviour
 		foreach (Targeter t in targeters) {
 			targeter = t;
 			// Use an AStarTargeter if it exists, otherwise whatever else there is
-			if (t.GetType() == typeof(AStarTargeter)) {
+			if (t.GetType() == typeof(AStarTargeter) && t.enabled) {
 				break;
 			}
 		}
+
+		movement = GetComponent<Movement>();
 
 		SetDefaults();
 	}
@@ -56,6 +61,9 @@ public class SteeringBehaviour : MonoBehaviour
 			case BType.Arrive:
 				steering = new ArriveSteering(transform.position, (Vector2)target);
 				break;
+			case BType.Wander:
+				steering = new Wander(rigidbody2D.velocity);
+				break;
 			case BType.None:
 				return;
 			default:
@@ -78,18 +86,14 @@ public class SteeringBehaviour : MonoBehaviour
 		}
 
 		// Update the position and orientation of the gameobject.
-		transform.position += new Vector3(rigidbody2D.velocity.x, rigidbody2D.velocity.y, 0.0f) * Time.deltaTime;
-
+		//transform.position += new Vector3(rigidbody2D.velocity.x, rigidbody2D.velocity.y, 0.0f) * Time.deltaTime;
+		movement.Move(so.linearVel);
 		rigidbody2D.rotation += rigidbody2D.angularVelocity * Time.deltaTime;
 
 		// Update the rigidbody velocities for next update.
-		rigidbody2D.velocity += (Vector2)(so.linearVel) * Time.deltaTime;
+		//rigidbody2D.velocity += ((Vector2)(so.linearVel) - rigidbody2D.velocity) * Time.deltaTime;
 		// Cos for z as we would rather rotate around the z-axis rather than the x-axis from our ortho perspective
 		//rigidbody.angularVelocity += new Vector3(0f, Mathf.Sin(so.angularVel), Mathf.Cos(so.angularVel)) * Time.deltaTime;
-
-		// During "Seek" the character moves so we must update their position in the steering class.
-		if (selectedBehaviour == BType.Seek || selectedBehaviour == BType.Arrive)
-			steering.updatePlayerPosition(transform.position);
 	}
 	
 	// For testing given an arbitrary initial velocity
