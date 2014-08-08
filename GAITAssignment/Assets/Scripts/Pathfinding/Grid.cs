@@ -12,7 +12,8 @@ public class Grid {
 	private float gridDivisionsPerUnit;
 	private float divisionSize;
 	private Hashtable blockedSet;
-	
+	Hashtable gridAreas = new Hashtable(); // <Node, setOfConnectedNodes>
+
 	// These are in terms of divisions, not world distance
 	private int gridWidth;
 	private int gridHeight;
@@ -55,6 +56,59 @@ public class Grid {
 		else
 			return blockedSet.Contains(n);
 	}
+
+	public bool IsConnected(Node n1, Node n2) {
+
+		if ((n1 == null) || (n2 == null)) {
+			return false;
+		}
+
+		foreach (object o in gridAreas.Values) {
+
+			if (((Hashtable)o).Contains(n1)) {
+				if (((Hashtable)o).Contains(n2)) {
+					return true;
+				} else {
+					return false;
+				}
+			} else if (((Hashtable)o).Contains(n2)) {
+				return false;
+			}
+		}
+
+		return false;
+	}
+
+	public Node GetClosestUnblockedNode(Node start) {
+
+		if (start == null) {
+			return null;
+		}
+
+		Queue openSet = new Queue();
+		openSet.Enqueue(start);
+
+		Node current;
+		
+		while (openSet.Count > 0) {
+			
+			current = (Node)(openSet.Dequeue());
+
+			if (!blockedSet.Contains(current)) {
+				return current;
+			}
+
+			Node[] neighbours = current.GetNeighbours();
+			
+			foreach (Node n in neighbours) {
+				if ((n != null) && (!openSet.Contains(n))) {
+					openSet.Enqueue(n);
+				}
+			}
+		}
+
+		return null;
+	}
 	
 	public void DebugDrawBlocked() {
 		foreach (object o in blockedSet.Keys) {
@@ -73,13 +127,17 @@ public class Grid {
 		
 		this.gridWidth = (int)((gridRight - gridLeft) * gridDivisionsPerUnit);
 		this.gridHeight = (int)((gridTop - gridBottom) * gridDivisionsPerUnit);
-		
+
+		bool logTiming = false;
+
 		squares = new Node[gridWidth][];
 		
 		blockedSet = new Hashtable();
 		
 		int layerMask = 1 << LayerMask.NameToLayer(OBSTACLES_LAYER_NAME);
-		
+
+		float timeNow = Time.realtimeSinceStartup;
+
 		for (int i = 0; i < gridWidth; i++) {
 			squares[i] = new Node[gridHeight];
 		}
@@ -90,7 +148,12 @@ public class Grid {
 				squares[i][j] = new Node(i, j, pos);
 			}
 		}
-		
+
+		if (logTiming) {
+			Debug.Log ("Took " + (Time.realtimeSinceStartup - timeNow) + " to allocate grid");
+			timeNow = Time.realtimeSinceStartup;
+		}
+
 		for (int i = 0; i < gridWidth; i++) {
 			
 			for (int j = 0; j < gridHeight; j++) {
@@ -134,7 +197,13 @@ public class Grid {
 				}
 			}
 		}
-		
+
+		if (logTiming) {
+			Debug.Log ("Took " + (Time.realtimeSinceStartup - timeNow) + " to set neighbours and raycast");
+			timeNow = Time.realtimeSinceStartup;
+		}
+
+		/*
 		// TO DO: Update this logic so it just fills unreachable areas
 		// Fill holes
 		ArrayList cornerBlocked = new ArrayList();
@@ -159,6 +228,58 @@ public class Grid {
 		foreach (object o in cornerBlocked) {
 			Node n = (Node)o;
 			blockedSet.Add(n, n);
+		}
+
+		if (logTiming) {
+			Debug.Log ("Took " + (Time.realtimeSinceStartup - timeNow) + " to fill holes");
+			timeNow = Time.realtimeSinceStartup;
+		}
+		*/
+
+		Hashtable done = new Hashtable ();
+
+		for (int i = 0; i < gridWidth; i++) {
+
+			for (int j = 0; j < gridHeight; j++) {
+
+				if (done.Contains(squares[i][j]) || blockedSet.Contains(squares[i][j])) {
+					continue;
+				}
+
+				Hashtable connectedNodes = new Hashtable();
+				Queue openQueue = new Queue();
+				Hashtable openSet = new Hashtable();
+				Node current;
+
+				openQueue.Enqueue(squares[i][j]);
+				openSet.Add(squares[i][j], squares[i][j]);
+
+				while (openQueue.Count > 0) {
+
+					current = (Node)(openQueue.Dequeue());
+
+					connectedNodes.Add(current, current);
+
+					// TO DO: Might have to fix this so that it doesn't include diagonal neighbours
+					Node[] neighbours = current.GetNeighbours();
+
+					foreach (Node n in neighbours) {
+						if ((n != null) && (!openSet.Contains(n)) && (!blockedSet.Contains(n)) && (!connectedNodes.Contains(n))) {
+							openQueue.Enqueue(n);
+							openSet.Add(n, n);
+						}
+					}
+				}
+				foreach (object o in connectedNodes.Keys) {
+					gridAreas.Add((Node)o, connectedNodes);
+					done.Add((Node)o, (Node)o);
+				}
+			}
+		}
+
+		if (logTiming) {
+			Debug.Log ("Took " + (Time.realtimeSinceStartup - timeNow) + " to find connected");
+			timeNow = Time.realtimeSinceStartup;
 		}
 	}
 }
