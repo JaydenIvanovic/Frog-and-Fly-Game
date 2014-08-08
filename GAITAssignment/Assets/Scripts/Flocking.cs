@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 // TODO When the flock reaches a border they should move away from it 
 // to stay within the world boundaries.
-[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(Rigidbody2D))]
 public class Flocking : MonoBehaviour 
 {
 	private const string BOUNDARIES = "boundaries";
@@ -19,6 +19,10 @@ public class Flocking : MonoBehaviour
 
 	private delegate Vector3 ReturnVector(GameObject agent);
 	private delegate Vector3 Finalization(Vector3 velocity, uint neighbourCount);
+
+	public static void DestroyFly(GameObject fly) {
+		agents.Remove (fly);
+	}
 
 	// Use this for initialization
 	void Start () 
@@ -40,18 +44,18 @@ public class Flocking : MonoBehaviour
 		vel.Normalize();
 		vel *= defaultSpeed;
 
-		rigidbody.velocity += vel;
+		rigidbody2D.velocity += (Vector2)vel;
 
 		// Cap rigidbody velocity.
-		if(rigidbody.velocity.magnitude > maxVelocity)
-			rigidbody.velocity = rigidbody.velocity.normalized * maxVelocity;
+		if(rigidbody2D.velocity.magnitude > maxVelocity)
+			rigidbody2D.velocity = rigidbody2D.velocity.normalized * maxVelocity;
 	}
 
 
 	// Computation to add to the velocity for the "Alignment" behaviour.
 	private Vector3 alignmentVector(GameObject agent)
 	{
-		return agent.rigidbody.velocity;
+		return new Vector3 (agent.rigidbody2D.velocity.x, agent.rigidbody2D.velocity.y, 0.0f);
 	}
 
 	
@@ -68,7 +72,7 @@ public class Flocking : MonoBehaviour
 	// Computation to add to the velocity for the "Cohesion" behaviour.
 	private Vector3 cohesionVector(GameObject agent)
 	{
-		return agent.rigidbody.position;
+		return new Vector3 (agent.rigidbody2D.position.x, agent.rigidbody2D.position.y, 0.0f);
 	}
 
 
@@ -86,7 +90,7 @@ public class Flocking : MonoBehaviour
 	// Computation to add to the velocity for the "Seperation" behaviour.
 	private Vector3 seperationVector(GameObject agent)
 	{
-		return agent.rigidbody.position - transform.position;
+		return new Vector3 (agent.rigidbody2D.position.x, agent.rigidbody2D.position.y, 0.0f) - transform.position;
 	}
 
 
@@ -173,16 +177,16 @@ public class Flocking : MonoBehaviour
 		switch (i)
 		{
 			case 0:
-				rigidbody.velocity = Vector3.left * defaultSpeed;
+				rigidbody2D.velocity = -Vector2.right * defaultSpeed;
 				break;
 			case 1:
-				rigidbody.velocity = Vector3.right * defaultSpeed;
+				rigidbody2D.velocity = Vector2.right * defaultSpeed;
 				break;
 			case 2:
-				rigidbody.velocity = Vector3.up * defaultSpeed;
+				rigidbody2D.velocity = Vector2.up * defaultSpeed;
 				break;
 			case 3: 
-				rigidbody.velocity = Vector3.down * defaultSpeed;
+				rigidbody2D.velocity = -Vector2.up * defaultSpeed;
 				break;
 		}
 	}

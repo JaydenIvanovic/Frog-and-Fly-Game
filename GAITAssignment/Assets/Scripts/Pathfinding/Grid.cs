@@ -127,13 +127,17 @@ public class Grid {
 		
 		this.gridWidth = (int)((gridRight - gridLeft) * gridDivisionsPerUnit);
 		this.gridHeight = (int)((gridTop - gridBottom) * gridDivisionsPerUnit);
-		
+
+		bool logTiming = false;
+
 		squares = new Node[gridWidth][];
 		
 		blockedSet = new Hashtable();
 		
 		int layerMask = 1 << LayerMask.NameToLayer(OBSTACLES_LAYER_NAME);
-		
+
+		float timeNow = Time.realtimeSinceStartup;
+
 		for (int i = 0; i < gridWidth; i++) {
 			squares[i] = new Node[gridHeight];
 		}
@@ -144,7 +148,12 @@ public class Grid {
 				squares[i][j] = new Node(i, j, pos);
 			}
 		}
-		
+
+		if (logTiming) {
+			Debug.Log ("Took " + (Time.realtimeSinceStartup - timeNow) + " to allocate grid");
+			timeNow = Time.realtimeSinceStartup;
+		}
+
 		for (int i = 0; i < gridWidth; i++) {
 			
 			for (int j = 0; j < gridHeight; j++) {
@@ -188,7 +197,13 @@ public class Grid {
 				}
 			}
 		}
-		
+
+		if (logTiming) {
+			Debug.Log ("Took " + (Time.realtimeSinceStartup - timeNow) + " to set neighbours and raycast");
+			timeNow = Time.realtimeSinceStartup;
+		}
+
+		/*
 		// TO DO: Update this logic so it just fills unreachable areas
 		// Fill holes
 		ArrayList cornerBlocked = new ArrayList();
@@ -215,51 +230,56 @@ public class Grid {
 			blockedSet.Add(n, n);
 		}
 
-		bool found;
+		if (logTiming) {
+			Debug.Log ("Took " + (Time.realtimeSinceStartup - timeNow) + " to fill holes");
+			timeNow = Time.realtimeSinceStartup;
+		}
+		*/
+
+		Hashtable done = new Hashtable ();
 
 		for (int i = 0; i < gridWidth; i++) {
+
 			for (int j = 0; j < gridHeight; j++) {
 
-				if (blockedSet.Contains(squares[i][j])) {
+				if (done.Contains(squares[i][j]) || blockedSet.Contains(squares[i][j])) {
 					continue;
 				}
 
-				found = false;
+				Hashtable connectedNodes = new Hashtable();
+				Queue openQueue = new Queue();
+				Hashtable openSet = new Hashtable();
+				Node current;
 
-				foreach (object o in gridAreas.Values) {
-					if (((Hashtable)o).Contains(squares[i][j])) {
-						found = true;
-						gridAreas.Add(squares[i][j], o);
-						break;
-					}
-				}
+				openQueue.Enqueue(squares[i][j]);
+				openSet.Add(squares[i][j], squares[i][j]);
 
-				if (!found) {
+				while (openQueue.Count > 0) {
 
-					Hashtable connectedNodes = new Hashtable();
-					Queue openSet = new Queue();
-					Node current;
+					current = (Node)(openQueue.Dequeue());
 
-					openSet.Enqueue(squares[i][j]);
+					connectedNodes.Add(current, current);
 
-					while (openSet.Count > 0) {
+					// TO DO: Might have to fix this so that it doesn't include diagonal neighbours
+					Node[] neighbours = current.GetNeighbours();
 
-						current = (Node)(openSet.Dequeue());
-
-						connectedNodes.Add(current, current);
-
-						Node[] neighbours = current.GetNeighbours();
-
-						foreach (Node n in neighbours) {
-							if ((n != null) && (!blockedSet.Contains(n)) && (!connectedNodes.Contains(n)) && (!openSet.Contains(n))) {
-								openSet.Enqueue(n);
-							}
+					foreach (Node n in neighbours) {
+						if ((n != null) && (!openSet.Contains(n)) && (!blockedSet.Contains(n)) && (!connectedNodes.Contains(n))) {
+							openQueue.Enqueue(n);
+							openSet.Add(n, n);
 						}
 					}
-
-					gridAreas.Add(squares[i][j], connectedNodes);
+				}
+				foreach (object o in connectedNodes.Keys) {
+					gridAreas.Add((Node)o, connectedNodes);
+					done.Add((Node)o, (Node)o);
 				}
 			}
+		}
+
+		if (logTiming) {
+			Debug.Log ("Took " + (Time.realtimeSinceStartup - timeNow) + " to find connected");
+			timeNow = Time.realtimeSinceStartup;
 		}
 	}
 }

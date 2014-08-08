@@ -29,7 +29,6 @@ public class AStarTargeter : Targeter {
 	private Vector2 targetPos;
 	private Node goalNode;
 	private Grid grid;
-	private Targeter targeter;
 	private float timeSinceUpdate = 0.0f;
 
 	public static int SEARCH_LIMIT = 10000;
@@ -39,6 +38,7 @@ public class AStarTargeter : Targeter {
 	public GameObject goalFlag;
 	public Mode searchMode = Mode.AStarWithJPS;
 	public int gridDivisionsPerSquare = 5;
+	public Targeter underlyingTargeter;
 
 	public override Vector2? GetTarget ()
 	{
@@ -59,15 +59,6 @@ public class AStarTargeter : Targeter {
 	}
 	
 	void Start () {
-
-		// TO DO: Ensure that there are 2 targeters (self and the original targeter)
-		Targeter[] targeters = GetComponents<Targeter>();
-		foreach (Targeter t in targeters) {
-			// Don't use self as a targeter!
-			if (t.GetType() != typeof(AStarTargeter)) {
-				targeter = t;
-			}
-		}
 
 		// Initialise the grid of nodes used for A*
 		// TO DO: Fix magic numbers!
@@ -130,7 +121,7 @@ public class AStarTargeter : Targeter {
 			timeSinceUpdate = 0.0f;
 
 			// Update path if target has updated
-			Vector2? tempTarget = targeter.GetTarget();
+			Vector2? tempTarget = underlyingTargeter.GetTarget();
 
 			if (tempTarget != null) {
 
