@@ -5,46 +5,40 @@ using System.Collections.Generic;
 // TODO When the flock reaches a border they should move away from it 
 // to stay within the world boundaries.
 [RequireComponent(typeof(Rigidbody2D))]
-public class Flocking : MonoBehaviour 
+public class Flocking : SteeringBehaviour 
 {
 	private const string BOUNDARIES = "boundaries";
 	public float alignmentWeight = 0.1f;
 	public float cohesionWeight = 0.1f;
 	public float seperationWeight = 0.1f;
 	public float neighbourDist = 30;
-	public float defaultSpeed = 4f;
-	public float maxVelocity = 7f;
-	private static List<GameObject> boundaries = new List<GameObject>();
+	private Movement movement;
 	private static List<GameObject> agents = new List<GameObject>();
 
 	private delegate Vector2 ReturnVector(GameObject agent);
 	private delegate Vector2 Finalization(Vector2 velocity, uint neighbourCount);
 
+	public static void DestroyFly(GameObject fly) 
+	{
+		agents.Remove (fly);
+	}
+
 	// Use this for initialization
 	void Start () 
 	{
-		// Get boundaries: TODO when the flock is near the boundary, alter trajectory.
-		//boundaries.AddRange(GameObject.FindGameObjectsWithTag(BOUNDARIES));
-
 		agents.Add(gameObject);
-
-		InvokeRepeating("randomizeDirection", 0f, 3f);
+		movement = GetComponent<Movement>();
 	}
 
 
-	// Update is called once per frame
-	void Update () 
+	public override Vector2 GetSteering()
 	{
 		// Compute the new velocity, taking into consideration the weights of each behaviour.
 		Vector2 vel = (computeAlignment() * alignmentWeight) + (computeCohesion() * cohesionWeight) + (computeSeperation() * seperationWeight);
 		vel.Normalize();
-		vel *= defaultSpeed;
-
-		rigidbody2D.velocity += vel - rigidbody2D.velocity;
-
-		// Cap rigidbody velocity.
-		if(rigidbody2D.velocity.magnitude > maxVelocity)
-			rigidbody2D.velocity = rigidbody2D.velocity.normalized * maxVelocity;
+		vel *= movement.speed;
+		
+		return vel;
 	}
 
 
@@ -159,40 +153,5 @@ public class Flocking : MonoBehaviour
 		Finalization finalizeFunc = seperationFinalize;
 		
 		return runAlgorithm(vecFunc, finalizeFunc);
-	}
-
-
-	// Get the group to move in a new direction. Add a bit of randomization
-	// so they don't continually go in the same direction.
-	public void randomizeDirection()
-	{
-		int i = Random.Range(0, 4);
-
-		//Debug.Log("New direction: " + i);
-
-		switch (i)
-		{
-			case 0:
-				rigidbody2D.velocity = Vector3.left * defaultSpeed;
-				break;
-			case 1:
-				rigidbody2D.velocity = Vector3.right * defaultSpeed;
-				break;
-			case 2:
-				rigidbody2D.velocity = Vector3.up * defaultSpeed;
-				break;
-			case 3: 
-				rigidbody2D.velocity = Vector3.down * defaultSpeed;
-				break;
-		}
-	}
-
-
-	// Check if there is null references in our agent list from a 
-	// fly being eaten by the player.
-	public static void killFly(GameObject fly)
-	{
-		agents.Remove(fly);
-		Destroy(fly);
 	}
 }

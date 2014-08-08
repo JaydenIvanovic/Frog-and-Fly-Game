@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
-
+/*
 public class ArriveSteering : Steering 
 {
-	private float maxSpeed = 2f;
+	private float maxSpeed = 0.8f;
 	private float slowRadius = 20f; // should slow at this point
 	private float targetRadius = 2f; // can stop now
 	private float timeToTarget = 0.25f; // the time in which we should achieve the target speed.
@@ -16,7 +16,7 @@ public class ArriveSteering : Steering
 	public override SteeringOutput getSteering()
 	{
 		var steering = new SteeringOutput();
-		Debug.Log(character);
+
 		steering.linearVel = target - character;
 		float distance = steering.linearVel.magnitude;
 
@@ -68,4 +68,4 @@ public class ArriveSteering : Steering
 
 		return steering;
 	}
-}
+}*/
