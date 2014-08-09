@@ -12,14 +12,19 @@ public struct SteeringOutput
 public class Seek : SteeringBehaviour
 {
 	private Movement move;
-	private Transform target;
+	private Vector2? target;
+
 	public bool flee; // provide a switch in inspector window
 	public float weight = 1f;
+	public Targeter targeter;
+
+	public void SetTargeter(Targeter targeter) {
+		this.targeter = targeter;
+	}
 
 	protected void Awake()
 	{
 		move = GetComponent<Movement>();
-		target = GetRandomAppleTree(); // our flies like fruit!
 	}
 
 
@@ -27,22 +32,22 @@ public class Seek : SteeringBehaviour
 	{
 		Vector2 targetDir;
 
-		// Are we seeking or fleeing?
-		if(!flee)
-			targetDir = (target.position - transform.position).normalized;
-		else
-			targetDir = (transform.position - target.position).normalized;
+		target = targeter.GetTarget();
 
-		var targetVelocity = targetDir * move.acceleration * weight;
+		if (target != null) {
 
-		return targetVelocity;
-	}
+			// Are we seeking or fleeing?
+			if(!flee)
+				targetDir = ((Vector2)target - (Vector2)(transform.position)).normalized;
+			else
+				targetDir = ((Vector2)(transform.position) - (Vector2)target).normalized;
 
+			var targetVelocity = targetDir * move.acceleration * weight;
 
-	public Transform GetRandomAppleTree()
-	{
-		GameObject[] trees = GameObject.FindGameObjectsWithTag("AppleTree");
+			return targetVelocity;
 
-		return trees[Random.Range(0, 4)].transform;
+		} else {
+			return Vector2.zero;
+		}
 	}
 }
