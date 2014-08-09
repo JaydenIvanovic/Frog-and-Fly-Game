@@ -7,6 +7,8 @@ public class Movement : MonoBehaviour
 	// Linear motion
 	public float speed = 3f;
 	public float acceleration = 10f;
+	public bool SnapToRightAngles = false;
+	public float SnapTime = 0.2f;
 
 	// Angular motion
 	public float angularAccelelation = 5.0f;
@@ -14,6 +16,10 @@ public class Movement : MonoBehaviour
 	public float angleAdjustment = 0.0f; // In case the sprite isn't facing left (0 degrees) to begin with
 
 	private float angularPosition;
+
+	private float actualRotation;
+	private float previousRotation;
+	private float timeCurrentRotation = 0.0f;
 
 	public void Start() {
 
@@ -57,7 +63,45 @@ public class Movement : MonoBehaviour
 			targetAngularVel *= angularAccelelation;
 			
 			angularPosition = angularPosition + targetAngularVel * Time.deltaTime;
-			rigidbody2D.transform.localEulerAngles = new Vector3(0.0f, 0.0f, angularPosition + angleAdjustment);
+
+			actualRotation = angularPosition + angleAdjustment;
+
+			while (actualRotation < 0.0f)
+				actualRotation += 360.0f;
+			
+			while (actualRotation > 360.0f)
+				actualRotation -= 360.0f;
+
+			if (SnapToRightAngles) {
+
+				if ((actualRotation > 45.0f) && (actualRotation < 135.0f)) {
+					actualRotation = 90.0f;
+				} else if ((actualRotation > 135.0f) && (actualRotation < 225.0f)) {
+					actualRotation = 180.0f;
+				} else if ((actualRotation > 225.0f) && (actualRotation < 315.0f)) {
+					actualRotation = 270.0f;
+				} else if ((actualRotation > 315.0f) || (actualRotation < 45.0f)) {
+					actualRotation = 0.0f;
+				}
+
+				if (previousRotation == actualRotation) {
+					
+					timeCurrentRotation += Time.deltaTime;
+					
+					if (timeCurrentRotation > SnapTime) {
+						rigidbody2D.transform.localEulerAngles = new Vector3(0.0f, 0.0f, actualRotation);
+					}
+					
+				} else {
+					timeCurrentRotation = 0.0f;
+				}
+				
+				previousRotation = actualRotation;
+			} else {
+
+				// We're not snapping so just apply the rotation every frame
+				rigidbody2D.transform.localEulerAngles = new Vector3(0.0f, 0.0f, actualRotation);
+			}
 		}
 	}
 }

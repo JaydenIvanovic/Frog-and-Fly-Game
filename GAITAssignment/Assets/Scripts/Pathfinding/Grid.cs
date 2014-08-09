@@ -6,9 +6,7 @@ public class Grid {
 	public static string OBSTACLES_LAYER_NAME = "Obstacles";
 	
 	private float gridLeft;
-	private float gridRight;
 	private float gridBottom;
-	private float gridTop;
 	private float gridDivisionsPerUnit;
 	private float divisionSize;
 	private Hashtable blockedSet;
@@ -118,9 +116,7 @@ public class Grid {
 	public Grid(float gridLeft, float gridRight, float gridBottom, float gridTop, float gridDivisionsPerUnit, float blockDetectionRadius) {
 		
 		this.gridLeft = gridLeft;
-		this.gridRight = gridRight;
 		this.gridBottom = gridBottom;
-		this.gridTop = gridTop;
 		this.gridDivisionsPerUnit = gridDivisionsPerUnit;
 		this.divisionSize = 1.0f / gridDivisionsPerUnit;
 		
