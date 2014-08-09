@@ -14,4 +14,13 @@ public class AppleTreeTargeter : Targeter {
 	{
 		return (Vector2?)treePosition;
 	}
+
+	public void UpdateTree()
+	{
+		GameObject[] trees = GameObject.FindGameObjectsWithTag("AppleTree");
+		var newTreePos = treePosition;
+
+		while (newTreePos == treePosition)
+			treePosition = trees[Random.Range(0, 4)].transform.position;
+	}
 }
