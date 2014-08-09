@@ -36,8 +36,7 @@ public class FlyStateMachine : MonoBehaviour {
 
 		playerTargeter.Target = GameObject.Find("Player");
 
-		timeEating = 0f;
-		doneEating = false;
+		ResetEatingVars();
 	}
 	
 	// Update is called once per frame
@@ -62,7 +61,6 @@ public class FlyStateMachine : MonoBehaviour {
 				{
 					doneEating = true;
 					((AppleTreeTargeter)appleTreeTargeter).UpdateTree();
-					timeEating = 0f;
 				}
 				break;
 		}
@@ -83,11 +81,21 @@ public class FlyStateMachine : MonoBehaviour {
 
 		if (distanceFromPlayer < fleeDistance) {
 			currentState = State.Fleeing;
+			ResetEatingVars();
+			//Random chance to change the tree the fly will visit to eat.
+			if(Random.Range(0,2) == 0) 
+				((AppleTreeTargeter)appleTreeTargeter).UpdateTree();
 		} else if ( (distanceFromAppleTree < appleTreeDist) && !doneEating ){
 			currentState = State.Eating;
 		} else {
 			currentState = State.SeekFood;
-			doneEating = false;
+			ResetEatingVars();
 		}
+	}
+
+	private void ResetEatingVars()
+	{
+		doneEating = false;
+		timeEating = 0f;
 	}
 }
