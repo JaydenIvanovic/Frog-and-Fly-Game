@@ -30,8 +30,8 @@ public class AStarTargeter : Targeter {
 	private Node goalNode;
 	private Grid grid;
 	private float timeSinceUpdate = 0.0f;
-
-	public static int SEARCH_LIMIT = 10000;
+	private float blockDetectionRadius;
+	private ArrayList nodesExploredLastMove = new ArrayList(); // For drawing debug info
 
 	public float updateFrequency;
 	public bool drawDebug;
@@ -64,7 +64,6 @@ public class AStarTargeter : Targeter {
 		// TO DO: Fix magic numbers!
 
 		Collider2D collider = GetComponent<Collider2D>();
-		float blockDetectionRadius;
 
 		// Assume all scaling is the same (i.e. x scaling = y scaling)
 		if (collider.GetType() == typeof(CircleCollider2D)) {
@@ -96,11 +95,16 @@ public class AStarTargeter : Targeter {
 
 	// Draw the current path (only shows in the "scene" window)
 	void DebugDrawPath() {
+
 		if ((path != null) && (path.Count > 0)) {
 			Debug.DrawLine((Vector2)transform.position, (Vector2)path[0], Color.green);
 			for (int i = 0; i < path.Count - 1; i++) {
 				Debug.DrawLine((Vector2)path[i], (Vector2)path[i + 1], Color.green);
 			}
+		}
+
+		foreach (object o in nodesExploredLastMove) {
+			((Node)o).DebugDraw(grid.GetDivisionSize(), Color.blue);
 		}
 	}
 	
@@ -191,38 +195,34 @@ public class AStarTargeter : Targeter {
 		startPoint.SetGScore(0.0f);
 		
 		// TO DO: A sorted list would be better for this because it would allow faster insertion time and no explicit sorting
-		ArrayList openSet = new ArrayList();
+		ArrayList openList = new ArrayList();
+		Hashtable openSet = new Hashtable(); // For efficient reasons, faster to check membership
 		
 		Hashtable closedSet = new Hashtable();
 		
 		if (grid.IsBlocked(goalNode))
 			return null;
 		
-		openSet.Add(startPoint);
+		openList.Add(startPoint);
+		openSet.Add(startPoint, startPoint);
 
 		if (!grid.IsConnected(startPoint, goalNode)) {
 			return null;
 		}
 		
-		int searchTime = 0;
-		
 		Node currentNode = startPoint;
+
+		nodesExploredLastMove.Clear();
 		
-		while (openSet.Count != 0) {
+		while (openList.Count != 0) {
 			
-			if (searchTime >= SEARCH_LIMIT) {
-				Debug.Log("Exceeded search limit!");
-				return null;
-			}
-			
-			openSet.Sort(new FScoreComparer());
+			openList.Sort(new FScoreComparer());
 			
 			// Wiki: current := the node in openset having the lowest f_score[] value
-			currentNode = (Node)openSet[0];
-			
-			if (drawDebug) {
-				currentNode.DebugDraw(grid.GetDivisionSize(), 2.0f);
-			}
+			currentNode = (Node)openList[0];
+
+			// For drawing debug info
+			nodesExploredLastMove.Add(currentNode);
 			
 			// Wiki: if current = goal return reconstruct_path(came_from, goal)
 			if (currentNode.Equals(goalNode)) {
@@ -235,19 +235,17 @@ public class AStarTargeter : Targeter {
 				}
 				
 				path.Reverse();
-				
-				// Remove redundant waypoints
+
 				int layerMask = 1 << LayerMask.NameToLayer(Grid.OBSTACLES_LAYER_NAME);
-				
+
+				// Remove intermediate waypoints if there is a clear path to a later waypoint
 				for (int i = 0; i < path.Count - 2; i++) {
-					
-					// TO DO: Fix magic numbers!
 					Vector2 rayDir = (Vector2)path[i + 2] - (Vector2)path[i];
 					if (!Physics2D.Raycast((Vector2)path[i], rayDir, rayDir.magnitude, layerMask)
-					    && !Physics2D.Raycast((Vector2)path[i] + new Vector2(0.0f, 0.35f), rayDir, rayDir.magnitude, layerMask)
-					    && !Physics2D.Raycast((Vector2)path[i] + new Vector2(0.0f, -0.35f), rayDir, rayDir.magnitude, layerMask)
-					    && !Physics2D.Raycast((Vector2)path[i] + new Vector2(0.35f, 0.0f), rayDir, rayDir.magnitude, layerMask)
-					    && !Physics2D.Raycast((Vector2)path[i] + new Vector2(-0.35f, 0.0f), rayDir, rayDir.magnitude, layerMask)) {
+					    && !Physics2D.Raycast((Vector2)path[i] + new Vector2(0.0f, blockDetectionRadius), rayDir, rayDir.magnitude, layerMask)
+					    && !Physics2D.Raycast((Vector2)path[i] + new Vector2(0.0f, -blockDetectionRadius), rayDir, rayDir.magnitude, layerMask)
+					    && !Physics2D.Raycast((Vector2)path[i] + new Vector2(blockDetectionRadius, 0.0f), rayDir, rayDir.magnitude, layerMask)
+					    && !Physics2D.Raycast((Vector2)path[i] + new Vector2(-blockDetectionRadius, 0.0f), rayDir, rayDir.magnitude, layerMask)) {
 						path.RemoveAt(i + 1);
 						i--;
 					}
@@ -265,7 +263,8 @@ public class AStarTargeter : Targeter {
 			}
 			
 			// Wiki: remove current from openset
-			openSet.RemoveAt(0);
+			openList.RemoveAt(0);
+			openSet.Remove(currentNode);
 			
 			// Wiki: add current to closedset
 			if (!closedSet.Contains(currentNode)) {
@@ -290,8 +289,10 @@ public class AStarTargeter : Targeter {
 								n.SetFScore(fsc);
 								n.SetGScore(tentG);
 								n.SetParent(currentNode);
-								openSet.Add(n);
+								openList.Add(n);
+								openSet.Add(n, n);
 							} else {
+								// Update existing G score
 								if (tentG < n.GetGScore()) {
 									n.SetGScore(tentG);
 									n.SetParent(currentNode);
@@ -336,25 +337,19 @@ public class AStarTargeter : Targeter {
 								n.SetFScore(fScores[i]);
 								n.SetGScore(tentativeGScores[i]);
 								n.SetParent(currentNode);
-								openSet.Add(n);
-								//Debug.Log("Added a new node at " + n.GetPosition().x + ", " + n.GetPosition().y);
+								openList.Add(n);
+								openSet.Add(n, n);
 							} else {
-								//int oldNodeIndex = openSet.IndexOf(n);
-								//Node oldNode = (Node)openSet[oldNodeIndex];
+								// Update existing G score
 								if (tentativeGScores[i] < n.GetGScore()) {
 									n.SetGScore(tentativeGScores[i]);
 									n.SetParent(currentNode);
-									//Debug.Log("Updated a node at " + n.GetPosition().x + ", " + n.GetPosition().y);
-									//openSet.RemoveAt(oldNodeIndex);
-									//openSet.Add (n);
 								}
 							}
 						}
 					}
 				}
 			}
-			
-			searchTime++;
 		}
 		
 		// Couldn't find a path (this may be ok, e.g. predators can't reach you)

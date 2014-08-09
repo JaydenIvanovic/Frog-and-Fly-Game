@@ -40,13 +40,12 @@ public class Grid {
 	
 	public Node GetClosestSquare(Vector2 pos) {
 		
-		if ((pos.x < gridLeft) || (pos.x > gridRight) || (pos.y < gridBottom) || (pos.y > gridTop)) {
-			return null;
-		}
-		
 		int x = (int)Mathf.Round((pos.x - gridLeft) * gridDivisionsPerUnit);
 		int y = (int)Mathf.Round((pos.y - gridBottom) * gridDivisionsPerUnit);
-		
+
+		x = Mathf.Clamp(x, 0, gridWidth - 1);
+		y = Mathf.Clamp(y, 0, gridHeight - 1);
+
 		return squares[x][y];
 	}
 	
@@ -112,7 +111,7 @@ public class Grid {
 	
 	public void DebugDrawBlocked() {
 		foreach (object o in blockedSet.Keys) {
-			((Node)o).DebugDraw(divisionSize);
+			((Node)o).DebugDraw(divisionSize, Color.red);
 		}
 	}
 	

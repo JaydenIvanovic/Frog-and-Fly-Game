@@ -98,19 +98,11 @@ public class Node {
 	}
 
 	// For drawing in an Update() method
-	public void DebugDraw(float gridDivisionSize) {
-		Debug.DrawLine(position + new Vector2(-DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, Color.red);
-		Debug.DrawLine(position + new Vector2(DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, Color.red);
-		Debug.DrawLine(position + new Vector2(DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(-DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, Color.red);
-		Debug.DrawLine(position + new Vector2(-DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(-DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, Color.red);
-	}
-
-	// For drawing as a once off
-	public void DebugDraw(float gridDivisionSize, float drawTime) {
-		Debug.DrawLine(position + new Vector2(-DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, Color.blue, drawTime);
-		Debug.DrawLine(position + new Vector2(DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, Color.blue, drawTime);
-		Debug.DrawLine(position + new Vector2(DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(-DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, Color.blue, drawTime);
-		Debug.DrawLine(position + new Vector2(-DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(-DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, Color.blue, drawTime);
+	public void DebugDraw(float gridDivisionSize, Color color) {
+		Debug.DrawLine(position + new Vector2(-DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, color);
+		Debug.DrawLine(position + new Vector2(DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, color);
+		Debug.DrawLine(position + new Vector2(DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(-DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, color);
+		Debug.DrawLine(position + new Vector2(-DEBUG_DRAW_RADIUS, -DEBUG_DRAW_RADIUS) * gridDivisionSize, position + new Vector2(-DEBUG_DRAW_RADIUS, DEBUG_DRAW_RADIUS) * gridDivisionSize, color);
 	}
 
 	// This method is used by JPS. It just returns the neighbouring node in the direction we're travelling.
