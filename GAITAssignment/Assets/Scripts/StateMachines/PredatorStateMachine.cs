@@ -29,6 +29,7 @@ public class PredatorStateMachine : MonoBehaviour {
 	public float LeashLength = 6.0f;
 	public float GiveUpDistance = 4.0f;
 	public float GoHomeTimeout = 1.5f;
+	public float KnockForce = 250.0f;
 
 	// Use this for initialization
 	void Start () {
@@ -121,5 +122,27 @@ public class PredatorStateMachine : MonoBehaviour {
 		}
 
 		animator.SetInteger("Direction", (int)dir);
+	}
+
+	private void CheckIfHitPlayer(Collider2D other) {
+
+		if (other.gameObject.tag.Equals ("Player") && !PlayerInfo.IsInvulnerable()) {
+
+			PlayerInfo.DecrementHealth();
+			PlayerInfo.MakeInvulnerable();
+
+			// Knock the player
+			GameObject player = GameObject.FindGameObjectWithTag("Player");
+			Vector2 knockDirection = ((Vector2)(player.transform.position - transform.position)).normalized;
+			player.rigidbody2D.AddForce(knockDirection * KnockForce);
+		}
+	}
+
+	public void OnTriggerEnter2D(Collider2D other) {
+		CheckIfHitPlayer(other);
+	}
+
+	public void OnTriggerStay2D(Collider2D other) {
+		CheckIfHitPlayer(other);
 	}
 }
