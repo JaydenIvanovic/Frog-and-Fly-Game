@@ -13,7 +13,7 @@ public class Flocking : SteeringBehaviour
 	public float seperationWeight = 0.1f;
 	public float neighbourDist = 30;
 	private Movement movement;
-	private static List<GameObject> agents = new List<GameObject>();
+	private static List<GameObject> agents;
 
 	private delegate Vector2 ReturnVector(GameObject agent);
 	private delegate Vector2 Finalization(Vector2 velocity, uint neighbourCount);
@@ -23,9 +23,11 @@ public class Flocking : SteeringBehaviour
 		agents.Remove (fly);
 	}
 
+
 	// Use this for initialization
 	void Start () 
 	{
+		agents = new List<GameObject>();
 		agents.Add(gameObject);
 		movement = GetComponent<Movement>();
 	}

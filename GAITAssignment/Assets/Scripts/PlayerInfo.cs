@@ -6,24 +6,31 @@ using System.Collections;
 [System.Serializable]
 public class PlayerInfo : MonoBehaviour {
 
+	private static string deathScreen = "DeathSplash";
+
 	public static int StartingHealth = 3;
 	public static float InvulnerableTimeWhenHit = 2.0f;
 
-	private static int heath;
-	private static int score = 0;
-	private static float invulnerableTime = 0.0f;
+	private static int health;
+	private static int score;
+	private static float invulnerableTime;
 
 	public void Start() {
-		heath = StartingHealth;
+		health = StartingHealth;
+		score = 0;
+		invulnerableTime = 0.0f;
 	}
 
 	public static int GetHealth() {
-		return heath;
+		return health;
 	}
 
 	public static void DecrementHealth() {
-		heath = Mathf.Max(heath - 1, 0);
+		health = Mathf.Max(health - 1, 0);
 		// TO DO: Die when zero health!
+		if(health == 0) {
+			Application.LoadLevel (deathScreen);
+		}
 	}
 
 	public static void IncrementScore() {
