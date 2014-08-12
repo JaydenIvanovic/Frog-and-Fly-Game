@@ -22,6 +22,12 @@ public class FrogStateMachine : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
+		if (PlayerInfo.IsUnderwater()) {
+			animator.SetBool("Underwater", true);
+		} else {
+			animator.SetBool("Underwater", false);
+		}
+
 		// Flicker when invulnerable
 		if (PlayerInfo.IsInvulnerable()) {
 			if (((int)(Time.unscaledTime * InvulnerableFlickerFrequency * 2.0f)) % 2 == 0) {

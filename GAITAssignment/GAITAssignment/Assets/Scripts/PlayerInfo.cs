@@ -15,6 +15,7 @@ public class PlayerInfo : MonoBehaviour {
 	private static int health;
 	private static int score;
 	private static float invulnerableTime;
+	private static bool underwater;
 
 	public void Start() {
 		health = StartingHealth;
@@ -47,6 +48,10 @@ public class PlayerInfo : MonoBehaviour {
 		eggsDestroyed++;
 	}
 
+	public static void SetUnderwater(bool isUnderwater) {
+		underwater = isUnderwater;
+	}
+
 	public static int GetScore() {
 		return score;
 	}
@@ -57,6 +62,10 @@ public class PlayerInfo : MonoBehaviour {
 
 	public static void MakeInvulnerable() {
 		invulnerableTime = InvulnerableTimeWhenHit;
+	}
+
+	public static bool IsUnderwater() {
+		return underwater;
 	}
 
 	public void Update() {

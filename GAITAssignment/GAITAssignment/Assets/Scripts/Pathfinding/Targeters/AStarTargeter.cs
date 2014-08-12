@@ -24,22 +24,24 @@ public enum Mode
 
 [RequireComponent(typeof(Collider2D))]
 public class AStarTargeter : Targeter {
-	
+
 	private ArrayList path = null;
 	private Vector2 targetPos;
 	private Node goalNode;
-	private Grid grid;
 	private float timeSinceUpdate = 0.0f;
 	private float blockDetectionRadius;
 	private ArrayList nodesExploredLastMove = new ArrayList(); // For drawing debug info
+
+	private static int gridDivisionsPerSquare = 4;
+	private static Hashtable grids = new Hashtable();
 
 	public float updateFrequency;
 	public bool drawDebug;
 	public GameObject goalFlag;
 	public Mode searchMode = Mode.AStarWithJPS;
-	public int gridDivisionsPerSquare = 5;
 	public Targeter underlyingTargeter;
-
+	public bool isEnemy;
+	
 	public override Vector2? GetTarget ()
 	{
 		if (path == null || path.Count == 0) {
@@ -48,7 +50,7 @@ public class AStarTargeter : Targeter {
 			return (Vector2?)targetPos;
 		}
 	}
-
+	
 	public float DistanceFromGoal(Vector2 pos) {
 		
 		// Manhattan distance
@@ -59,12 +61,12 @@ public class AStarTargeter : Targeter {
 	}
 	
 	void Start () {
-
+		
 		// Initialise the grid of nodes used for A*
 		// TO DO: Fix magic numbers!
-
+		
 		Collider2D collider = GetComponent<Collider2D>();
-
+		
 		// Assume all scaling is the same (i.e. x scaling = y scaling)
 		if (collider.GetType() == typeof(CircleCollider2D)) {
 			blockDetectionRadius = ((CircleCollider2D)collider).radius * transform.localScale.x;
@@ -74,42 +76,55 @@ public class AStarTargeter : Targeter {
 			Debug.Log("ERROR: Unsupported collider type!");
 			blockDetectionRadius = 0.0f;
 		}
-		 
-		grid = new Grid(GameObject.Find("LeftBoundary").transform.position.x,
-		                GameObject.Find("RightBoundary").transform.position.x,
-		                GameObject.Find("BottomBoundary").transform.position.y,
-		                GameObject.Find("TopBoundary").transform.position.y,
-		                (float)gridDivisionsPerSquare,
-		                blockDetectionRadius);
+
+		Grid grid;
+
+		if (!grids.Contains(gameObject.tag)) {
+
+			grid = new Grid(GameObject.Find("LeftBoundary").transform.position.x,
+			                GameObject.Find("RightBoundary").transform.position.x,
+			                GameObject.Find("BottomBoundary").transform.position.y,
+			                GameObject.Find("TopBoundary").transform.position.y,
+			                (float)gridDivisionsPerSquare, blockDetectionRadius, isEnemy);
+
+			grids.Add(gameObject.tag, grid);
+
+		} else {
+			grid = (Grid)(grids[gameObject.tag]);
+		}
 		
 		// Set the goal at the player's position so that they won't start moving immediately
 		goalNode = grid.GetClosestSquare(transform.position);
 		if (goalNode == null) {
 			Debug.Log("ERROR: Player placed outside of grid!");
 		}
-
+		
 		// Hide the target flag
 		if (goalFlag != null)
 			goalFlag.GetComponent<SpriteRenderer>().enabled = false;
 	}
-
+	
 	// Draw the current path (only shows in the "scene" window)
 	void DebugDrawPath() {
 
+		Grid grid = (Grid)(grids[gameObject.tag]);
+		
 		if ((path != null) && (path.Count > 0)) {
 			Debug.DrawLine((Vector2)transform.position, (Vector2)path[0], Color.green);
 			for (int i = 0; i < path.Count - 1; i++) {
 				Debug.DrawLine((Vector2)path[i], (Vector2)path[i + 1], Color.green);
 			}
 		}
-
+		
 		foreach (object o in nodesExploredLastMove) {
 			((Node)o).DebugDraw(grid.GetDivisionSize(), Color.blue);
 		}
 	}
 	
 	void Update() {
-		
+
+		Grid grid = (Grid)(grids[gameObject.tag]);
+
 		if (drawDebug) {
 			DebugDrawPath();
 		}
@@ -117,37 +132,37 @@ public class AStarTargeter : Targeter {
 		if (drawDebug) {
 			grid.DebugDrawBlocked();
 		}
-
+		
 		timeSinceUpdate += Time.deltaTime;
-
+		
 		if (timeSinceUpdate > updateFrequency) {
-
+			
 			timeSinceUpdate = 0.0f;
-
+			
 			// Update path if target has updated
 			Vector2? tempTarget = underlyingTargeter.GetTarget();
-
+			
 			if (tempTarget != null) {
-
+				
 				// TO DO: If the closest square is blocked then return the nearest unblocked square
 				Node tempGoal = grid.GetClosestSquare((Vector2)tempTarget);
 				tempGoal = grid.GetClosestUnblockedNode(tempGoal);
-
+				
 				if ((tempGoal != null) && (!tempGoal.Equals (goalNode))) {
 					goalNode = tempGoal;
-
+					
 					ArrayList tempPath = GetAStarPath ();
-
+					
 					// Ensure that A* managed to find a path
 					if (tempPath != null) {
 						path = tempPath;
-
+						
 						if (goalFlag != null)
 							goalFlag.transform.position = goalNode.GetPosition ();
-
+						
 						// Target the first waypoint in the path
 						targetPos = (Vector2)path [0];
-
+						
 						// Show the target flag
 						if (goalFlag != null)
 							goalFlag.GetComponent<SpriteRenderer> ().enabled = true;
@@ -180,19 +195,19 @@ public class AStarTargeter : Targeter {
 	}
 	
 	private ArrayList GetAStarPath() {
-		
-		grid.Reset();
+
+		Grid grid = (Grid)(grids[gameObject.tag]);
 		
 		Node startPoint = grid.GetClosestSquare((Vector2)transform.position);
 		startPoint = grid.GetClosestUnblockedNode(startPoint);
-
+		
 		if (startPoint == null) {
 			Debug.Log("WARNING: Starting point is outside the grid.");
 			return null;
 		}
-
-		startPoint.SetFScore(DistanceFromGoal((Vector2)transform.position));
-		startPoint.SetGScore(0.0f);
+		
+		//startPoint.SetFScore(DistanceFromGoal((Vector2)transform.position));
+		//startPoint.SetGScore(0.0f);
 		
 		// TO DO: A sorted list would be better for this because it would allow faster insertion time and no explicit sorting
 		ArrayList openList = new ArrayList();
@@ -205,22 +220,38 @@ public class AStarTargeter : Targeter {
 		
 		openList.Add(startPoint);
 		openSet.Add(startPoint, startPoint);
-
+		
 		if (!grid.IsConnected(startPoint, goalNode)) {
 			return null;
 		}
 		
+		Hashtable nodeParent = new Hashtable(); // Node, parent
+		nodeParent.Add(startPoint, null);
+		
+		Hashtable fScoresMap = new Hashtable(); // Node, fScore
+		fScoresMap.Add (startPoint, DistanceFromGoal((Vector2)transform.position));
+		
+		Hashtable gScoresMap = new Hashtable(); // Node, gScore
+		gScoresMap.Add (startPoint, 0.0f);
+		
 		Node currentNode = startPoint;
-
+		
 		nodesExploredLastMove.Clear();
 		
 		while (openList.Count != 0) {
 			
-			openList.Sort(new FScoreComparer());
+			openList.Sort(new FScoreComparer(fScoresMap));
 			
 			// Wiki: current := the node in openset having the lowest f_score[] value
 			currentNode = (Node)openList[0];
-
+			
+			float currentNodeGScore;
+			if (gScoresMap.ContainsKey(currentNode)) {
+				currentNodeGScore = (float)(gScoresMap[currentNode]);
+			} else {
+				currentNodeGScore = 0.0f;
+			}
+			
 			// For drawing debug info
 			nodesExploredLastMove.Add(currentNode);
 			
@@ -231,13 +262,18 @@ public class AStarTargeter : Targeter {
 				
 				while (currentNode != null) {
 					path.Add(currentNode.GetPosition());
-					currentNode = currentNode.GetParent();
+					currentNode = (Node)(nodeParent[currentNode]);
 				}
 				
 				path.Reverse();
-
+				
 				int layerMask = 1 << LayerMask.NameToLayer(Grid.OBSTACLES_LAYER_NAME);
 
+				if (isEnemy) {
+					int lakeMask = 1 << LayerMask.NameToLayer (Grid.POND_LAYER_NAME);
+					layerMask = layerMask | lakeMask;
+				}
+				
 				// Remove intermediate waypoints if there is a clear path to a later waypoint
 				for (int i = 0; i < path.Count - 2; i++) {
 					Vector2 rayDir = (Vector2)path[i + 2] - (Vector2)path[i];
@@ -273,7 +309,7 @@ public class AStarTargeter : Targeter {
 			
 			if (searchMode == Mode.AStarWithJPS) {
 				
-				ArrayList jpsSuccessors = identifySuccessors(grid, currentNode, goalNode);
+				ArrayList jpsSuccessors = identifySuccessors(grid, currentNode, (Node)(nodeParent[currentNode]), goalNode);
 				
 				foreach (object o in jpsSuccessors) {
 					
@@ -281,21 +317,56 @@ public class AStarTargeter : Targeter {
 					
 					if (n != null) {
 						
-						float tentG = currentNode.GetGScore() + (n.GetPosition() - currentNode.GetPosition()).magnitude;
+						float tentG = currentNodeGScore + (n.GetPosition() - currentNode.GetPosition()).magnitude;
 						float fsc = tentG + DistanceFromGoal(n.GetPosition());
 						
 						if (!grid.IsBlocked(n) && !closedSet.Contains(n)) {
 							if (!openSet.Contains(n)) {
-								n.SetFScore(fsc);
-								n.SetGScore(tentG);
-								n.SetParent(currentNode);
+								//n.SetFScore(fsc);
+								
+								//n.SetGScore(tentG);
+								
+								//n.SetParent(currentNode);
+								
+								if (fScoresMap.ContainsKey(n)) {
+									fScoresMap.Remove(n);
+								}
+								fScoresMap.Add (n, fsc);
+								
+								
+								if (gScoresMap.ContainsKey(n)) {
+									gScoresMap.Remove(n);
+								}
+								gScoresMap.Add(n, tentG);
+								
+								if (nodeParent.ContainsKey(n)) {
+									nodeParent.Remove(n);
+								}
+								nodeParent.Add(n, currentNode);
 								openList.Add(n);
 								openSet.Add(n, n);
 							} else {
+								
 								// Update existing G score
-								if (tentG < n.GetGScore()) {
-									n.SetGScore(tentG);
-									n.SetParent(currentNode);
+								float existingGScore;
+								
+								if (gScoresMap.ContainsKey(n)) {
+									existingGScore = (float)(gScoresMap[n]);
+								} else {
+									existingGScore = 0.0f;
+								}
+								
+								if (tentG < existingGScore) {
+									//n.SetGScore(tentG);
+									if (gScoresMap.ContainsKey(n)) {
+										gScoresMap.Remove(n);
+									}
+									gScoresMap.Add(n, tentG);
+									//n.SetParent(currentNode);
+									if (nodeParent.ContainsKey(n)) {
+										nodeParent.Remove(n);
+									}
+									nodeParent.Add(n, currentNode);
 								}
 							}
 						}
@@ -307,12 +378,12 @@ public class AStarTargeter : Targeter {
 				
 				// Directly adjacent g scores
 				for (int i = 0; i < ((int)NodeDirections.Last + 1) / 2; i++) {
-					tentativeGScores[i] = currentNode.GetGScore() + grid.GetDivisionSize();
+					tentativeGScores[i] = currentNodeGScore + grid.GetDivisionSize();
 				}
 				
 				// Diagonally adjacent g scores
 				for (int i = ((int)NodeDirections.Last + 1) / 2; i < ((int)NodeDirections.Last + 1); i++) {
-					tentativeGScores[i] = currentNode.GetGScore() + (float)(Math.Sqrt(2.0)) * grid.GetDivisionSize();
+					tentativeGScores[i] = currentNodeGScore + (float)(Math.Sqrt(2.0)) * grid.GetDivisionSize();
 				}
 				
 				Node[] neighbours = new Node[(int)NodeDirections.Last + 1];
@@ -331,19 +402,46 @@ public class AStarTargeter : Targeter {
 					Node n = neighbours[i];
 					
 					if (n != null) {
+
+						float nGScore;
+						if (gScoresMap.ContainsKey(n)) {
+							nGScore = (float)(gScoresMap[n]);
+						} else {
+							nGScore = 0.0f;
+						}
 						
 						if (!grid.IsBlocked(n) && !closedSet.Contains(n)) {
 							if (!openSet.Contains(n)) {
-								n.SetFScore(fScores[i]);
-								n.SetGScore(tentativeGScores[i]);
-								n.SetParent(currentNode);
+								//n.SetFScore(fScores[i]);
+								if (fScoresMap.ContainsKey(n)) {
+									fScoresMap.Remove(n);
+								}
+								fScoresMap.Add (n, fScores[i]);
+								//n.SetGScore(tentativeGScores[i]);
+								if (gScoresMap.ContainsKey(n)) {
+									gScoresMap.Remove(n);
+								}
+								gScoresMap.Add(n, tentativeGScores[i]);
+								//n.SetParent(currentNode);
+								if (nodeParent.ContainsKey(n)) {
+									nodeParent.Remove(n);
+								}
+								nodeParent.Add(n, currentNode);
 								openList.Add(n);
 								openSet.Add(n, n);
 							} else {
 								// Update existing G score
-								if (tentativeGScores[i] < n.GetGScore()) {
-									n.SetGScore(tentativeGScores[i]);
-									n.SetParent(currentNode);
+								if (tentativeGScores[i] < nGScore) {
+									//n.SetGScore(tentativeGScores[i]);
+									if (gScoresMap.ContainsKey(n)) {
+										gScoresMap.Remove(n);
+									}
+									gScoresMap.Add(n, tentativeGScores[i]);
+									//n.SetParent(currentNode);
+									if (nodeParent.ContainsKey(n)) {
+										nodeParent.Remove(n);
+									}
+									nodeParent.Add(n, currentNode);
 								}
 							}
 						}
@@ -551,11 +649,11 @@ public class AStarTargeter : Targeter {
 		return (Node)result.Pop();
 	}
 	
-	private ArrayList identifySuccessors(Grid g, Node current, Node goal) {
+	private ArrayList identifySuccessors(Grid g, Node current, Node parent, Node goal) {
 		
 		ArrayList successors = new ArrayList();
 		
-		ArrayList neighbours = current.GetJPSNeighbours(g);
+		ArrayList neighbours = current.GetJPSNeighbours(g, parent);
 		
 		int directionX, directionY;
 		
@@ -576,10 +674,16 @@ public class AStarTargeter : Targeter {
 		return successors;
 	}
 	
-	class FScoreComparer : IComparer  {
+	public class FScoreComparer : IComparer  {
+		
+		private Hashtable fScores;
+		
+		public FScoreComparer(Hashtable fScores) {
+			this.fScores = fScores;
+		}
 		
 		int IComparer.Compare(object x, object y)  {
-			return(((Node)x).GetFScore ().CompareTo (((Node)y).GetFScore ()));
+			return ((float)fScores[x]).CompareTo((float)fScores[y]);
 		}
 	}
 }

@@ -4,6 +4,7 @@ using System.Collections;
 public class Grid {
 
 	public static string OBSTACLES_LAYER_NAME = "Obstacles";
+	public static string POND_LAYER_NAME = "Pond";
 	
 	private float gridLeft;
 	private float gridBottom;
@@ -24,16 +25,6 @@ public class Grid {
 	
 	public float GetDivisionSize() {
 		return divisionSize;
-	}
-	
-	public void Reset() {
-		for (int i = 0; i < gridWidth; i++) {
-			for (int j = 0; j < gridHeight; j++) {
-				squares[i][j].SetFScore(float.MaxValue);
-				squares[i][j].SetGScore(float.MaxValue);
-				squares[i][j].SetParent(null);
-			}
-		}
 	}
 	
 	public Node GetClosestSquare(Vector2 pos) {
@@ -113,7 +104,7 @@ public class Grid {
 		}
 	}
 	
-	public Grid(float gridLeft, float gridRight, float gridBottom, float gridTop, float gridDivisionsPerUnit, float blockDetectionRadius) {
+	public Grid(float gridLeft, float gridRight, float gridBottom, float gridTop, float gridDivisionsPerUnit, float blockDetectionRadius, bool isEnemy) {
 		
 		this.gridLeft = gridLeft;
 		this.gridBottom = gridBottom;
@@ -130,6 +121,11 @@ public class Grid {
 		blockedSet = new Hashtable();
 		
 		int layerMask = 1 << LayerMask.NameToLayer(OBSTACLES_LAYER_NAME);
+
+		if (isEnemy) {
+			int lakeMask = 1 << LayerMask.NameToLayer (POND_LAYER_NAME);
+			layerMask = layerMask | lakeMask;
+		}
 
 		float timeNow = Time.realtimeSinceStartup;
 

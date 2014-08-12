@@ -14,11 +14,6 @@ public class Node {
 	// The world position of the node
 	private Vector2 position;
 
-	// A* variables
-	private float fScore = float.MaxValue;
-	private float gScore = float.MaxValue;
-	private Node parent = null;
-
 	// The adjacency list
 	private Node[] neighbours = new Node[(int)NodeDirections.Last + 1];
 
@@ -35,35 +30,11 @@ public class Node {
 		return position;
 	}
 	
-	public float GetFScore() {
-		return fScore;
-	}
-	
-	public float GetGScore() {
-		return gScore;
-	}
-	
-	public Node GetParent() {
-		return parent;
-	}
-	
 	public Node[] GetNeighbours() {
 		return neighbours;
 	}
 
 	// Setters
-	public void SetFScore(float fScore) {
-		this.fScore = fScore;
-	}
-	
-	public void SetGScore(float gScore) {
-		this.gScore = gScore;
-	}
-	
-	public void SetParent(Node parent) {
-		this.parent = parent;
-	}
-	
 	public void SetNeighbours(Node[] neighbours) {
 		this.neighbours = neighbours;
 	}
@@ -143,7 +114,7 @@ public class Node {
 	// By using the position of the parent node, we can determine which direction we're travelling in.
 	// When we expand the current node, we can intelligently ignore some neighbours by taking into account
 	// the current direction. This method returns the neighbours that we DO have to consider.
-	public ArrayList GetJPSNeighbours(Grid g) {
+	public ArrayList GetJPSNeighbours(Grid g, Node parent) {
 		
 		ArrayList result = new ArrayList();
 		
