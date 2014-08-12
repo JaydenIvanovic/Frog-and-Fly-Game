@@ -52,7 +52,7 @@ public class CameraMovementRTS : MonoBehaviour {
 			transform.Translate(Vector3.up * scrollSpeed * scrollPct * Time.deltaTime);
 		}
 		
-		// Clamp the mouse position to the part of the world we want to see
+		// Clamp the camera position to the part of the world we want to see
 		float xBuffer, yBuffer;
 		
 		if (Camera.main.aspect > 1.0f) {
