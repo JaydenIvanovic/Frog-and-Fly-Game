@@ -23,9 +23,10 @@ public class PredatorStateMachine : MonoBehaviour {
 	private Animator animator;
 	private float timeSinceWentHome;
 	private bool wasChasing = false;
-
+	
 	public GameObject Home;
 	public GameObject Player;
+	public GameObject Egg;
 	public float LeashLength = 6.0f;
 	public float GiveUpDistance = 4.0f;
 	public float GoHomeTimeout = 1.5f;
@@ -40,6 +41,23 @@ public class PredatorStateMachine : MonoBehaviour {
 		animator = GetComponent<Animator>();
 
 		timeSinceWentHome = GoHomeTimeout;
+
+		// Ensure that the snake has someone to target and a home.
+		if (Home == null || Player == null)
+		{
+			// Place in predator hierarchy.
+			transform.parent = GameObject.Find("Predators").transform;
+			
+			// Set the player for the predator to chase and this predators home base.
+			var predStateMac = GetComponent<PredatorStateMachine>();
+			predStateMac.Player = GameObject.FindGameObjectWithTag("Player");
+			if (Random.Range (0, 2) == 0)
+				predStateMac.Home = GameObject.Find ("SnakeHomeLeft");
+			else
+				predStateMac.Home = GameObject.Find ("SnakeHomeRight");
+		}
+
+		InvokeRepeating("LayEgg", 15f, 15f);
 	}
 	
 	// Update is called once per frame
@@ -136,6 +154,11 @@ public class PredatorStateMachine : MonoBehaviour {
 			Vector2 knockDirection = ((Vector2)(player.transform.position - transform.position)).normalized;
 			player.rigidbody2D.AddForce(knockDirection * KnockForce);
 		}
+	}
+
+	private void LayEgg()
+	{
+		Instantiate(Egg, transform.position - Vector3.down, Quaternion.identity);
 	}
 
 	public void OnTriggerEnter2D(Collider2D other) {

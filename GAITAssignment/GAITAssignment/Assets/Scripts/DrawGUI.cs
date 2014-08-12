@@ -10,7 +10,7 @@ public class DrawGUI : MonoBehaviour {
 
 	void OnGUI () {
 
-		GUI.Box (new Rect (10, 10, 100, 70), "");
+		GUI.Box (new Rect (10, 10, 130, 80), "");
 
 		int health = PlayerInfo.GetHealth();
 
@@ -19,5 +19,6 @@ public class DrawGUI : MonoBehaviour {
 		}
 
 		GUI.Label (new Rect (20, 50, 80, 20), "Flies eaten: " + PlayerInfo.GetScore());
+		GUI.Label (new Rect (20, 65, 120, 20), "Eggs destroyed: " + PlayerInfo.GetEggsDestroyed());
 	}
 }

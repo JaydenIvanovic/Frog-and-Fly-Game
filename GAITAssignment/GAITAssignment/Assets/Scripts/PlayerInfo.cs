@@ -11,6 +11,7 @@ public class PlayerInfo : MonoBehaviour {
 	public static int StartingHealth = 3;
 	public static float InvulnerableTimeWhenHit = 2.0f;
 
+	private static int eggsDestroyed;
 	private static int health;
 	private static int score;
 	private static float invulnerableTime;
@@ -18,11 +19,16 @@ public class PlayerInfo : MonoBehaviour {
 	public void Start() {
 		health = StartingHealth;
 		score = 0;
+		eggsDestroyed = 0;
 		invulnerableTime = 0.0f;
 	}
 
 	public static int GetHealth() {
 		return health;
+	}
+
+	public static int GetEggsDestroyed() {
+		return eggsDestroyed;
 	}
 
 	public static void DecrementHealth() {
@@ -35,6 +41,10 @@ public class PlayerInfo : MonoBehaviour {
 
 	public static void IncrementScore() {
 		score++;
+	}
+
+	public static void IncrementEggs() {
+		eggsDestroyed++;
 	}
 
 	public static int GetScore() {
