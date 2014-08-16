@@ -1,6 +1,12 @@
 fileFormatVersion: 2
 guid: c32d39d3e87aa284d9c2f91baf1d13e6
 TextureImporter:
+  fileIDToRecycleName:
+    21300000: eggSprites_0
+    21300002: eggSprites_1
+    21300004: eggSprites_2
+    21300006: eggSprites_3
+    21300008: eggSprites_4
   serializedVersion: 2
   mipmaps:
     mipMapMode: 0
