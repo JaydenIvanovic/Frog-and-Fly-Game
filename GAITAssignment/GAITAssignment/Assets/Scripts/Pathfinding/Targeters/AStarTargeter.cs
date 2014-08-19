@@ -32,7 +32,7 @@ public class AStarTargeter : Targeter {
 	private float blockDetectionRadius;
 	private ArrayList nodesExploredLastMove = new ArrayList(); // For drawing debug info
 
-	private static int gridDivisionsPerSquare = 4;
+	private static int gridDivisionsPerSquare = 3; // Still runs ok on 2 if this is making things laggy
 	private static Hashtable grids = new Hashtable();
 
 	public float updateFrequency;

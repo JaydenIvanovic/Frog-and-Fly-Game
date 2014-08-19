@@ -10,15 +10,19 @@ public enum SnakeDirections
 };
 
 [RequireComponent(typeof(GameObjectTargeter))]
+[RequireComponent(typeof(HuntTargeter))]
 [RequireComponent(typeof(AStarTargeter))]
 [RequireComponent(typeof(Wander))]
+[RequireComponent(typeof(Seek))]
 [RequireComponent(typeof(Movement))]
 [RequireComponent(typeof(Animator))]
 public class PredatorStateMachine : MonoBehaviour 
 {
-	private GameObjectTargeter underlyingTargeter;
-	private AStarTargeter targeter;
+	private GameObjectTargeter homeTargeter;
+	private HuntTargeter huntTargeter;
+	private AStarTargeter aStarTargeter;
 	private Wander wanderer;
+	private Seek seek;
 	private Movement movement;
 	private Animator animator;
 	private float timeSinceWentHome;
@@ -44,16 +48,17 @@ public class PredatorStateMachine : MonoBehaviour
 		HeadingHome,
 		Parenting
 	};
-
-
-	// Use this for initialization
-	void Start ()
+	
+	void Awake ()
 	{
-		underlyingTargeter = GetComponent<GameObjectTargeter>();
-		targeter = GetComponent<AStarTargeter>();
+		homeTargeter = GetComponent<GameObjectTargeter>();
+		huntTargeter = GetComponent<HuntTargeter>();
+		aStarTargeter = GetComponent<AStarTargeter>();
 		wanderer = GetComponent<Wander>();
+		seek = GetComponent<Seek>();
 		movement = GetComponent<Movement>();
 		animator = GetComponent<Animator>();
+
 		parentingTimer = 0f;
 		timeSinceWentHome = GoHomeTimeout;
 
@@ -71,17 +76,24 @@ public class PredatorStateMachine : MonoBehaviour
 			else
 				predStateMac.Home = GameObject.Find ("SnakeHomeRight");
 		}
-	}
 
+		huntTargeter.Target = Player;
+		homeTargeter.Target = Home;
+	}
 
 	// Update is called once per frame
 	void Update () 
 	{
 		UpdateState();
 
+		// Defaults
+		seek.weight = 1.0f;
+		aStarTargeter.underlyingTargeter = homeTargeter;
+
 		switch(currentState)
 		{
 			case State.Chasing:
+				aStarTargeter.underlyingTargeter = huntTargeter;
 				child = null;
 				wanderer.weight = 0.0f;
 				movement.acceleration = 5.0f;
@@ -90,8 +102,7 @@ public class PredatorStateMachine : MonoBehaviour
 				break;
 			case State.HeadingHome:
 				child = null;
-				targeter.enabled = true;
-				underlyingTargeter.Target = Home;
+				homeTargeter.Target = Home;
 				wanderer.weight = 0.0f;
 				movement.acceleration = 1.0f;
 				movement.speed = 2.0f;
@@ -102,13 +113,12 @@ public class PredatorStateMachine : MonoBehaviour
 				}
 				break;
 			case State.Parenting:
-				targeter.enabled = true;
-				underlyingTargeter.Target = child;
+				homeTargeter.Target = child;
 				wanderer.weight = 0.25f;
 				break;
 			case State.Wandering:
 				child = null;
-				targeter.enabled = false;
+				seek.weight = 0.0f;
 				wanderer.weight = 1.0f;
 				movement.acceleration = 1.0f;
 				movement.speed = 2.0f;
@@ -157,9 +167,8 @@ public class PredatorStateMachine : MonoBehaviour
 		else if (timeSinceWentHome > GoHomeTimeout) 
 		{	
 			// Target the player
-			targeter.enabled = true;
-			underlyingTargeter.Target = Player;
-			Vector2? target = targeter.GetTarget();
+			homeTargeter.Target = Player;
+			Vector2? target = aStarTargeter.GetTarget();
 			
 			if (target != null) 
 			{	
