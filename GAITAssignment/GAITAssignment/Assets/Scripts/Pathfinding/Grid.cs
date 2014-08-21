@@ -2,15 +2,23 @@
 using System.Collections;
 
 public class Grid {
-
+	
 	public static string OBSTACLES_LAYER_NAME = "Obstacles";
 	public static string POND_LAYER_NAME = "Pond";
-	
+	public static string EGG_LAYER_NAME = "Eggs";
+
+	private static float TEMP_BLOCKED_UPDATE_FREQ = 0.1f;
+	private static float EGG_DETECTION_RADIUS = 1.0f;
+
 	private float gridLeft;
 	private float gridBottom;
 	private float gridDivisionsPerUnit;
 	private float divisionSize;
+	private float blockDetectionRadius;
+	private bool isEnemy;
 	private Hashtable blockedSet;
+	private Hashtable tempBlocked = new Hashtable();
+	private float tempBlockedLastUpdated = 0.0f;
 	Hashtable gridAreas = new Hashtable(); // <Node, setOfConnectedNodes>
 
 	// These are in terms of divisions, not world distance
@@ -41,8 +49,9 @@ public class Grid {
 	public bool IsBlocked(Node n) {
 		if (n == null)
 			return true;
-		else
-			return blockedSet.Contains(n);
+		else {
+			return blockedSet.Contains(n) || tempBlocked.Contains(n);
+		}
 	}
 
 	public bool IsConnected(Node n1, Node n2) {
@@ -82,7 +91,7 @@ public class Grid {
 			
 			current = (Node)(openSet.Dequeue());
 
-			if (!blockedSet.Contains(current)) {
+			if (!blockedSet.Contains(current) && !tempBlocked.Contains(current)) {
 				return current;
 			}
 
@@ -99,8 +108,49 @@ public class Grid {
 	}
 	
 	public void DebugDrawBlocked() {
+
 		foreach (object o in blockedSet.Keys) {
 			((Node)o).DebugDraw(divisionSize, Color.red);
+		}
+
+		foreach (object o in tempBlocked.Keys) {
+			((Node)o).DebugDraw(divisionSize, Color.yellow);
+		}
+	}
+
+	public void UpdateTempBlocked() {
+
+		// We don't want to spam this every frame because the raycast is a bit expensive and it will be redundant if there are multiple creatures sharing the same grid.
+		// The temporary blocked cells (from eggs) only apply to the snakes, since the player probably wants to target them
+		if (isEnemy && ((Time.realtimeSinceStartup - tempBlockedLastUpdated) > TEMP_BLOCKED_UPDATE_FREQ)) {
+
+			tempBlocked = new Hashtable();
+
+			GameObject[] eggs = GameObject.FindGameObjectsWithTag("Egg");
+			
+			int layerMask = 1 << LayerMask.NameToLayer(EGG_LAYER_NAME);
+			
+			Vector2[] rayDirs = new Vector2[] {new Vector2(1.0f, 0.0f), new Vector2(-1.0f, 0.0f), new Vector2(0.0f, 1.0f), new Vector2(0.0f, -1.0f),
+				new Vector2(1.0f, 1.0f), new Vector2(-1.0f, 1.0f), new Vector2(1.0f, -1.0f), new Vector2(-1.0f, -1.0f)};
+			
+			foreach (GameObject egg in eggs) {
+				// 1.01 to stop rounding issue from skipping nodes
+				for (float x = egg.transform.position.x - EGG_DETECTION_RADIUS; x <= egg.transform.position.x + EGG_DETECTION_RADIUS; x += divisionSize / 1.01f) {
+					for (float y = egg.transform.position.y - EGG_DETECTION_RADIUS; y <= egg.transform.position.y + EGG_DETECTION_RADIUS; y += divisionSize / 1.01f) {
+						
+						Node n = GetClosestSquare(new Vector2(x, y));
+						
+						foreach (Vector2 ray in rayDirs) {
+							if (!(tempBlocked.Contains(n)) && Physics2D.Raycast(n.GetPosition(), ray, blockDetectionRadius, layerMask)) { // A bit hacky...
+								tempBlocked.Add(n, n);
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			tempBlockedLastUpdated = Time.realtimeSinceStartup;
 		}
 	}
 	
@@ -110,6 +160,8 @@ public class Grid {
 		this.gridBottom = gridBottom;
 		this.gridDivisionsPerUnit = gridDivisionsPerUnit;
 		this.divisionSize = 1.0f / gridDivisionsPerUnit;
+		this.blockDetectionRadius = blockDetectionRadius;
+		this.isEnemy = isEnemy;
 		
 		this.gridWidth = (int)((gridRight - gridLeft) * gridDivisionsPerUnit);
 		this.gridHeight = (int)((gridTop - gridBottom) * gridDivisionsPerUnit);

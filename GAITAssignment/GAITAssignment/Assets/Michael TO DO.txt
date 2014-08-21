@@ -1,0 +1,10 @@
+UNITY:
+- Make snake pack hunting demo available in menu
+- Change the text in the HUD to pictures of flies/eggs
+- Add music with option for on/off
+- Make it so eggs cannot be laid at choke points, cos that will screw A*!
+
+WRITE UP:
+- Explain jolty snake rotation
+- Credit the dude I took the binary heap from (and explain that C sharp does not have one...)
+- Explain why the binary heap made much more difference to A* vanilla than JPS

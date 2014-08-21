@@ -160,7 +160,7 @@ public class PredatorStateMachine : MonoBehaviour
 			currentState = State.Parenting;
 		}
 		else if ((((Vector2)(transform.position) - (Vector2)(Home.transform.position)).magnitude > LeashLength)
-		    && (((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude > GiveUpDistance))
+		    && ((((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude > GiveUpDistance) || PlayerInfo.IsUnderwater()))
 		{
 			currentState = State.HeadingHome;	
 		} 
@@ -231,7 +231,7 @@ public class PredatorStateMachine : MonoBehaviour
 
 	private void LayEgg()
 	{
-		child = (GameObject)Instantiate(Egg, transform.position - Vector3.down, Quaternion.identity);
+		child = (GameObject)Instantiate(Egg, transform.position - Vector3.down + new Vector3(0.0f, 0.0f, 1.0f), Quaternion.identity);
 	}
 
 
