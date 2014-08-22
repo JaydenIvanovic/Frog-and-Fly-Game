@@ -1,6 +1,7 @@
 using UnityEngine;
-using System.Collections;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 enum NodeDirections
 {
@@ -24,17 +25,17 @@ public enum Mode
 
 [RequireComponent(typeof(Collider2D))]
 public class AStarTargeter : Targeter {
-
+	
 	private ArrayList path = null;
 	private Vector2 targetPos;
 	private Node goalNode;
 	private float timeSinceUpdate = 0.0f;
 	private float blockDetectionRadius;
 	private ArrayList nodesExploredLastMove = new ArrayList(); // For drawing debug info
-
+	
 	private static int gridDivisionsPerSquare = 3; // Still runs ok on 2 if this is making things laggy
 	private static Hashtable grids = new Hashtable();
-
+	
 	public float updateFrequency;
 	public bool drawDebug;
 	public GameObject goalFlag;
@@ -54,6 +55,8 @@ public class AStarTargeter : Targeter {
 	public float DistanceFromGoal(Vector2 pos) {
 		
 		// Manhattan distance
+		// This metric isn't really "admissable" now that we're allowing diagonal grid movement,
+		// but in practice it's a lot faster than using Euclidean distance
 		return (float)(Math.Abs(goalNode.GetPosition().x - pos.x) + Math.Abs(goalNode.GetPosition().y - pos.y));
 		
 		// Euclidean distance
@@ -76,19 +79,19 @@ public class AStarTargeter : Targeter {
 			Debug.Log("ERROR: Unsupported collider type!");
 			blockDetectionRadius = 0.0f;
 		}
-
+		
 		Grid grid;
-
+		
 		if (!grids.Contains(gameObject.tag)) {
-
+			
 			grid = new Grid(GameObject.Find("LeftBoundary").transform.position.x,
 			                GameObject.Find("RightBoundary").transform.position.x,
 			                GameObject.Find("BottomBoundary").transform.position.y,
 			                GameObject.Find("TopBoundary").transform.position.y,
 			                (float)gridDivisionsPerSquare, blockDetectionRadius, isEnemy);
-
+			
 			grids.Add(gameObject.tag, grid);
-
+			
 		} else {
 			grid = (Grid)(grids[gameObject.tag]);
 		}
@@ -106,7 +109,7 @@ public class AStarTargeter : Targeter {
 	
 	// Draw the current path (only shows in the "scene" window)
 	void DebugDrawPath() {
-
+		
 		Grid grid = (Grid)(grids[gameObject.tag]);
 		
 		if ((path != null) && (path.Count > 0)) {
@@ -122,9 +125,11 @@ public class AStarTargeter : Targeter {
 	}
 	
 	void Update() {
-
+		
 		Grid grid = (Grid)(grids[gameObject.tag]);
 
+		grid.UpdateTempBlocked();
+		
 		if (drawDebug) {
 			DebugDrawPath();
 		}
@@ -195,7 +200,9 @@ public class AStarTargeter : Targeter {
 	}
 	
 	private ArrayList GetAStarPath() {
-
+		
+		float startTime = Time.realtimeSinceStartup;
+		
 		Grid grid = (Grid)(grids[gameObject.tag]);
 		
 		Node startPoint = grid.GetClosestSquare((Vector2)transform.position);
@@ -210,7 +217,8 @@ public class AStarTargeter : Targeter {
 		//startPoint.SetGScore(0.0f);
 		
 		// TO DO: A sorted list would be better for this because it would allow faster insertion time and no explicit sorting
-		ArrayList openList = new ArrayList();
+		//ArrayList openList = new ArrayList();
+		PriorityQueue<float, Node> frontier = new PriorityQueue<float, Node>();
 		Hashtable openSet = new Hashtable(); // For efficient reasons, faster to check membership
 		
 		Hashtable closedSet = new Hashtable();
@@ -218,7 +226,8 @@ public class AStarTargeter : Targeter {
 		if (grid.IsBlocked(goalNode))
 			return null;
 		
-		openList.Add(startPoint);
+		//openList.Add(startPoint);
+		frontier.Add(new KeyValuePair<float, Node>(DistanceFromGoal((Vector2)transform.position), startPoint));
 		openSet.Add(startPoint, startPoint);
 		
 		if (!grid.IsConnected(startPoint, goalNode)) {
@@ -238,12 +247,14 @@ public class AStarTargeter : Targeter {
 		
 		nodesExploredLastMove.Clear();
 		
-		while (openList.Count != 0) {
+		//while (openList.Count != 0) {
+		while (frontier.Count != 0) {
 			
-			openList.Sort(new FScoreComparer(fScoresMap));
+			//openList.Sort(new FScoreComparer(fScoresMap));
 			
 			// Wiki: current := the node in openset having the lowest f_score[] value
-			currentNode = (Node)openList[0];
+			//currentNode = (Node)openList[0];
+			currentNode = frontier.DequeueValue();
 			
 			float currentNodeGScore;
 			if (gScoresMap.ContainsKey(currentNode)) {
@@ -269,9 +280,11 @@ public class AStarTargeter : Targeter {
 				
 				int layerMask = 1 << LayerMask.NameToLayer(Grid.OBSTACLES_LAYER_NAME);
 
+				// Snakes should avoid eggs and the pond
 				if (isEnemy) {
 					int lakeMask = 1 << LayerMask.NameToLayer (Grid.POND_LAYER_NAME);
-					layerMask = layerMask | lakeMask;
+					int eggMask = 1 << LayerMask.NameToLayer (Grid.EGG_LAYER_NAME);
+					layerMask = layerMask | lakeMask | eggMask;
 				}
 				
 				// Remove intermediate waypoints if there is a clear path to a later waypoint
@@ -294,12 +307,17 @@ public class AStarTargeter : Targeter {
 				if (path.Count == 0) {
 					return null;
 				} else {
+					
+					if (drawDebug) {
+						Debug.Log(searchMode.ToString() + " calculated path in " + 1000.0f * (Time.realtimeSinceStartup - startTime) + " milliseconds");
+					}
+					
 					return path;
 				}
 			}
 			
 			// Wiki: remove current from openset
-			openList.RemoveAt(0);
+			//openList.RemoveAt(0);
 			openSet.Remove(currentNode);
 			
 			// Wiki: add current to closedset
@@ -343,7 +361,8 @@ public class AStarTargeter : Targeter {
 									nodeParent.Remove(n);
 								}
 								nodeParent.Add(n, currentNode);
-								openList.Add(n);
+								//openList.Add(n);
+								frontier.Add(new KeyValuePair<float, Node>(fsc, n));
 								openSet.Add(n, n);
 							} else {
 								
@@ -402,7 +421,7 @@ public class AStarTargeter : Targeter {
 					Node n = neighbours[i];
 					
 					if (n != null) {
-
+						
 						float nGScore;
 						if (gScoresMap.ContainsKey(n)) {
 							nGScore = (float)(gScoresMap[n]);
@@ -427,7 +446,8 @@ public class AStarTargeter : Targeter {
 									nodeParent.Remove(n);
 								}
 								nodeParent.Add(n, currentNode);
-								openList.Add(n);
+								//openList.Add(n);
+								frontier.Add(new KeyValuePair<float, Node>(fScores[i], n));
 								openSet.Add(n, n);
 							} else {
 								// Update existing G score

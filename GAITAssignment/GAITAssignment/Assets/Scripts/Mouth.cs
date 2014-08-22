@@ -21,7 +21,7 @@ public class Mouth : MonoBehaviour
 	{
 		if (other.gameObject.tag.Equals ("Fly")) {
 			Destroy (other.gameObject.GetComponent<Flocking>());
-			Flocking.DestroyFly(other.gameObject);
+			Flocking.DestroyFlockMember(other.gameObject);
 			Destroy (other.gameObject);
 			PlayerInfo.IncrementScore();
 		}

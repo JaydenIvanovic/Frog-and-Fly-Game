@@ -35,7 +35,7 @@ public class Egg : MonoBehaviour
 		if (edgeColl && nextSprite == eggSprites.Length) {
 			Destroy (edgeColl);
 
-			GameObject snake = Instantiate(snakePrefab, transform.position, Quaternion.identity) as GameObject;
+			Instantiate(snakePrefab, new Vector3(transform.position.x, transform.position.y, snakePrefab.transform.position.z), Quaternion.identity);
 
 			Invoke("DestroyEgg", 1f);
 		}

@@ -13,31 +13,40 @@ public class Flocking : SteeringBehaviour
 	public float seperationWeight = 0.1f;
 	public float neighbourDist = 30;
 	private Movement movement;
-	private static List<GameObject> agents;
+	//private static List<GameObject> agents;
+	private static Hashtable flocks = new Hashtable();
 
 	private delegate Vector2 ReturnVector(GameObject agent);
 	private delegate Vector2 Finalization(Vector2 velocity, uint neighbourCount);
 
-	public static void DestroyFly(GameObject fly) 
+	public static void DestroyFlockMember(GameObject flockMember) 
 	{
-		agents.Remove (fly);
+		if (flockMember != null) {
+			((Hashtable)flocks[flockMember.tag]).Remove(flockMember);
+		}
 	}
 
+	private void EnsureFlocksOK() {
 
-	// Use this for initialization
-	void Start () 
-	{
-		agents = new List<GameObject>();
-		agents.Add(gameObject);
-		movement = GetComponent<Movement>();
+		// Store a list of members for each type of flock (flies and snakes)
+		if (!(flocks.ContainsKey(this.tag))) {
+			flocks.Add(this.tag, new Hashtable());
+		}
+
+		if (!((Hashtable)flocks[this.tag]).Contains(gameObject)) {
+			((Hashtable)flocks[this.tag]).Add(gameObject, gameObject);
+		}
 	}
-
 
 	public override Vector2 GetSteering()
 	{
 		// Compute the new velocity, taking into consideration the weights of each behaviour.
 		Vector2 vel = (computeAlignment() * alignmentWeight) + (computeCohesion() * cohesionWeight) + (computeSeperation() * seperationWeight);
 		vel.Normalize();
+
+		// Moved this line here because occasionally Start() wasn't setting it correctly and it was throwing an exception
+		movement = GetComponent<Movement>();
+
 		vel *= movement.speed;
 		
 		return vel;
@@ -103,9 +112,24 @@ public class Flocking : SteeringBehaviour
 	{
 		Vector2 velocity = Vector2.zero;
 		uint neighbourCount = 0;
-		
-		foreach (GameObject agent in agents)
+
+		// Ugh... Some super-annoying bugs can occur with the agent list when the frog eats a fly or the game is restarted.
+		// This check as well as "staleAgents" below means that we should avoid any null reference crap.
+		EnsureFlocksOK();
+
+		Hashtable agents = (Hashtable)flocks[this.tag];
+
+		List<GameObject> staleAgents = new List<GameObject>();
+
+		foreach (object o in agents.Keys)
 		{
+			GameObject agent = (GameObject)o;
+
+			if (agent == null) {
+				staleAgents.Add(agent);
+				continue;
+			}
+
 			if (agent == gameObject)
 				continue;
 
@@ -116,6 +140,10 @@ public class Flocking : SteeringBehaviour
 				velocity += vecFunc(agent);
 				neighbourCount += 1;
 			}
+		}
+
+		foreach (GameObject staleAgent in staleAgents) {
+			agents.Remove(staleAgent);
 		}
 		
 		if (neighbourCount == 0)

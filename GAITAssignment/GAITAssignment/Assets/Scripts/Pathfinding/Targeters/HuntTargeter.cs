@@ -3,59 +3,106 @@ using System.Collections;
 using System.Collections.Generic;
 
 [System.Serializable]
+[RequireComponent(typeof(Flocking))]
 public class HuntTargeter : Targeter {
 
 	public GameObject Target;
 	public float flankingDistance = 5.0f;
+	public float attackDistance = 3.0f;
+	public int maxAttackerCount = 2;
+	public bool dumbAttack = false;
+
+	private Flocking flocker;
+
+	void Awake() {
+		flocker = GetComponent<Flocking>();
+	}
 
 	public override Vector2? GetTarget ()
 	{
+		// Default
+		flocker.seperationWeight = 0.2f;
+
 		if (Target == null) {
 			return null;
 		}
 
-		bool isClosest = true;
-		float targetDistance = (Target.transform.position - transform.position).magnitude;
+		// We can't chase the frog if it's underwater
+		if ((Target != null) && (Target.tag == "Player") && PlayerInfo.IsUnderwater()) {
+			return null;
+		}
+		
+		// Player velocity
+		Vector2 normPlayerVelocity = Target.rigidbody2D.velocity;
+		
+		// All attack if the player is still
+		if (dumbAttack || (normPlayerVelocity == Vector2.zero)) {
+			return (Vector2?)(Target.transform.position);
+		}
+		
+		normPlayerVelocity.Normalize();
+		
+		// Vector to player
+		Vector2 posDifference = (Vector2)(Target.transform.position - transform.position);
 
-		GameObject[] snakes = GameObject.FindGameObjectsWithTag("Predator");
+		// Component of vector to player that's in the direction of the player's velocity.
+		// If it's positive then we're chasing, otherwise we're coming head-on
+		float compAlongVelocity = Vector2.Dot(posDifference, normPlayerVelocity);
 
-		foreach (GameObject snake in snakes) {
-			float snakeDistance = (Target.transform.position - snake.transform.position).magnitude;
-			if (snakeDistance < targetDistance) {
-				isClosest = false;
-			}
+		Vector2 vecB = compAlongVelocity * normPlayerVelocity;
+		Vector2 vecA = posDifference - vecB;
+
+		float snakeSpeed = this.GetComponent<Movement>().speed;
+		float targetSpeed = Target.rigidbody2D.velocity.magnitude;
+
+		//Debug.Log ("Snake speed " + snakeSpeed + ", Target speed " + targetSpeed);
+
+		float a = (snakeSpeed * snakeSpeed) / (targetSpeed * targetSpeed) - 1.0f;
+		float b = 2.0f * vecB.magnitude;
+
+		// Adjustment to formula if chasing
+		if (compAlongVelocity > 0) {
+			b *= -1.0f;
 		}
 
-		if (isClosest) {
-			return (Vector2?)(Target.transform.position);
+		float c = -(vecA.sqrMagnitude + vecB.sqrMagnitude);
+
+		float determinant = b * b - 4.0f * a * c;
+
+		if (determinant < 0) {
+
+			// Flank target
+			if (compAlongVelocity < 0) {
+				return (Vector2?)(transform.position) - (Vector2?)vecB;
+			} else {
+				return (Vector2?)(transform.position) + (Vector2?)vecB;
+			}
+
 		} else {
+			float solution1 = (-b + Mathf.Sqrt(determinant)) / (2.0f * a);
+			float solution2 = (-b - Mathf.Sqrt(determinant)) / (2.0f * a);
 
-			Vector2 normPlayerVelocity = Target.rigidbody2D.velocity;
+			float solution = float.MaxValue;
 
-			normPlayerVelocity.Normalize();
-			Vector2 posDifference = (Vector2)(Target.transform.position - transform.position);
+			if (solution1 > 0) {
+				solution = solution1;
+			}
 
-			Vector2 normPosDifference = posDifference.normalized;
-			float cosTheta = Vector2.Dot(normPlayerVelocity, normPosDifference);
+			if ((solution2 > 0) && (solution2 < solution)) {
+				solution = solution2;
+			}
 
-			float compAlongVelocity = Vector2.Dot(posDifference, normPlayerVelocity);
-
-			// If we're approaching head-on at less than 45 degrees, just target the player
-			if ((cosTheta <= (-1.0f / Mathf.Sqrt(2.0f))) && (cosTheta >= -1.0f)) {
-				return (Vector2?)(Target.transform.position);
-			} else if (cosTheta < 0.0f) {
-				if (posDifference.magnitude < flankingDistance) {
-					// We're in a good flanking position so turn and move with the player
-					compAlongVelocity *= -1.0f;
+			// No positive solutions
+			if (solution == float.MaxValue) {
+				// Flank target
+				if (compAlongVelocity < 0) {
+					return (Vector2?)(transform.position) - (Vector2?)vecB;
 				} else {
-					// Try to get closer before flanking
-					return (Vector2?)(Target.transform.position);
+					return (Vector2?)(transform.position) + (Vector2?)vecB;
 				}
 			}
 
-			Vector2 vecAlongVelocity = normPlayerVelocity * compAlongVelocity;
-
-			return (Vector2?)(transform.position) + (Vector2?)vecAlongVelocity;
+			return (Vector2?)(Target.transform.position) + solution * (Vector2?)normPlayerVelocity;
 		}
 	}
 }
