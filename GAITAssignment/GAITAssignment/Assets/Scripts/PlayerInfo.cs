@@ -78,9 +78,18 @@ public class PlayerInfo : MonoBehaviour {
 		// If currently invulnerable, decrease invulnerable time left
 		invulnerableTime = Mathf.Max(invulnerableTime - Time.deltaTime, 0.0f);
 
-		if(underwater)
+		if(underwater) {
 			waterLevel = Mathf.Min(waterLevel + Time.deltaTime * 5, 100.0f);
-		else
+		}
+		else {
 			waterLevel = Mathf.Max(waterLevel - Time.deltaTime * 2, 0.0f);
+			if(waterLevel <= 0) {
+				DecrementHealth();
+				if(Random.Range(0, 2) == 0)
+					transform.position = GameObject.Find("Pond_Left").transform.position;
+				else
+					transform.position = GameObject.Find("Pond_Right").transform.position;
+			}
+		}
 	}
 }

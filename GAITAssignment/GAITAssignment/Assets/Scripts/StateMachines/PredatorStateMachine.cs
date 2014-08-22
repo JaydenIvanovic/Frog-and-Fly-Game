@@ -114,7 +114,7 @@ public class PredatorStateMachine : MonoBehaviour
 				break;
 			case State.Parenting:
 				homeTargeter.Target = child;
-				wanderer.weight = 0.25f;
+				wanderer.weight = 0.2f;
 				break;
 			case State.Wandering:
 				child = null;
@@ -238,6 +238,9 @@ public class PredatorStateMachine : MonoBehaviour
 	public void OnTriggerEnter2D(Collider2D other) 
 	{
 		CheckIfHitPlayer(other);
+
+		if (other.gameObject.tag == "Projectile") 
+			Destroy(gameObject);
 	}
 
 

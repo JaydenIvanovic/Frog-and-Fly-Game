@@ -3,7 +3,7 @@ using System.Collections;
 
 public class Mouth : MonoBehaviour
 {
-	public GameObject waterSprayPrefab;
+	public GameObject waterProjectilePrefab;
 
 	// Use this for initialization
 	void Start () 
@@ -29,14 +29,9 @@ public class Mouth : MonoBehaviour
 
 	void SprayWater()
 	{
-		if (Input.GetMouseButtonDown(0))
+		if (Input.GetMouseButtonDown(0) && PlayerInfo.IsUnderwater())
 		{
-			Vector3 faceDir = transform.rotation * Vector3.up;
-			faceDir.Normalize();
-			GameObject water = (GameObject)Instantiate(waterSprayPrefab, transform.position + faceDir * 1.1f, transform.rotation);
-
-			// So it follows the player
-			water.transform.parent = transform;
+			GameObject water = (GameObject)Instantiate(waterProjectilePrefab, transform.position, transform.rotation);
 		}
 	}
 }
