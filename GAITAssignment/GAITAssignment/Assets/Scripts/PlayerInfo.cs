@@ -85,10 +85,13 @@ public class PlayerInfo : MonoBehaviour {
 			waterLevel = Mathf.Max(waterLevel - Time.deltaTime * 2, 0.0f);
 			if(waterLevel <= 0) {
 				DecrementHealth();
+				Vector3 pondPos;
 				if(Random.Range(0, 2) == 0)
-					transform.position = GameObject.Find("Pond_Left").transform.position;
+					pondPos = GameObject.Find("Pond_Left").transform.position;
 				else
-					transform.position = GameObject.Find("Pond_Right").transform.position;
+					pondPos = GameObject.Find("Pond_Right").transform.position;
+				transform.position = new Vector3(pondPos.x, pondPos.y, transform.position.z);
+				Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, Camera.main.transform.position.z);
 			}
 		}
 	}
