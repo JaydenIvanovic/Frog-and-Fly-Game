@@ -31,9 +31,7 @@ public class Projectile : MonoBehaviour
 
 	public void OnTriggerEnter2D(Collider2D coll)
 	{
-		if (coll.gameObject.tag != "Player" && coll.gameObject.tag != "Mouth"
-		    && coll.gameObject.tag != "Background" && coll.gameObject.tag != "Projectile") {
-
+		if (coll.gameObject.tag == "Egg" || coll.gameObject.tag == "Predator") {
 			Destroy(gameObject);
 		}
 	}

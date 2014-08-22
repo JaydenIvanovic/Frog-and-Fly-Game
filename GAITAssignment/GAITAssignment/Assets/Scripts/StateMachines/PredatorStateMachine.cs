@@ -31,7 +31,8 @@ public class PredatorStateMachine : MonoBehaviour
 	private float parentingTimer;
 	private State currentState;
 	private static AudioSource SoundSource; // Static so we don't get a weird chorus effect when all snakes attack at once
-
+	private float bubbleTimeLeft = 0.0f;
+	
 	public GameObject Home;
 	public GameObject Player;
 	public GameObject Egg;
@@ -41,6 +42,8 @@ public class PredatorStateMachine : MonoBehaviour
 	public float GiveUpDistance = 4.0f;
 	public float GoHomeTimeout = 1.5f;
 	public float KnockForce = 250.0f;
+	public float BubbleTime = 3.0f;
+	public SpriteRenderer bubble;
 	public AudioClip AttackSound;
 
 	private enum State
@@ -48,9 +51,9 @@ public class PredatorStateMachine : MonoBehaviour
 		Chasing,
 		Wandering,
 		HeadingHome,
-		Parenting
+		Parenting,
+		Bubbled
 	};
-
 
 	void Awake ()
 	{
@@ -96,6 +99,7 @@ public class PredatorStateMachine : MonoBehaviour
 		// Defaults
 		seek.weight = 1.0f;
 		aStarTargeter.underlyingTargeter = homeTargeter;
+		bubble.enabled = false;
 
 		switch(currentState)
 		{
@@ -135,6 +139,15 @@ public class PredatorStateMachine : MonoBehaviour
 				movement.speed = 2.0f;
 				wasChasing = false;
 				break;
+			case State.Bubbled:
+				bubble.enabled = true;
+				child = null;
+				seek.weight = 0.0f;
+				wanderer.weight = 0.0f;
+				movement.acceleration = 0.0f;
+				movement.speed = 0.0f;
+				wasChasing = false;
+				break;
 		}
 
 		UpdateAnimation();
@@ -143,6 +156,11 @@ public class PredatorStateMachine : MonoBehaviour
 
 	private void UpdateState()
 	{
+		if (bubbleTimeLeft > 0.0f) {
+			bubbleTimeLeft -= Time.deltaTime;
+			return;
+		}
+
 		PlayerInfo playerInfo = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerInfo>();
 
 		timeSinceWentHome += Time.deltaTime;
@@ -256,9 +274,12 @@ public class PredatorStateMachine : MonoBehaviour
 	public void OnTriggerEnter2D(Collider2D other) 
 	{
 		CheckIfHitPlayer(other);
-		
-		if (other.gameObject.tag == "Projectile") 
-			Destroy(gameObject);
+
+		if (other.gameObject.tag == "Projectile") {
+			rigidbody2D.velocity = Vector2.zero;
+			bubbleTimeLeft = BubbleTime;
+			currentState = State.Bubbled;
+		}
 	}
 
 

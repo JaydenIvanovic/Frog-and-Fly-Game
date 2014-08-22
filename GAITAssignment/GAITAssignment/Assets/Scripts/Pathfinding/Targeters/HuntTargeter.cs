@@ -7,9 +7,6 @@ using System.Collections.Generic;
 public class HuntTargeter : Targeter {
 
 	public GameObject Target;
-	public float flankingDistance = 5.0f;
-	public float attackDistance = 3.0f;
-	public int maxAttackerCount = 2;
 	public bool dumbAttack = false;
 
 	private Flocking flocker;
