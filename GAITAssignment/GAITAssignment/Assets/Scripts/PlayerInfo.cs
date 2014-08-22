@@ -14,6 +14,7 @@ public class PlayerInfo : MonoBehaviour {
 	private static int eggsDestroyed;
 	private static int health;
 	private static int score;
+	private static float waterLevel;
 	private static float invulnerableTime;
 	private static bool underwater;
 
@@ -22,6 +23,7 @@ public class PlayerInfo : MonoBehaviour {
 		score = 0;
 		eggsDestroyed = 0;
 		invulnerableTime = 0.0f;
+		waterLevel = 100f;
 	}
 
 	public static int GetHealth() {
@@ -30,6 +32,10 @@ public class PlayerInfo : MonoBehaviour {
 
 	public static int GetEggsDestroyed() {
 		return eggsDestroyed;
+	}
+
+	public static float GetWaterLevel() {
+		return waterLevel;
 	}
 
 	public static void DecrementHealth() {
@@ -71,5 +77,10 @@ public class PlayerInfo : MonoBehaviour {
 	public void Update() {
 		// If currently invulnerable, decrease invulnerable time left
 		invulnerableTime = Mathf.Max(invulnerableTime - Time.deltaTime, 0.0f);
+
+		if(underwater)
+			waterLevel = Mathf.Min(waterLevel + Time.deltaTime * 5, 100.0f);
+		else
+			waterLevel = Mathf.Max(waterLevel - Time.deltaTime * 2, 0.0f);
 	}
 }
