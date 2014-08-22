@@ -30,6 +30,7 @@ public class PredatorStateMachine : MonoBehaviour
 	private GameObject child = null;
 	private float parentingTimer;
 	private State currentState;
+	private static AudioSource SoundSource; // Static so we don't get a weird chorus effect when all snakes attack at once
 
 	public GameObject Home;
 	public GameObject Player;
@@ -40,6 +41,7 @@ public class PredatorStateMachine : MonoBehaviour
 	public float GiveUpDistance = 4.0f;
 	public float GoHomeTimeout = 1.5f;
 	public float KnockForce = 250.0f;
+	public AudioClip AttackSound;
 
 	private enum State
 	{
@@ -48,7 +50,8 @@ public class PredatorStateMachine : MonoBehaviour
 		HeadingHome,
 		Parenting
 	};
-	
+
+
 	void Awake ()
 	{
 		homeTargeter = GetComponent<GameObjectTargeter>();
@@ -79,6 +82,10 @@ public class PredatorStateMachine : MonoBehaviour
 
 		huntTargeter.Target = Player;
 		homeTargeter.Target = Home;
+
+		currentState = State.HeadingHome; // So we don't play the chasing sound immediately!
+		SoundSource = gameObject.AddComponent<AudioSource>();
+		SoundSource.loop = false;
 	}
 
 	// Update is called once per frame
@@ -98,6 +105,10 @@ public class PredatorStateMachine : MonoBehaviour
 				wanderer.weight = 0.0f;
 				movement.acceleration = 5.0f;
 				movement.speed = 3.0f;
+				if (!wasChasing) {
+					SoundSource.clip = AttackSound;
+					SoundSource.Play();
+				}
 				wasChasing = true;
 				break;
 			case State.HeadingHome:
@@ -132,6 +143,8 @@ public class PredatorStateMachine : MonoBehaviour
 
 	private void UpdateState()
 	{
+		PlayerInfo playerInfo = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerInfo>();
+
 		timeSinceWentHome += Time.deltaTime;
 		parentingTimer += Time.deltaTime;
 
@@ -160,7 +173,7 @@ public class PredatorStateMachine : MonoBehaviour
 			currentState = State.Parenting;
 		}
 		else if ((((Vector2)(transform.position) - (Vector2)(Home.transform.position)).magnitude > LeashLength)
-		    && ((((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude > GiveUpDistance) || PlayerInfo.IsUnderwater()))
+		    && ((((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude > GiveUpDistance) || playerInfo.IsUnderwater()))
 		{
 			currentState = State.HeadingHome;	
 		} 
@@ -175,7 +188,7 @@ public class PredatorStateMachine : MonoBehaviour
 				// Check if we're gonna chase.
 				if (((((Vector2)(Player.transform.position) - (Vector2)(Home.transform.position)).magnitude < LeashLength)
 				    || (((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude < GiveUpDistance))
-					&& !PlayerInfo.IsUnderwater()) 
+				    && !playerInfo.IsUnderwater()) 
 				{
 					currentState = State.Chasing;	
 				} 
@@ -216,15 +229,20 @@ public class PredatorStateMachine : MonoBehaviour
 
 	private void CheckIfHitPlayer(Collider2D other) 
 	{
-		if (other.gameObject.tag.Equals ("Player") && !PlayerInfo.IsInvulnerable()) {
+		if (other.gameObject.tag.Equals ("Player")) {
 
-			PlayerInfo.DecrementHealth();
-			PlayerInfo.MakeInvulnerable();
+			PlayerInfo playerInfo = other.gameObject.GetComponent<PlayerInfo>();
 
-			// Knock the player
-			GameObject player = GameObject.FindGameObjectWithTag("Player");
-			Vector2 knockDirection = ((Vector2)(player.transform.position - transform.position)).normalized;
-			player.rigidbody2D.AddForce(knockDirection * KnockForce);
+			if (!playerInfo.IsInvulnerable()) {
+
+				playerInfo.DecrementHealth();
+				playerInfo.MakeInvulnerable();
+
+				// Knock the player
+				GameObject player = GameObject.FindGameObjectWithTag("Player");
+				Vector2 knockDirection = ((Vector2)(player.transform.position - transform.position)).normalized;
+				player.rigidbody2D.AddForce(knockDirection * KnockForce);
+			}
 		}
 	}
 
@@ -238,7 +256,7 @@ public class PredatorStateMachine : MonoBehaviour
 	public void OnTriggerEnter2D(Collider2D other) 
 	{
 		CheckIfHitPlayer(other);
-
+		
 		if (other.gameObject.tag == "Projectile") 
 			Destroy(gameObject);
 	}

@@ -80,7 +80,7 @@ public class FlyStateMachine : MonoBehaviour {
 		float distanceFromAppleTree = Vector2.Distance((Vector2)appleTreeTargeter.GetTarget(), (Vector2)transform.position);
 
 		// Only if the player is close and not underwater.
-		if (distanceFromPlayer < fleeDistance && !PlayerInfo.IsUnderwater()) {
+		if (distanceFromPlayer < fleeDistance && !GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerInfo>().IsUnderwater()) {
 			currentState = State.Fleeing;
 			ResetEatingVars();
 			//Random chance to change the tree the fly will visit to eat.

@@ -18,7 +18,7 @@ public class SpawnFlies : MonoBehaviour {
 			// I got an error one time because a fly was destroyed before Flocking had initialised
 			do {
 				spawnLocation = new Vector3(Random.Range(-28.0f, 28.0f), Random.Range(-8.0f, 8.0f), flyPrefab.transform.position.z);
-			} while ((spawnLocation - player.transform.position).magnitude < minDistanceFromPlayer);
+			} while (((Vector2)(spawnLocation - player.transform.position)).magnitude < minDistanceFromPlayer);
 
 			GameObject fly = Instantiate (flyPrefab, spawnLocation, Quaternion.identity) as GameObject;
 			fly.transform.parent = gameObject.transform;

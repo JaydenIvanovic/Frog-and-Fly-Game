@@ -6,17 +6,27 @@ using System.Collections;
 [System.Serializable]
 public class PlayerInfo : MonoBehaviour {
 
-	private static string deathScreen = "DeathSplash";
+	private string deathScreen = "DeathSplash";
 
-	public static int StartingHealth = 3;
-	public static float InvulnerableTimeWhenHit = 2.0f;
+	public int StartingHealth = 3;
+	public float InvulnerableTimeWhenHit = 2.0f;
+	public AudioClip HurtSound;
+	public AudioClip EatSound;
+	public AudioClip SplashSound;
 
-	private static int eggsDestroyed;
-	private static int health;
-	private static int score;
-	private static float waterLevel;
-	private static float invulnerableTime;
-	private static bool underwater;
+	private int eggsDestroyed;
+	private int health;
+	private int score;
+	private float waterLevel;
+	private float invulnerableTime;
+	private bool isUnderwater;
+	private AudioSource SoundSource;
+
+	void Awake()
+	{
+		SoundSource = gameObject.AddComponent<AudioSource>();
+		SoundSource.loop = false;
+	}
 
 	public void Start() {
 		health = StartingHealth;
@@ -26,62 +36,73 @@ public class PlayerInfo : MonoBehaviour {
 		waterLevel = 100f;
 	}
 
-	public static int GetHealth() {
+	public int GetHealth() {
 		return health;
 	}
 
-	public static int GetEggsDestroyed() {
+	public int GetEggsDestroyed() {
 		return eggsDestroyed;
 	}
 
-	public static float GetWaterLevel() {
+	public float GetWaterLevel() {
 		return waterLevel;
 	}
 
-	public static void DecrementHealth() {
+	public void DecrementHealth() {
+
 		health = Mathf.Max(health - 1, 0);
-		// TO DO: Die when zero health!
 		if(health == 0) {
 			Application.LoadLevel (deathScreen);
+		} else {
+			SoundSource.clip = HurtSound;
+			SoundSource.Play();
 		}
 	}
 
-	public static void IncrementScore() {
+	public void IncrementScore() {
 		score++;
+		GameObject.Find("Tongue").GetComponent<Animator>().SetTrigger("Eating");
+		SoundSource.clip = EatSound;
+		SoundSource.Play();
 	}
 
-	public static void IncrementEggs() {
+	public void IncrementEggs() {
 		eggsDestroyed++;
 	}
 
-	public static void SetUnderwater(bool isUnderwater) {
-		underwater = isUnderwater;
+	public void SetUnderwater(bool isUnderwater) {
+
+		if (this.isUnderwater != isUnderwater) {
+			SoundSource.clip = SplashSound;
+			SoundSource.Play();
+		}
+
+		this.isUnderwater = isUnderwater;
 	}
 
-	public static int GetScore() {
+	public int GetScore() {
 		return score;
 	}
 
-	public static bool IsInvulnerable() {
+	public bool IsInvulnerable() {
 		return invulnerableTime > 0.0f;
 	}
 
-	public static void MakeInvulnerable() {
+	public void MakeInvulnerable() {
 		invulnerableTime = InvulnerableTimeWhenHit;
 	}
 
-	public static bool IsUnderwater() {
-		return underwater;
+	public bool IsUnderwater() {
+		return isUnderwater;
 	}
 
 	public void Update() {
 		// If currently invulnerable, decrease invulnerable time left
 		invulnerableTime = Mathf.Max(invulnerableTime - Time.deltaTime, 0.0f);
 
-		if(underwater) {
+		if (isUnderwater) {
 			waterLevel = Mathf.Min(waterLevel + Time.deltaTime * 5, 100.0f);
-		}
-		else {
+		} else {
 			waterLevel = Mathf.Max(waterLevel - Time.deltaTime * 2, 0.0f);
 			if(waterLevel <= 0) {
 				DecrementHealth();

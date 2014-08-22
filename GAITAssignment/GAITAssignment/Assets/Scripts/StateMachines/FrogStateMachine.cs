@@ -4,10 +4,13 @@ using System.Collections;
 [RequireComponent(typeof(Animator))]
 [RequireComponent(typeof(AStarTargeter))]
 [RequireComponent(typeof(SpriteRenderer))]
+[RequireComponent(typeof(PlayerInfo))]
 public class FrogStateMachine : MonoBehaviour {
 
 	private Animator animator;
 	private SpriteRenderer spriteRenderer;
+	private Animator tongueAnimator;
+	private SpriteRenderer tongueSprite;
 	private AStarTargeter targeter;
 
 	public float InvulnerableFlickerFrequency = 8.0f;
@@ -16,30 +19,34 @@ public class FrogStateMachine : MonoBehaviour {
 	void Start () {
 		animator = GetComponent<Animator>();
 		spriteRenderer = GetComponent<SpriteRenderer>();
+		tongueAnimator = GameObject.Find("Tongue").GetComponent<Animator>();
+		tongueSprite = GameObject.Find("Tongue").GetComponent<SpriteRenderer>();
 		targeter = GetComponent<AStarTargeter>();
 	}
 	
 	// Update is called once per frame
 	void Update () {
 
-		if (PlayerInfo.IsUnderwater()) {
+		if (GetComponent<PlayerInfo>().IsUnderwater()) {
 			animator.SetBool("Underwater", true);
 		} else {
 			animator.SetBool("Underwater", false);
 		}
 
+		// Defaults
+		animator.enabled = true;
+		spriteRenderer.enabled = true;
+		tongueAnimator.enabled = true;
+		tongueSprite.enabled = true;
+		
 		// Flicker when invulnerable
-		if (PlayerInfo.IsInvulnerable()) {
+		if (GetComponent<PlayerInfo>().IsInvulnerable()) {
 			if (((int)(Time.unscaledTime * InvulnerableFlickerFrequency * 2.0f)) % 2 == 0) {
 				animator.enabled = false;
 				spriteRenderer.enabled = false;
-			} else {
-				animator.enabled = true;
-				spriteRenderer.enabled = true;
+				tongueAnimator.enabled = false;
+				tongueSprite.enabled = false;
 			}
-		} else {
-			animator.enabled = true;
-			spriteRenderer.enabled = true;
 		}
 
 		Vector2? target = targeter.GetTarget();

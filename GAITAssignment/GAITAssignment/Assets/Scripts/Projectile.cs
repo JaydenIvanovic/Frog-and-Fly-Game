@@ -25,14 +25,15 @@ public class Projectile : MonoBehaviour
 
 		if (Vector3.Distance(currentPos, originalPos) >= destroyDistance)
 			Destroy(gameObject);
-		
-		Debug.Log(facingDir);
+
 		movement.Move(facingDir * speed);
 	}
 
 	public void OnTriggerEnter2D(Collider2D coll)
 	{
-		if (coll.gameObject.tag != "Player" && coll.gameObject.tag != "Background") {
+		if (coll.gameObject.tag != "Player" && coll.gameObject.tag != "Mouth"
+		    && coll.gameObject.tag != "Background" && coll.gameObject.tag != "Projectile") {
+
 			Destroy(gameObject);
 		}
 	}
