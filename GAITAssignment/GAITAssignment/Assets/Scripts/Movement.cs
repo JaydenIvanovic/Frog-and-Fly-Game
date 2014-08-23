@@ -37,6 +37,13 @@ public class Movement : MonoBehaviour
 		// Rotate to the initial position
 		rigidbody2D.transform.localEulerAngles = new Vector3(0.0f, 0.0f, angularPosition + angleAdjustment);
 	}
+
+	public void FaceDown() {
+		actualRotation = 270.0f + angleAdjustment;
+		previousRotation = actualRotation;
+		angularPosition = actualRotation - angleAdjustment;
+		rigidbody2D.transform.localEulerAngles = new Vector3(0.0f, 0.0f, actualRotation);
+	}
 	
 	public void Move(Vector3 velocity)
 	{

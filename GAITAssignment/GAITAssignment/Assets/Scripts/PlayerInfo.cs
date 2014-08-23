@@ -15,6 +15,8 @@ public class PlayerInfo : MonoBehaviour {
 	public AudioClip HurtSound;
 	public AudioClip EatSound;
 	public AudioClip SplashSound;
+	public float WaterLossRate = 2.0f;
+	public float WaterRefillRate = 10.0f;
 
 	private static int eggsDestroyed;
 	private static int health;
@@ -115,13 +117,20 @@ public class PlayerInfo : MonoBehaviour {
 	}
 
 	public void Update() {
+
+		// Make the music follow the player (you get a weird panning effect otherwise)
+		GameObject musicPlayer = GameObject.Find("Music");
+		if (musicPlayer != null) {
+			musicPlayer.transform.position = new Vector3(Camera.main.transform.position.x, Camera.main.transform.position.y, 0.0f);
+		}
+
 		// If currently invulnerable, decrease invulnerable time left
 		invulnerableTime = Mathf.Max(invulnerableTime - Time.deltaTime, 0.0f);
 
 		if (_isUnderwater) {
-			waterLevel = Mathf.Min(waterLevel + Time.deltaTime * 5, 100.0f);
+			waterLevel = Mathf.Min(waterLevel + Time.deltaTime * WaterRefillRate, 100.0f);
 		} else {
-			waterLevel = Mathf.Max(waterLevel - Time.deltaTime * 2, 0.0f);
+			waterLevel = Mathf.Max(waterLevel - Time.deltaTime * WaterLossRate, 0.0f);
 
 			// You don't lose health now, you just can't shoot any more bubbles
 			/*

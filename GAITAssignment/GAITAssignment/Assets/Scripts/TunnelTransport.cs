@@ -15,13 +15,21 @@ public class TunnelTransport : MonoBehaviour
 	{
 	
 	}
-
-	void OnCollisionEnter2D(Collision2D coll)
+	
+	void OnTriggerEnter2D(Collider2D coll)
 	{
 		if (coll.gameObject.tag == "Player") {
 
-			coll.gameObject.transform.position = new Vector3(outTunnel.transform.position.x, outTunnel.transform.position.y - 1f, coll.gameObject.transform.position.z);
-			Camera.main.transform.position = new Vector3(outTunnel.transform.position.x, outTunnel.transform.position.y - 1f, Camera.main.transform.position.z);
+			coll.gameObject.transform.position = new Vector3(outTunnel.transform.position.x, outTunnel.transform.position.y - 1.0f, coll.gameObject.transform.position.z);
+			Camera.main.transform.position = new Vector3(outTunnel.transform.position.x, outTunnel.transform.position.y - 1.0f, Camera.main.transform.position.z);
+
+			// Stop targeting the old tunnel
+			coll.gameObject.GetComponent<MouseTargeter>().StopTargeting();
+			coll.gameObject.GetComponent<AStarTargeter>().StopTargeting();
+
+			// Switch directions
+			coll.gameObject.rigidbody2D.velocity = new Vector2(0.0f, -1.0f);
+			coll.gameObject.GetComponent<Movement>().FaceDown();
 
 			// Clamp the mouse position to the part of the world we want to see
 			float xBuffer, yBuffer;

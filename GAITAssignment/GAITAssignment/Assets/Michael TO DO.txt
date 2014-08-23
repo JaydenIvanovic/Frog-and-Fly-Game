@@ -1,6 +1,11 @@
 UNITY:
-- Add music with option for on/off
-- Make it so eggs cannot be laid at choke points, cos that will screw A*!
+- Add unpause button to pause screen
+
+Rare bugs:
+- Stop snakes from laying eggs in lake
+
+Nice to do:
+- Add mute option for all sound
 
 WRITE UP:
 - Explain jolty snake rotation

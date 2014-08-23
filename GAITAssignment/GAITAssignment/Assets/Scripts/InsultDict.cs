@@ -8,6 +8,11 @@ public class InsultDict : MonoBehaviour
 	// Use this for initialization
 	void Start () 
 	{
+		GameObject musicPlayer = GameObject.Find("Music");
+		if (musicPlayer != null) {
+			musicPlayer.transform.position = Vector3.zero;
+		}
+
 		GetComponent<TextMesh>().text = insults[Random.Range(0, insults.Length)];
 	}
 }

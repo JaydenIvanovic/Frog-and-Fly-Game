@@ -32,6 +32,7 @@ public class PredatorStateMachine : MonoBehaviour
 	private State currentState;
 	private static AudioSource SoundSource; // Static so we don't get a weird chorus effect when all snakes attack at once
 	private float bubbleTimeLeft = 0.0f;
+	private float chaseTimeLeft = 0.0f;
 	
 	public GameObject Home;
 	public GameObject Player;
@@ -40,6 +41,7 @@ public class PredatorStateMachine : MonoBehaviour
 	public float ParentDesire = 0.3f;
 	public float LeashLength = 6.0f;
 	public float GiveUpDistance = 4.0f;
+	public float MinChaseTime = 5.0f;
 	public float GoHomeTimeout = 1.5f;
 	public float KnockForce = 250.0f;
 	public float BubbleTime = 3.0f;
@@ -95,6 +97,10 @@ public class PredatorStateMachine : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
+		timeSinceWentHome += Time.deltaTime;
+		parentingTimer += Time.deltaTime;
+		chaseTimeLeft = Mathf.Max(0.0f, chaseTimeLeft - Time.deltaTime);
+
 		UpdateState();
 
 		// Defaults
@@ -111,8 +117,11 @@ public class PredatorStateMachine : MonoBehaviour
 				movement.acceleration = 5.0f;
 				movement.speed = 3.0f;
 				if (!wasChasing) {
-					SoundSource.clip = AttackSound;
-					SoundSource.Play();
+					if (!SoundSource.isPlaying) {
+						SoundSource.clip = AttackSound;
+						SoundSource.Play();
+					}
+					chaseTimeLeft = MinChaseTime;
 				}
 				wasChasing = true;
 				break;
@@ -162,14 +171,14 @@ public class PredatorStateMachine : MonoBehaviour
 			return;
 		}
 
-		timeSinceWentHome += Time.deltaTime;
-		parentingTimer += Time.deltaTime;
+		// Default
+		//currentState = State.Wandering;
 
 		// Let the parent remain with the egg
 		if(child)
 		{
 			//Debug.Log("with child");
-			if( ((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude < GiveUpDistance)
+			if ((((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude < GiveUpDistance) || chaseTimeLeft > 0.0f)
 			{
 				currentState = State.Chasing;
 				return;
@@ -185,27 +194,37 @@ public class PredatorStateMachine : MonoBehaviour
 		{
 			parentingTimer = 0f;
 			// Extra randomization step to see if an egg is to be created.
-			if (Random.Range(0f,1f) <= ParentDesire)
+			if (Random.Range(0f,1f) <= ParentDesire) {
 				LayEgg();
-			currentState = State.Parenting;
+				currentState = State.Parenting;
+				return;
+			}
 		}
-		else if ((((Vector2)(transform.position) - (Vector2)(Home.transform.position)).magnitude > LeashLength)
-		    	&& ((((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude > GiveUpDistance) || PlayerInfo.IsUnderwater()))
+
+		if (PlayerInfo.IsUnderwater()) {
+			currentState = State.Wandering;
+			return;
+		}
+
+		if ((((Vector2)(transform.position) - (Vector2)(Home.transform.position)).magnitude > LeashLength)
+		    		&& (((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude > GiveUpDistance)
+					&& (chaseTimeLeft <= 0.0f))
 		{
-			currentState = State.HeadingHome;	
+			currentState = State.HeadingHome;
 		} 
 		else if (timeSinceWentHome > GoHomeTimeout) 
 		{	
-			// Target the player
+			// Try targeting the player directly to see if they're reachable
 			homeTargeter.Target = Player;
+			aStarTargeter.underlyingTargeter = homeTargeter;
 			Vector2? target = aStarTargeter.GetTarget();
 			
 			if (target != null) 
 			{	
 				// Check if we're gonna chase.
-				if (((((Vector2)(Player.transform.position) - (Vector2)(Home.transform.position)).magnitude < LeashLength)
-				    || (((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude < GiveUpDistance))
-				    && !PlayerInfo.IsUnderwater()) 
+				if ((((Vector2)(Player.transform.position) - (Vector2)(Home.transform.position)).magnitude < LeashLength)
+				    	|| (((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude < GiveUpDistance)
+				    	|| (chaseTimeLeft > 0.0f))
 				{
 					currentState = State.Chasing;	
 				} 
