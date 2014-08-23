@@ -6,7 +6,9 @@ using System.Collections;
 [System.Serializable]
 public class PlayerInfo : MonoBehaviour {
 
-	private string deathScreen = "DeathSplash";
+	private static string deathScreen = "DeathSplash";
+
+	public static float BUBBLE_COST = 20.0f;
 
 	public int StartingHealth = 3;
 	public float InvulnerableTimeWhenHit = 2.0f;
@@ -14,18 +16,30 @@ public class PlayerInfo : MonoBehaviour {
 	public AudioClip EatSound;
 	public AudioClip SplashSound;
 
-	private int eggsDestroyed;
-	private int health;
-	private int score;
-	private float waterLevel;
-	private float invulnerableTime;
-	private bool isUnderwater;
-	private AudioSource SoundSource;
+	private static int eggsDestroyed;
+	private static int health;
+	private static int score;
+	private static float waterLevel;
+	private static float invulnerableTime;
+	private static bool _isUnderwater;
+	private static AudioSource SoundSource;
+
+	// Static copies
+	private static float _InvulnerableTimeWhenHit;
+	private static AudioClip _HurtSound;
+	private static AudioClip _EatSound;
+	private static AudioClip _SplashSound;
 
 	void Awake()
 	{
 		SoundSource = gameObject.AddComponent<AudioSource>();
 		SoundSource.loop = false;
+
+		// So we can access from static functions... Ugly but it works
+		_InvulnerableTimeWhenHit = InvulnerableTimeWhenHit;
+		_HurtSound = HurtSound;
+		_EatSound = EatSound;
+		_SplashSound = SplashSound;
 	}
 
 	public void Start() {
@@ -36,74 +50,81 @@ public class PlayerInfo : MonoBehaviour {
 		waterLevel = 100f;
 	}
 
-	public int GetHealth() {
+	public static int GetHealth() {
 		return health;
 	}
 
-	public int GetEggsDestroyed() {
+	public static int GetEggsDestroyed() {
 		return eggsDestroyed;
 	}
 
-	public float GetWaterLevel() {
+	public static float GetWaterLevel() {
 		return waterLevel;
 	}
 
-	public void DecrementHealth() {
+	public static void DecrementHealth() {
 
 		health = Mathf.Max(health - 1, 0);
 		if(health == 0) {
 			Application.LoadLevel (deathScreen);
 		} else {
-			SoundSource.clip = HurtSound;
+			SoundSource.clip = _HurtSound;
 			SoundSource.Play();
 		}
 	}
 
-	public void IncrementScore() {
+	public static void IncrementScore() {
 		score++;
 		GameObject.Find("Tongue").GetComponent<Animator>().SetTrigger("Eating");
-		SoundSource.clip = EatSound;
+		SoundSource.clip = _EatSound;
 		SoundSource.Play();
 	}
 
-	public void IncrementEggs() {
+	public static void IncrementEggs() {
 		eggsDestroyed++;
 	}
 
-	public void SetUnderwater(bool isUnderwater) {
+	public static void ReduceWaterAfterBubble() {
+		waterLevel -= BUBBLE_COST;
+	}
 
-		if (this.isUnderwater != isUnderwater) {
-			SoundSource.clip = SplashSound;
+	public static void SetUnderwater(bool isUnderwater) {
+
+		if (_isUnderwater!= isUnderwater) {
+			SoundSource.clip = _SplashSound;
 			SoundSource.Play();
 		}
 
-		this.isUnderwater = isUnderwater;
+		_isUnderwater = isUnderwater;
 	}
 
-	public int GetScore() {
+	public static int GetScore() {
 		return score;
 	}
 
-	public bool IsInvulnerable() {
+	public static bool IsInvulnerable() {
 		return invulnerableTime > 0.0f;
 	}
 
-	public void MakeInvulnerable() {
-		invulnerableTime = InvulnerableTimeWhenHit;
+	public static void MakeInvulnerable() {
+		invulnerableTime = _InvulnerableTimeWhenHit;
 	}
 
-	public bool IsUnderwater() {
-		return isUnderwater;
+	public static bool IsUnderwater() {
+		return _isUnderwater;
 	}
 
 	public void Update() {
 		// If currently invulnerable, decrease invulnerable time left
 		invulnerableTime = Mathf.Max(invulnerableTime - Time.deltaTime, 0.0f);
 
-		if (isUnderwater) {
+		if (_isUnderwater) {
 			waterLevel = Mathf.Min(waterLevel + Time.deltaTime * 5, 100.0f);
 		} else {
 			waterLevel = Mathf.Max(waterLevel - Time.deltaTime * 2, 0.0f);
+
+			// You don't lose health now, you just can't shoot any more bubbles
+			/*
 			if(waterLevel <= 0) {
 				DecrementHealth();
 				Vector3 pondPos;
@@ -114,6 +135,7 @@ public class PlayerInfo : MonoBehaviour {
 				transform.position = new Vector3(pondPos.x, pondPos.y, transform.position.z);
 				Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, Camera.main.transform.position.z);
 			}
+			*/
 		}
 	}
 }

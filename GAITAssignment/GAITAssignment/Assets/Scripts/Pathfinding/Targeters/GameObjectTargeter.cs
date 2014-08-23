@@ -14,7 +14,7 @@ public class GameObjectTargeter : Targeter {
 	public override Vector2? GetTarget ()
 	{
 		// We can't chase the frog if it's underwater
-		if ((Target != null) && (Target.tag == "Player") && Target.GetComponent<PlayerInfo>().IsUnderwater()) {
+		if ((Target != null) && (Target.tag == "Player") && PlayerInfo.IsUnderwater()) {
 			return null;
 		}
 

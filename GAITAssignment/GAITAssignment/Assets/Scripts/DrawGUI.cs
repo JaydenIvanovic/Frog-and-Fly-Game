@@ -10,8 +10,10 @@ public class DrawGUI : MonoBehaviour
 	public Texture Fly;
 	public Sprite Egg;
 	public Sprite Water;
+	public Sprite WaterMeter;
 	public GUISkin skin;
-	private Texture2D heartTex, eggTex, waterTex; 
+
+	private Texture2D heartTex, eggTex, waterTex, waterMeterTex;
 	private bool isPaused;
 
 	void Start () 
@@ -20,6 +22,7 @@ public class DrawGUI : MonoBehaviour
 		heartTex = SpriteToTexture(Heart);
 		eggTex = SpriteToTexture(Egg);
 		waterTex = SpriteToTexture(Water);
+		waterMeterTex = SpriteToTexture(WaterMeter);
 	}
 
 
@@ -35,22 +38,20 @@ public class DrawGUI : MonoBehaviour
 
 		GUI.Box (new Rect (10, 10, 100, 120), "");
 
-		PlayerInfo info = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerInfo>();
-
-		int health = info.GetHealth();
+		int health = PlayerInfo.GetHealth();
 
 		for (int i = 0; i < health; i++) {
 			GUI.DrawTexture(new Rect(20 + (heartSize + heartSeparation) * i, 20, heartSize, heartSize), heartTex, ScaleMode.ScaleToFit, true, 0.0f);
 		}
 
 		// This could probably be made better by using GUI groups. 
-		GUI.DrawTexture(new Rect(20, 45, heartSize, heartSize), Fly, ScaleMode.ScaleToFit, true, 0.0f);
-		GUI.DrawTexture(new Rect(20, 70, heartSize, heartSize), eggTex, ScaleMode.ScaleToFit, true, 0.0f);
-		GUI.DrawTexture(new Rect(20, 95, heartSize, heartSize), waterTex, ScaleMode.ScaleToFit, true, 0.0f);
+		GUI.DrawTexture(new Rect(20, 45, heartSize, heartSize), waterTex, ScaleMode.ScaleToFit, true, 0.0f);
+		GUI.DrawTexture(new Rect(20, 70, heartSize, heartSize), Fly, ScaleMode.ScaleToFit, true, 0.0f);
+		GUI.DrawTexture(new Rect(20, 90, heartSize, heartSize), eggTex, ScaleMode.ScaleToFit, true, 0.0f);
 
-		GUI.Label (new Rect (40, 45, 120, 20), ": " + info.GetScore());
-		GUI.Label (new Rect (40, 70, 120, 20), ": " + info.GetEggsDestroyed());
-		GUI.Label (new Rect (40, 95, 120, 20), ": " + (int)info.GetWaterLevel());
+		GUI.DrawTexture(new Rect(50 - 2, 45 + 3, PlayerInfo.GetWaterLevel() / 2.0f, 14), waterMeterTex, ScaleMode.StretchToFill, true, 0.0f);
+		GUI.Label (new Rect (40, 70, 120, 20), ": " + PlayerInfo.GetScore());
+		GUI.Label (new Rect (40, 95, 120, 20), ": " + PlayerInfo.GetEggsDestroyed());
 
 		// Draw the pause menu
 		if (isPaused) {

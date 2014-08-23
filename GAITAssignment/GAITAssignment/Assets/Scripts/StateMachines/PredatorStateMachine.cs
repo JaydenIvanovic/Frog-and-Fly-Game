@@ -87,6 +87,7 @@ public class PredatorStateMachine : MonoBehaviour
 		homeTargeter.Target = Home;
 
 		currentState = State.HeadingHome; // So we don't play the chasing sound immediately!
+
 		SoundSource = gameObject.AddComponent<AudioSource>();
 		SoundSource.loop = false;
 	}
@@ -161,8 +162,6 @@ public class PredatorStateMachine : MonoBehaviour
 			return;
 		}
 
-		PlayerInfo playerInfo = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerInfo>();
-
 		timeSinceWentHome += Time.deltaTime;
 		parentingTimer += Time.deltaTime;
 
@@ -191,7 +190,7 @@ public class PredatorStateMachine : MonoBehaviour
 			currentState = State.Parenting;
 		}
 		else if ((((Vector2)(transform.position) - (Vector2)(Home.transform.position)).magnitude > LeashLength)
-		    && ((((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude > GiveUpDistance) || playerInfo.IsUnderwater()))
+		    	&& ((((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude > GiveUpDistance) || PlayerInfo.IsUnderwater()))
 		{
 			currentState = State.HeadingHome;	
 		} 
@@ -206,7 +205,7 @@ public class PredatorStateMachine : MonoBehaviour
 				// Check if we're gonna chase.
 				if (((((Vector2)(Player.transform.position) - (Vector2)(Home.transform.position)).magnitude < LeashLength)
 				    || (((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude < GiveUpDistance))
-				    && !playerInfo.IsUnderwater()) 
+				    && !PlayerInfo.IsUnderwater()) 
 				{
 					currentState = State.Chasing;	
 				} 
@@ -247,14 +246,12 @@ public class PredatorStateMachine : MonoBehaviour
 
 	private void CheckIfHitPlayer(Collider2D other) 
 	{
-		if (other.gameObject.tag.Equals ("Player")) {
+		if ((currentState != State.Bubbled) && (other.gameObject.tag.Equals ("Player"))) {
 
-			PlayerInfo playerInfo = other.gameObject.GetComponent<PlayerInfo>();
+			if (!PlayerInfo.IsInvulnerable()) {
 
-			if (!playerInfo.IsInvulnerable()) {
-
-				playerInfo.DecrementHealth();
-				playerInfo.MakeInvulnerable();
+				PlayerInfo.DecrementHealth();
+				PlayerInfo.MakeInvulnerable();
 
 				// Knock the player
 				GameObject player = GameObject.FindGameObjectWithTag("Player");

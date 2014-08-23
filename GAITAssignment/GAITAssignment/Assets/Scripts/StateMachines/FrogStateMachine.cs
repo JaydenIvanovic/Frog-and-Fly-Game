@@ -4,7 +4,6 @@ using System.Collections;
 [RequireComponent(typeof(Animator))]
 [RequireComponent(typeof(AStarTargeter))]
 [RequireComponent(typeof(SpriteRenderer))]
-[RequireComponent(typeof(PlayerInfo))]
 public class FrogStateMachine : MonoBehaviour {
 
 	private Animator animator;
@@ -27,7 +26,7 @@ public class FrogStateMachine : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
-		if (GetComponent<PlayerInfo>().IsUnderwater()) {
+		if (PlayerInfo.IsUnderwater()) {
 			animator.SetBool("Underwater", true);
 		} else {
 			animator.SetBool("Underwater", false);
@@ -40,7 +39,7 @@ public class FrogStateMachine : MonoBehaviour {
 		tongueSprite.enabled = true;
 		
 		// Flicker when invulnerable
-		if (GetComponent<PlayerInfo>().IsInvulnerable()) {
+		if (PlayerInfo.IsInvulnerable()) {
 			if (((int)(Time.unscaledTime * InvulnerableFlickerFrequency * 2.0f)) % 2 == 0) {
 				animator.enabled = false;
 				spriteRenderer.enabled = false;

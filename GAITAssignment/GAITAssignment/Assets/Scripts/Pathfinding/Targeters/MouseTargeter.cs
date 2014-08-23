@@ -12,11 +12,18 @@ public class MouseTargeter : Targeter {
 		if(Input.GetMouseButtonDown(1)) {
 			Vector2 clickPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 			_target = clickPos;
+
+			// Cease overriding rotation (used when firing a projectile) upon clicking
+			GetComponent<Movement>().StopOverrideRotation();
 		}
 	}
 
 	public override Vector2? GetTarget ()
 	{
 		return _target;
+	}
+
+	public void StopTargeting() {
+		_target = (Vector2)(transform.position);
 	}
 }

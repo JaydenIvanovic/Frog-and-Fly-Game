@@ -22,7 +22,7 @@ public class Egg : MonoBehaviour
 	void OnCollisionEnter2D (Collision2D coll)
 	{
 		if (coll.gameObject.tag == "Player") {
-			GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerInfo>().IncrementEggs();
+			PlayerInfo.IncrementEggs();
 			Destroy(gameObject);
 		}
 	}

@@ -20,6 +20,15 @@ public class Movement : MonoBehaviour
 	private float actualRotation;
 	private float previousRotation;
 	private float timeCurrentRotation = 0.0f;
+	private float overrideRotation = float.MinValue; // For rotating the frog when it shoots bubbles
+
+	public void OverrideRotation(float overrideRotation) {
+		this.overrideRotation = overrideRotation;
+	}
+	
+	public void StopOverrideRotation() {
+		this.overrideRotation = float.MinValue;
+	}
 
 	public void Start() {
 
@@ -46,9 +55,15 @@ public class Movement : MonoBehaviour
 		rigidbody2D.velocity += accel * Time.deltaTime;
 		
 		// Angular movement
-		if (velocity != Vector3.zero) { // Don't rotate unless we're actually going somewhere
+		if ((velocity != Vector3.zero) || (overrideRotation != float.MinValue)) { // Don't rotate unless we're moving or firing
 
-			float targetAngularVel = Mathf.Rad2Deg * Mathf.Atan2(velocity.y, velocity.x) - angularPosition;
+			float targetAngularVel;
+			
+			if (overrideRotation != float.MinValue) {
+				targetAngularVel = overrideRotation - angularPosition;
+			} else {
+				targetAngularVel = Mathf.Rad2Deg * Mathf.Atan2(velocity.y, velocity.x) - angularPosition;
+			}
 
 			while (targetAngularVel > 180.0f)
 				targetAngularVel -= 360.0f;

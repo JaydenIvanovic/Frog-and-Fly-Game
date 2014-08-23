@@ -3,14 +3,14 @@ using System.Collections;
 
 [RequireComponent(typeof(PlayerInfo))]
 public class Mouth : MonoBehaviour {
-
-	private PlayerInfo playerInfo;
+	
 	private float rotationOffset;
 
+	public float BubbleCost = 20.0f;
+	public float BubbleLaunchDistance = 0.3f;
 	public GameObject waterProjectilePrefab;
 	
 	void Awake () {
-		playerInfo = GetComponentInParent<PlayerInfo>();
 		rotationOffset = transform.parent.rotation.eulerAngles.z;
 	}
 	
@@ -26,19 +26,34 @@ public class Mouth : MonoBehaviour {
 			Destroy (other.gameObject.GetComponent<Flocking>());
 			Flocking.DestroyFlockMember(other.gameObject);
 			Destroy (other.gameObject);
-			playerInfo.IncrementScore();
+			PlayerInfo.IncrementScore();
 		}
 	}
 
 	void SprayWater()
 	{
-		if (Input.GetMouseButtonDown(0) && playerInfo.IsUnderwater())
+		if (Input.GetMouseButtonDown(0) && PlayerInfo.GetWaterLevel() > PlayerInfo.BUBBLE_COST)
 		{
 			Vector2 clickPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+			
+			Vector2 shotDirection = clickPos - (Vector2)(transform.position);
+			
+			float angle = Mathf.Atan2(shotDirection.y, shotDirection.x) * Mathf.Rad2Deg;
 
-			float angle = Mathf.Atan2(clickPos.y - transform.position.y, clickPos.x - transform.position.x) * Mathf.Rad2Deg;
+			if (transform.parent.GetComponent<Animator>().GetBool("Sitting")) {
+				transform.parent.GetComponent<Animator>().SetBool("Sitting", false);
+			}
 
-			Instantiate(waterProjectilePrefab, transform.position, Quaternion.Euler(0.0f, 0.0f, angle - rotationOffset));
+			transform.parent.GetComponent<Movement>().OverrideRotation(angle);
+			transform.parent.GetComponent<MouseTargeter>().StopTargeting();
+			transform.parent.GetComponent<AStarTargeter>().StopTargeting();
+			shotDirection.Normalize();
+			
+			Instantiate(waterProjectilePrefab,
+			            new Vector3(transform.position.x + shotDirection.x * BubbleLaunchDistance, transform.position.y + shotDirection.y * BubbleLaunchDistance, transform.position.z),
+			            Quaternion.Euler(0.0f, 0.0f, angle - rotationOffset));
+
+			PlayerInfo.ReduceWaterAfterBubble();
 		}
 	}
 }

@@ -51,6 +51,11 @@ public class AStarTargeter : Targeter {
 			return (Vector2?)targetPos;
 		}
 	}
+
+	public void StopTargeting() {
+		targetPos = (Vector2)(transform.position);
+		path = null;
+	}
 	
 	public float DistanceFromGoal(Vector2 pos) {
 		

@@ -20,15 +20,17 @@ public class FlyStateMachine : MonoBehaviour {
 	private State currentState;
 	private float timeEating;
 	private bool doneEating;
+	private static AudioSource SoundSource; // Static so we don't get a weird chorus effect when all flies flee at once
 
 	public float fleeDistance;
 	public float fleeSpeed;
 	public float appleTreeSpeed;
 	public float appleTreeDist;
 	public float maxEatTime;
+	public AudioClip FleeSound;
 
-	// Use this for initialization
-	void Start () {
+	void Awake () {
+
 		appleTreeTargeter = (AppleTreeTargeter)GetComponent<AppleTreeTargeter>();
 		playerTargeter = (GameObjectTargeter)GetComponent<GameObjectTargeter>();
 		seekComponent = (Seek)GetComponent<Seek>();
@@ -37,6 +39,16 @@ public class FlyStateMachine : MonoBehaviour {
 		playerTargeter.Target = GameObject.Find("Player");
 
 		ResetEatingVars();
+
+		addAudioSource();
+	}
+
+	private void addAudioSource() {
+		
+		SoundSource = gameObject.AddComponent<AudioSource>();
+		SoundSource.loop = false;
+		SoundSource.volume = 0.65f; // The flies do get pretty annoying on full volume...
+		SoundSource.pitch = 0.8f; // The noise is a bit high to start with
 	}
 	
 	// Update is called once per frame
@@ -79,8 +91,16 @@ public class FlyStateMachine : MonoBehaviour {
 
 		float distanceFromAppleTree = Vector2.Distance((Vector2)appleTreeTargeter.GetTarget(), (Vector2)transform.position);
 
+		if (SoundSource == null) {
+			addAudioSource();
+		}
+
 		// Only if the player is close and not underwater.
-		if (distanceFromPlayer < fleeDistance && !GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerInfo>().IsUnderwater()) {
+		if (distanceFromPlayer < fleeDistance && !PlayerInfo.IsUnderwater()) {
+			if (currentState != State.Fleeing && !SoundSource.isPlaying) { // Don't stop/start the sound every time a new fly flees
+				SoundSource.clip = FleeSound;
+				SoundSource.Play();
+			}
 			currentState = State.Fleeing;
 			ResetEatingVars();
 			//Random chance to change the tree the fly will visit to eat.
