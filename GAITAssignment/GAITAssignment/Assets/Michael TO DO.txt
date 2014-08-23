@@ -1,7 +1,7 @@
 UNITY:
 - Make snake pack hunting demo available in menu
-- Change the text in the HUD to pictures of flies/eggs
-- Stretch fly counter so it goes up to 10!
+- Change the text in the HUD to pictures of flies/eggs - DONE
+- Stretch fly counter so it goes up to 10! - DONE
 - Add music with option for on/off
 - Make it so eggs cannot be laid at choke points, cos that will screw A*!
 - Fix annoying white crap around frog

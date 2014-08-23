@@ -12,12 +12,20 @@ public class DrawGUI : MonoBehaviour
 	public Sprite Water;
 	public GUISkin skin;
 	private Texture2D heartTex, eggTex, waterTex; 
+	private bool isPaused;
 
 	void Start () 
 	{
+		isPaused = false;
 		heartTex = SpriteToTexture(Heart);
 		eggTex = SpriteToTexture(Egg);
 		waterTex = SpriteToTexture(Water);
+	}
+
+
+	void Update ()
+	{
+		CheckForPause();
 	}
 
 
@@ -43,6 +51,14 @@ public class DrawGUI : MonoBehaviour
 		GUI.Label (new Rect (40, 45, 120, 20), ": " + info.GetScore());
 		GUI.Label (new Rect (40, 70, 120, 20), ": " + info.GetEggsDestroyed());
 		GUI.Label (new Rect (40, 95, 120, 20), ": " + (int)info.GetWaterLevel());
+
+		// Draw the pause menu
+		if (isPaused) {
+			int menuWidth = 300;
+			int menuHeight = 220;
+			// Center the menu on the screen.
+			GUI.Box (new Rect (Screen.width / 2 - menuWidth / 2, Screen.height / 2 - menuHeight / 2, menuWidth, menuHeight), "");
+		}
 	}
 
 
@@ -60,5 +76,20 @@ public class DrawGUI : MonoBehaviour
 		texture.Apply();
 
 		return texture;
+	}
+
+
+	private void CheckForPause() 
+	{
+		if (Input.GetKeyDown(KeyCode.Escape)) {
+			if (isPaused) {
+				Time.timeScale = 1;
+				isPaused = false;
+			}
+			else {
+				Time.timeScale = 0;
+				isPaused = true;
+			}
+		}
 	}
 }
