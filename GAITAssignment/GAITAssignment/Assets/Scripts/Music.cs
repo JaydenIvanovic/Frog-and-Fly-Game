@@ -11,8 +11,15 @@ public class Music : MonoBehaviour {
 
 	void Awake()
 	{
+		GameObject[] existingPlayers = GameObject.FindGameObjectsWithTag("Music");
+		foreach (GameObject existingPlayer in existingPlayers) {
+			if (existingPlayer != this.gameObject) {
+				Destroy(existingPlayer);
+			}
+		}
+
 		DontDestroyOnLoad(gameObject);
-		SoundSource = gameObject.AddComponent<AudioSource>();
+		SoundSource = gameObject.AddComponent<AudioSource> ();
 		SoundSource.loop = true;
 	}
 	

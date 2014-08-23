@@ -50,6 +50,7 @@ public class PlayerInfo : MonoBehaviour {
 		eggsDestroyed = 0;
 		invulnerableTime = 0.0f;
 		waterLevel = 100f;
+		_isUnderwater = false;
 	}
 
 	public static int GetHealth() {
