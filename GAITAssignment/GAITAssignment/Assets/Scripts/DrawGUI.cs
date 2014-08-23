@@ -12,6 +12,7 @@ public class DrawGUI : MonoBehaviour
 	public Sprite Water;
 	public Sprite WaterMeter;
 	public GUISkin skin;
+	public GUIStyle pauseText;
 
 	private Texture2D heartTex, eggTex, waterTex, waterMeterTex;
 	private bool isPaused;
@@ -57,8 +58,19 @@ public class DrawGUI : MonoBehaviour
 		if (isPaused) {
 			int menuWidth = 300;
 			int menuHeight = 220;
+
 			// Center the menu on the screen.
-			GUI.Box (new Rect (Screen.width / 2 - menuWidth / 2, Screen.height / 2 - menuHeight / 2, menuWidth, menuHeight), "");
+			GUI.BeginGroup(new Rect (Screen.width / 2 - menuWidth / 2, Screen.height / 2 - menuHeight / 2, menuWidth, menuHeight));
+			GUI.Box (new Rect (0, 0, menuWidth, menuHeight), "");
+			GUI.Label(new Rect (55, 30, 100, 30), "Game Paused", pauseText);
+			// Draw the button which will take the player back to the main menu.
+			// And handle the situation in which it is pressed.
+			if(GUI.Button(new Rect (100, 70, 100, 30), "Main Menu")) {
+				isPaused = false;
+				Time.timeScale = 1;
+				Application.LoadLevel("Menu");
+			}
+			GUI.EndGroup();
 		}
 	}
 
