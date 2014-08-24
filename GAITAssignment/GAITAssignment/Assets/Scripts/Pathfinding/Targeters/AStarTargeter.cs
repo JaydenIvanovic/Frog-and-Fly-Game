@@ -68,6 +68,10 @@ public class AStarTargeter : Targeter {
 		//return (goalNode.GetPosition() - pos).magnitude;
 	}
 	
+	public static void ClearGrids() {
+		grids.Clear();
+	}
+
 	void Start () {
 		
 		// Initialise the grid of nodes used for A*
@@ -132,6 +136,11 @@ public class AStarTargeter : Targeter {
 	void Update() {
 		
 		Grid grid = (Grid)(grids[gameObject.tag]);
+
+		// Stop null reference errors when we reset all grids and return to the main menu
+		if (grid == null) {
+			return;
+		}
 
 		grid.UpdateTempBlocked();
 		

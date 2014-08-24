@@ -12,6 +12,7 @@ public class PlayerInfo : MonoBehaviour {
 
 	public int StartingHealth = 3;
 	public float InvulnerableTimeWhenHit = 2.0f;
+	public float InvulnerableFlickerFrequency = 8.0f;
 	public AudioClip HurtSound;
 	public AudioClip EatSound;
 	public AudioClip SplashSound;
@@ -24,8 +25,16 @@ public class PlayerInfo : MonoBehaviour {
 	private static float waterLevel;
 	private static float invulnerableTime;
 	private static bool _isUnderwater;
+
+	private AStarTargeter targeter;
 	private static AudioSource SoundSource;
 
+	// For flickering
+	private static Animator animator;
+	private static SpriteRenderer spriteRenderer;
+	private static Animator tongueAnimator;
+	private static SpriteRenderer tongueSpriteRenderer;
+	
 	// Static copies
 	private static float _InvulnerableTimeWhenHit;
 	private static AudioClip _HurtSound;
@@ -34,6 +43,8 @@ public class PlayerInfo : MonoBehaviour {
 
 	void Awake()
 	{
+		targeter = GetComponent<AStarTargeter>();
+
 		SoundSource = gameObject.AddComponent<AudioSource>();
 		SoundSource.loop = false;
 
@@ -42,6 +53,24 @@ public class PlayerInfo : MonoBehaviour {
 		_HurtSound = HurtSound;
 		_EatSound = EatSound;
 		_SplashSound = SplashSound;
+
+		// Set animators & sprite renderers
+		animator = GetComponent<Animator>();
+		spriteRenderer = GetComponent<SpriteRenderer>();
+
+		Animator[] animators = GetComponentsInChildren<Animator>();
+		foreach (Animator a in animators) {
+			if (a.gameObject.tag == "Tongue") {
+				tongueAnimator = a;
+			}
+		}
+
+		SpriteRenderer[] renderers = GetComponentsInChildren<SpriteRenderer>();
+		foreach (SpriteRenderer sr in renderers) {
+			if (sr.gameObject.tag == "Tongue") {
+				tongueSpriteRenderer = sr;
+			}
+		}
 	}
 
 	public void Start() {
@@ -78,7 +107,7 @@ public class PlayerInfo : MonoBehaviour {
 
 	public static void IncrementScore() {
 		score++;
-		GameObject.Find("Tongue").GetComponent<Animator>().SetTrigger("Eating");
+		tongueAnimator.SetTrigger("Eating");
 		SoundSource.clip = _EatSound;
 		SoundSource.Play();
 	}
@@ -118,6 +147,34 @@ public class PlayerInfo : MonoBehaviour {
 	}
 
 	public void Update() {
+
+		// Defaults
+		spriteRenderer.enabled = true;
+		tongueSpriteRenderer.enabled = true;
+		
+		// Flicker when invulnerable
+		if (PlayerInfo.IsInvulnerable()) {
+			if (((int)(Time.unscaledTime * InvulnerableFlickerFrequency * 2.0f)) % 2 == 0) {
+				spriteRenderer.enabled = false;
+				tongueSpriteRenderer.enabled = false;
+			}
+		}
+
+		// Hide tongue if underwater
+		if (_isUnderwater) {
+			tongueSpriteRenderer.enabled = false;
+			animator.SetBool("Underwater", true);
+		} else {
+			animator.SetBool("Underwater", false);
+		}
+
+		// Sitting or walking
+		Vector2? target = targeter.GetTarget();
+		if (target != null) {
+			animator.SetBool("Sitting", false);
+		} else {
+			animator.SetBool("Sitting", true);
+		}
 
 		// Make the music follow the player (you get a weird panning effect otherwise)
 		GameObject musicPlayer = GameObject.Find("Music");

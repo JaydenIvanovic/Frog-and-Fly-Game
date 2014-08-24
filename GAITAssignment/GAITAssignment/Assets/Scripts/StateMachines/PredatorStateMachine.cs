@@ -30,9 +30,22 @@ public class PredatorStateMachine : MonoBehaviour
 	private GameObject child = null;
 	private float parentingTimer;
 	private State currentState;
-	private static AudioSource SoundSource; // Static so we don't get a weird chorus effect when all snakes attack at once
+	private AudioSource SoundSource;
 	private float bubbleTimeLeft = 0.0f;
 	private float chaseTimeLeft = 0.0f;
+	private float timeUnderwater = 0.0f;
+	private Vector3 originalScale;
+
+	// Making the snakes go in/out of the water is a bit tricky... When they're on the edge of
+	// a lake's trigger they have a tendency to flicker between being inside/outside of the trigger.
+	// I've made it so that this can only flicker with a frequency of WATER_TRANSITION_TIME.
+	private const float WATER_TRANSITION_TIME = 0.3f;
+	private float waterTransitionTimer = WATER_TRANSITION_TIME;
+	private bool lastOnLand = true;
+
+	// Stop hisses being played while there's another hiss going
+	private bool soundWasPlaying = false;
+	private static bool soundPlaying = false;
 	
 	public GameObject Home;
 	public GameObject Player;
@@ -45,18 +58,23 @@ public class PredatorStateMachine : MonoBehaviour
 	public float GoHomeTimeout = 1.5f;
 	public float KnockForce = 250.0f;
 	public float BubbleTime = 3.0f;
+	public float StaySunkTime = 1.0f;
+	public float SunkDeadTime = 2.0f;
+	public float MinReemergenceTime = 0.1f;
 	public SpriteRenderer bubble;
 	public AudioClip AttackSound;
-
+	public AudioClip SplashSound;
+	
 	private enum State
 	{
 		Chasing,
 		Wandering,
 		HeadingHome,
 		Parenting,
-		Bubbled
+		Bubbled,
+		Sunk
 	};
-
+	
 	void Awake ()
 	{
 		homeTargeter = GetComponent<GameObjectTargeter>();
@@ -66,10 +84,11 @@ public class PredatorStateMachine : MonoBehaviour
 		seek = GetComponent<Seek>();
 		movement = GetComponent<Movement>();
 		animator = GetComponent<Animator>();
-
+		originalScale = transform.localScale;
+		
 		parentingTimer = 0f;
 		timeSinceWentHome = GoHomeTimeout;
-
+		
 		// Ensure that the snake has someone to target and a home.
 		if (Home == null || Player == null)
 		{
@@ -79,101 +98,159 @@ public class PredatorStateMachine : MonoBehaviour
 			// Set the player for the predator to chase and this predators home base.
 			var predStateMac = GetComponent<PredatorStateMachine>();
 			predStateMac.Player = GameObject.FindGameObjectWithTag("Player");
-			if (Random.Range (0, 2) == 0)
+			if (Random.Range(0, 2) == 0)
 				predStateMac.Home = GameObject.Find ("SnakeHomeLeft");
 			else
 				predStateMac.Home = GameObject.Find ("SnakeHomeRight");
 		}
-
+		
 		huntTargeter.Target = Player;
 		homeTargeter.Target = Home;
-
+		
 		currentState = State.HeadingHome; // So we don't play the chasing sound immediately!
-
+		
 		SoundSource = gameObject.AddComponent<AudioSource>();
 		SoundSource.loop = false;
 	}
-
+	
 	// Update is called once per frame
 	void Update () 
 	{
+		if (soundWasPlaying && !SoundSource.isPlaying) {
+			soundPlaying = false;
+			soundWasPlaying = false;
+		}
+
 		timeSinceWentHome += Time.deltaTime;
 		parentingTimer += Time.deltaTime;
 		chaseTimeLeft = Mathf.Max(0.0f, chaseTimeLeft - Time.deltaTime);
-
+		waterTransitionTimer += Time.deltaTime;
+		
 		UpdateState();
-
+		
 		// Defaults
 		seek.weight = 1.0f;
 		aStarTargeter.underlyingTargeter = homeTargeter;
 		bubble.enabled = false;
-
+		gameObject.layer = LayerMask.NameToLayer("Default");
+		
 		switch(currentState)
 		{
-			case State.Chasing:
-				aStarTargeter.underlyingTargeter = huntTargeter;
-				child = null;
-				wanderer.weight = 0.0f;
-				movement.acceleration = 5.0f;
-				movement.speed = 3.0f;
-				if (!wasChasing) {
-					if (!SoundSource.isPlaying) {
-						SoundSource.clip = AttackSound;
-						SoundSource.Play();
-					}
-					chaseTimeLeft = MinChaseTime;
+		case State.Chasing:
+			aStarTargeter.underlyingTargeter = huntTargeter;
+			child = null;
+			wanderer.weight = 0.0f;
+			movement.acceleration = 5.0f;
+			movement.speed = 3.0f;
+			if (!wasChasing) {
+				if (!soundPlaying) {
+					soundPlaying = true;
+					soundWasPlaying = true;
+					SoundSource.clip = AttackSound;
+					SoundSource.Play();
 				}
-				wasChasing = true;
-				break;
-			case State.HeadingHome:
-				child = null;
-				homeTargeter.Target = Home;
-				wanderer.weight = 0.0f;
-				movement.acceleration = 1.0f;
-				movement.speed = 2.0f;
-				
-				if (wasChasing) {
-					timeSinceWentHome = 0.0f;
-					wasChasing = false;
-				}
-				break;
-			case State.Parenting:
-				homeTargeter.Target = child;
-				wanderer.weight = 0.2f;
-				break;
-			case State.Wandering:
-				child = null;
-				seek.weight = 0.0f;
-				wanderer.weight = 1.0f;
-				movement.acceleration = 1.0f;
-				movement.speed = 2.0f;
+				chaseTimeLeft = MinChaseTime;
+			}
+			wasChasing = true;
+			break;
+		case State.HeadingHome:
+			child = null;
+			homeTargeter.Target = Home;
+			wanderer.weight = 0.0f;
+			movement.acceleration = 1.0f;
+			movement.speed = 2.0f;
+			
+			if (wasChasing) {
+				timeSinceWentHome = 0.0f;
 				wasChasing = false;
-				break;
-			case State.Bubbled:
-				bubble.enabled = true;
-				child = null;
-				seek.weight = 0.0f;
-				wanderer.weight = 0.0f;
-				movement.acceleration = 0.0f;
-				movement.speed = 0.0f;
-				wasChasing = false;
-				break;
+			}
+			break;
+		case State.Parenting:
+			homeTargeter.Target = child;
+			wanderer.weight = 0.2f;
+			break;
+		case State.Wandering:
+			child = null;
+			seek.weight = 0.0f;
+			wanderer.weight = 1.0f;
+			movement.acceleration = 1.0f;
+			movement.speed = 2.0f;
+			wasChasing = false;
+			break;
+		case State.Bubbled:
+			gameObject.layer = LayerMask.NameToLayer("BubbledSnake");
+			bubble.enabled = true;
+			child = null;
+			seek.weight = 0.0f;
+			wanderer.weight = 0.0f;
+			movement.acceleration = 0.0f;
+			movement.speed = 0.0f;
+			wasChasing = false;
+			break;
+		case State.Sunk:
+			gameObject.layer = LayerMask.NameToLayer("BubbledSnake");
+			bubble.enabled = false;
+			child = null;
+			seek.weight = 0.0f;
+			wanderer.weight = 0.0f;
+			movement.acceleration = 0.0f;
+			movement.speed = 0.0f;
+			wasChasing = false;
+			break;
 		}
-
+		
 		UpdateAnimation();
 	}
-
-
+	
+	
 	private void UpdateState()
 	{
-		if (bubbleTimeLeft > 0.0f) {
-			bubbleTimeLeft -= Time.deltaTime;
+		// Transition between water and land
+		if (waterTransitionTimer > WATER_TRANSITION_TIME) {
+
+			// Emerge from water
+			if ((currentState == State.Sunk) && lastOnLand) {
+				currentState = State.Bubbled;
+				transform.localScale = originalScale;
+				if (!soundPlaying) {
+					soundPlaying = true;
+					soundWasPlaying = true;
+					SoundSource.clip = SplashSound;
+					SoundSource.Play();
+				}
+			}
+
+			// Go into water
+			if ((currentState != State.Sunk) && !lastOnLand) {
+				currentState = State.Sunk;
+				transform.localScale = GameObject.FindGameObjectWithTag("Player").transform.localScale; // So that the underwater animation is the same size as the frog's
+				timeUnderwater = 0.0f;
+				if (!soundPlaying) {
+					soundPlaying = true;
+					soundWasPlaying = true;
+					SoundSource.clip = SplashSound;
+					SoundSource.Play();
+				}
+			}
+		}
+
+		if (currentState == State.Sunk) {
+
+			timeUnderwater += Time.deltaTime;
+				
+			if (timeUnderwater > SunkDeadTime) {
+				Destroy(this.gameObject);
+			}
+
 			return;
 		}
 
-		// Default
-		//currentState = State.Wandering;
-
+		if (bubbleTimeLeft > 0.0f) {
+			currentState = State.Bubbled;
+			bubbleTimeLeft -= Time.deltaTime;
+			return;
+		}
+		
 		// Let the parent remain with the egg
 		if(child)
 		{
@@ -189,7 +266,7 @@ public class PredatorStateMachine : MonoBehaviour
 				return;
 			}
 		}
-
+		
 		if (parentingTimer >= ParentAge && !child) 
 		{
 			parentingTimer = 0f;
@@ -200,15 +277,15 @@ public class PredatorStateMachine : MonoBehaviour
 				return;
 			}
 		}
-
+		
 		if (PlayerInfo.IsUnderwater()) {
 			currentState = State.Wandering;
 			return;
 		}
-
+		
 		if ((((Vector2)(transform.position) - (Vector2)(Home.transform.position)).magnitude > LeashLength)
-		    		&& (((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude > GiveUpDistance)
-					&& (chaseTimeLeft <= 0.0f))
+		    && (((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude > GiveUpDistance)
+		    && (chaseTimeLeft <= 0.0f))
 		{
 			currentState = State.HeadingHome;
 		} 
@@ -223,8 +300,8 @@ public class PredatorStateMachine : MonoBehaviour
 			{	
 				// Check if we're gonna chase.
 				if ((((Vector2)(Player.transform.position) - (Vector2)(Home.transform.position)).magnitude < LeashLength)
-				    	|| (((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude < GiveUpDistance)
-				    	|| (chaseTimeLeft > 0.0f))
+				    || (((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude < GiveUpDistance)
+				    || (chaseTimeLeft > 0.0f))
 				{
 					currentState = State.Chasing;	
 				} 
@@ -235,10 +312,30 @@ public class PredatorStateMachine : MonoBehaviour
 			}
 		}
 	}
-
-
+	
+	public void Sink() {
+		if (lastOnLand) {
+			waterTransitionTimer = 0.0f;
+		}
+		lastOnLand = false;
+	}
+	
+	public void Unsink() {
+		if (!lastOnLand) {
+			waterTransitionTimer = 0.0f;
+		}
+		lastOnLand = true;
+	}
+	
 	private void UpdateAnimation()
 	{
+		if (currentState == State.Sunk) {
+			animator.SetBool("Sunk", true);
+			return;
+		} else {
+			animator.SetBool("Sunk", false);
+		}
+		
 		float actualRotation = transform.localEulerAngles.z - movement.angleAdjustment;
 		
 		while (actualRotation < 0.0f)
@@ -261,17 +358,17 @@ public class PredatorStateMachine : MonoBehaviour
 		
 		animator.SetInteger("Direction", (int)dir);
 	}
-
-
+	
+	
 	private void CheckIfHitPlayer(Collider2D other) 
 	{
-		if ((currentState != State.Bubbled) && (other.gameObject.tag.Equals ("Player"))) {
-
+		if ((currentState != State.Bubbled) && (currentState != State.Sunk) && (other.gameObject.tag.Equals ("Player"))) {
+			
 			if (!PlayerInfo.IsInvulnerable()) {
-
+				
 				PlayerInfo.DecrementHealth();
 				PlayerInfo.MakeInvulnerable();
-
+				
 				// Knock the player
 				GameObject player = GameObject.FindGameObjectWithTag("Player");
 				Vector2 knockDirection = ((Vector2)(player.transform.position - transform.position)).normalized;
@@ -279,26 +376,26 @@ public class PredatorStateMachine : MonoBehaviour
 			}
 		}
 	}
-
-
+	
+	
 	private void LayEgg()
 	{
 		child = (GameObject)Instantiate(Egg, transform.position - Vector3.down + new Vector3(0.0f, 0.0f, 1.0f), Quaternion.identity);
 	}
-
-
+	
+	
 	public void OnTriggerEnter2D(Collider2D other) 
 	{
 		CheckIfHitPlayer(other);
-
+		
 		if (other.gameObject.tag == "Projectile") {
 			rigidbody2D.velocity = Vector2.zero;
 			bubbleTimeLeft = BubbleTime;
 			currentState = State.Bubbled;
 		}
 	}
-
-
+	
+	
 	public void OnTriggerStay2D(Collider2D other) 
 	{
 		CheckIfHitPlayer(other);

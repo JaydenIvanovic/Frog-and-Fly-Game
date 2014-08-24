@@ -68,6 +68,7 @@ public class DrawGUI : MonoBehaviour
 			if(GUI.Button(new Rect (100, 70, 100, 30), "Main Menu")) {
 				isPaused = false;
 				Time.timeScale = 1;
+				AStarTargeter.ClearGrids();
 				Application.LoadLevel("Menu");
 			}
 			GUI.EndGroup();

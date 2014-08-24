@@ -1,7 +1,11 @@
 UNITY:
-- Add music with option for on/off
-- Make it so eggs cannot be laid at choke points, cos that will screw A*!
-- Add an obstacle avoidance steering behaviour (I believe the specs ask for this)
+- Add an obstacle avoidance steering behaviour (I believe the specs ask for this). Michael: Could we make the snakes avoid the bubbles?
+- Add a score for drowned snakes
+
+Nice to have:
+- Stop snakes laying eggs in the lakes
+- Add a mute option to the start screen
+
 
 WRITE UP:
 - Explain jolty snake rotation
