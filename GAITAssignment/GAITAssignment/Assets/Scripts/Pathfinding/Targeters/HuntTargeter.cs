@@ -64,9 +64,9 @@ public class HuntTargeter : Targeter {
 
 		float c = -(vecA.sqrMagnitude + vecB.sqrMagnitude);
 
-		float determinant = b * b - 4.0f * a * c;
+		float discriminant = b * b - 4.0f * a * c;
 
-		if (determinant < 0) {
+		if (discriminant < 0) {
 
 			// Flank target
 			if (compAlongVelocity < 0) {
@@ -76,8 +76,8 @@ public class HuntTargeter : Targeter {
 			}
 
 		} else {
-			float solution1 = (-b + Mathf.Sqrt(determinant)) / (2.0f * a);
-			float solution2 = (-b - Mathf.Sqrt(determinant)) / (2.0f * a);
+			float solution1 = (-b + Mathf.Sqrt(discriminant)) / (2.0f * a);
+			float solution2 = (-b - Mathf.Sqrt(discriminant)) / (2.0f * a);
 
 			float solution = float.MaxValue;
 

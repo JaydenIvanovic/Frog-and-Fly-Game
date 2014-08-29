@@ -37,22 +37,25 @@ public class DrawGUI : MonoBehaviour
 	{
 		GUI.skin = skin;
 
-		GUI.Box (new Rect (10, 10, 100, 120), "");
+		if (PlayerInfo.playerInScene) {
 
-		int health = PlayerInfo.GetHealth();
+			GUI.Box (new Rect (10, 10, 100, 120), "");
 
-		for (int i = 0; i < health; i++) {
-			GUI.DrawTexture(new Rect(20 + (heartSize + heartSeparation) * i, 20, heartSize, heartSize), heartTex, ScaleMode.ScaleToFit, true, 0.0f);
+			int health = PlayerInfo.GetHealth();
+
+			for (int i = 0; i < health; i++) {
+				GUI.DrawTexture(new Rect(20 + (heartSize + heartSeparation) * i, 20, heartSize, heartSize), heartTex, ScaleMode.ScaleToFit, true, 0.0f);
+			}
+
+			// This could probably be made better by using GUI groups. 
+			GUI.DrawTexture(new Rect(20, 45, heartSize, heartSize), waterTex, ScaleMode.ScaleToFit, true, 0.0f);
+			GUI.DrawTexture(new Rect(20, 70, heartSize, heartSize), Fly, ScaleMode.ScaleToFit, true, 0.0f);
+			GUI.DrawTexture(new Rect(20, 90, heartSize, heartSize), eggTex, ScaleMode.ScaleToFit, true, 0.0f);
+
+			GUI.DrawTexture(new Rect(50 - 2, 45 + 3, PlayerInfo.GetWaterLevel() / 2.0f, 14), waterMeterTex, ScaleMode.StretchToFill, true, 0.0f);
+			GUI.Label (new Rect (40, 70, 120, 20), ": " + PlayerInfo.GetScore());
+			GUI.Label (new Rect (40, 95, 120, 20), ": " + PlayerInfo.GetEggsDestroyed());
 		}
-
-		// This could probably be made better by using GUI groups. 
-		GUI.DrawTexture(new Rect(20, 45, heartSize, heartSize), waterTex, ScaleMode.ScaleToFit, true, 0.0f);
-		GUI.DrawTexture(new Rect(20, 70, heartSize, heartSize), Fly, ScaleMode.ScaleToFit, true, 0.0f);
-		GUI.DrawTexture(new Rect(20, 90, heartSize, heartSize), eggTex, ScaleMode.ScaleToFit, true, 0.0f);
-
-		GUI.DrawTexture(new Rect(50 - 2, 45 + 3, PlayerInfo.GetWaterLevel() / 2.0f, 14), waterMeterTex, ScaleMode.StretchToFill, true, 0.0f);
-		GUI.Label (new Rect (40, 70, 120, 20), ": " + PlayerInfo.GetScore());
-		GUI.Label (new Rect (40, 95, 120, 20), ": " + PlayerInfo.GetEggsDestroyed());
 
 		// Draw the pause menu
 		if (isPaused) {

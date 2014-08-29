@@ -10,6 +10,15 @@ public class AppleTreeTargeter : Targeter {
 		treePosition = trees[Random.Range(0, 4)].transform.position;
 	}
 
+	public void Update() {
+
+		// Change trees if we're stuck
+		ObstacleAvoider avoider = GetComponent<ObstacleAvoider>();
+		if ((avoider != null) && (avoider.isStuck)) {
+			UpdateTree();
+		}
+	}
+
 	public override Vector2? GetTarget ()
 	{
 		return (Vector2?)treePosition;
