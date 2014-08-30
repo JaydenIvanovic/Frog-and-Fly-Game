@@ -1,64 +1,61 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class DrawGUI : MonoBehaviour 
-{
-	private int heartSize = 20;
-	private int heartSeparation = 10;
-
-	public Sprite Heart;
-	public Texture Fly;
-	public Sprite Egg;
-	public Sprite Water;
-	public Sprite WaterMeter;
+public class DrawGUIFlyDemo : MonoBehaviour {
+	
 	public GUISkin skin;
 	public GUIStyle pauseText;
 
-	private Texture2D heartTex, eggTex, waterTex, waterMeterTex;
 	private bool isPaused;
+	private bool avoidObstacles = true;
 
 	void Start () 
 	{
 		isPaused = false;
-		heartTex = SpriteToTexture(Heart);
-		eggTex = SpriteToTexture(Egg);
-		waterTex = SpriteToTexture(Water);
-		waterMeterTex = SpriteToTexture(WaterMeter);
+
+		if (!PlayerPrefs.HasKey("AvoidObstacles")) {
+			PlayerPrefs.SetInt("AvoidObstacles", avoidObstacles? 1 : -1);
+		}
+
+		UpdateFlies();
 	}
-
-
+	
+	
 	void Update ()
 	{
 		CheckForPause();
 	}
 
+	void UpdateFlies() {
 
+		GameObject[] flys = GameObject.FindGameObjectsWithTag("Fly");
+		foreach (GameObject fly in flys) {
+			SteeringController sc = fly.GetComponent<SteeringController>();
+			if (sc != null) {
+				sc.avoidObstacles = (PlayerPrefs.GetInt("AvoidObstacles") == 1)? true : false;
+			}
+		}
+	}
+	
 	void OnGUI () 
 	{
 		GUI.skin = skin;
 
-		GUI.Box (new Rect (10, 10, 100, 120), "");
+		GUI.Box (new Rect (10, 10, 180, 90), "");
 
-		int health = PlayerInfo.GetHealth();
-
-		for (int i = 0; i < health; i++) {
-			GUI.DrawTexture(new Rect(20 + (heartSize + heartSeparation) * i, 20, heartSize, heartSize), heartTex, ScaleMode.ScaleToFit, true, 0.0f);
+		if(GUI.Button(new Rect (20, 20, 160, 30), "Avoid obstacles: " + ((PlayerPrefs.GetInt("AvoidObstacles") == 1)? "On" : "Off"))) {
+			PlayerPrefs.SetInt("AvoidObstacles", PlayerPrefs.GetInt("AvoidObstacles") * -1);
+			UpdateFlies();
 		}
-
-		// This could probably be made better by using GUI groups. 
-		GUI.DrawTexture(new Rect(20, 45, heartSize, heartSize), waterTex, ScaleMode.ScaleToFit, true, 0.0f);
-		GUI.DrawTexture(new Rect(20, 70, heartSize, heartSize), Fly, ScaleMode.ScaleToFit, true, 0.0f);
-		GUI.DrawTexture(new Rect(20, 90, heartSize, heartSize), eggTex, ScaleMode.ScaleToFit, true, 0.0f);
-
-		GUI.DrawTexture(new Rect(50 - 2, 45 + 3, PlayerInfo.GetWaterLevel() / 2.0f, 14), waterMeterTex, ScaleMode.StretchToFill, true, 0.0f);
-		GUI.Label (new Rect (40, 70, 120, 20), ": " + PlayerInfo.GetScore());
-		GUI.Label (new Rect (40, 95, 120, 20), ": " + PlayerInfo.GetEggsDestroyed());
+		if(GUI.Button(new Rect (20, 60, 160, 30), "Restart demo")) {
+			Application.LoadLevel (Application.loadedLevel);
+		}
 
 		// Draw the pause menu
 		if (isPaused) {
 			int menuWidth = 300;
 			int menuHeight = 220;
-
+			
 			// Center the menu on the screen.
 			GUI.BeginGroup(new Rect (Screen.width / 2 - menuWidth / 2, Screen.height / 2 - menuHeight / 2, menuWidth, menuHeight));
 			GUI.Box (new Rect (0, 0, menuWidth, menuHeight), "");
@@ -74,8 +71,8 @@ public class DrawGUI : MonoBehaviour
 			GUI.EndGroup();
 		}
 	}
-
-
+	
+	
 	// Helper function to convert sprites to textures.
 	// Follows the code from http://answers.unity3d.com/questions/651984/convert-sprite-image-to-texture.html
 	private Texture2D SpriteToTexture(Sprite sprite)
@@ -88,11 +85,11 @@ public class DrawGUI : MonoBehaviour
 		texture.SetPixels(pixels);
 		// Must be called to set changes made via SetPixels.
 		texture.Apply();
-
+		
 		return texture;
 	}
-
-
+	
+	
 	private void CheckForPause() 
 	{
 		if (Input.GetKeyDown(KeyCode.Escape)) {

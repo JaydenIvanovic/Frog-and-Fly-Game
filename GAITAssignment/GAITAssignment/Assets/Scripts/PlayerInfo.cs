@@ -9,7 +9,6 @@ public class PlayerInfo : MonoBehaviour {
 	private static string deathScreen = "DeathSplash";
 
 	public static float BUBBLE_COST = 20.0f;
-	public static bool playerInScene = false;
 
 	public int StartingHealth = 3;
 	public float InvulnerableTimeWhenHit = 2.0f;
@@ -44,8 +43,6 @@ public class PlayerInfo : MonoBehaviour {
 
 	void Awake()
 	{
-		playerInScene = true;
-
 		targeter = GetComponent<AStarTargeter>();
 
 		SoundSource = gameObject.AddComponent<AudioSource>();

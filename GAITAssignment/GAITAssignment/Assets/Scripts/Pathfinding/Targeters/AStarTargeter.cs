@@ -37,6 +37,7 @@ public class AStarTargeter : Targeter {
 	private static Hashtable grids = new Hashtable();
 	
 	public float updateFrequency;
+	public float moveNextNodeRadius = 0.2f;
 	public bool drawDebug;
 	public GameObject goalFlag;
 	public Mode searchMode = Mode.AStarWithJPS;
@@ -73,13 +74,12 @@ public class AStarTargeter : Targeter {
 	}
 
 	void Start () {
-		
-		// Initialise the grid of nodes used for A*
-		// TO DO: Fix magic numbers!
-		
+
 		Collider2D collider = GetComponent<Collider2D>();
 		
-		// Assume all scaling is the same (i.e. x scaling = y scaling)
+		// This assumes that all scaling is equal (i.e. x scaling = y scaling) and the GameObject's collider
+		// is a perfect square or circle (which it is for the snakes and frog).
+		// "blockDetectionRadius" is the extra blocked zone that the grid creates around blocked nodes.
 		if (collider.GetType() == typeof(CircleCollider2D)) {
 			blockDetectionRadius = ((CircleCollider2D)collider).radius * transform.localScale.x;
 		} else if (collider.GetType() == typeof(BoxCollider2D)) {
@@ -92,7 +92,8 @@ public class AStarTargeter : Targeter {
 		Grid grid;
 		
 		if (!grids.Contains(gameObject.tag)) {
-			
+
+			// Initialise the grid of nodes used for A*	
 			grid = new Grid(GameObject.Find("LeftBoundary").transform.position.x,
 			                GameObject.Find("RightBoundary").transform.position.x,
 			                GameObject.Find("BottomBoundary").transform.position.y,
@@ -102,13 +103,15 @@ public class AStarTargeter : Targeter {
 			grids.Add(gameObject.tag, grid);
 			
 		} else {
+
+			// Use an existing grid (this will happen for the snakes after the first snake grid is created)
 			grid = (Grid)(grids[gameObject.tag]);
 		}
 		
-		// Set the goal at the player's position so that they won't start moving immediately
+		// Set the goal at the player's position so that they won't start moving when the game starts
 		goalNode = grid.GetClosestSquare(transform.position);
 		if (goalNode == null) {
-			Debug.Log("ERROR: Player placed outside of grid!");
+			Debug.Log("ERROR: Player placed in a bad position!");
 		}
 		
 		// Hide the target flag
@@ -116,7 +119,7 @@ public class AStarTargeter : Targeter {
 			goalFlag.GetComponent<SpriteRenderer>().enabled = false;
 	}
 	
-	// Draw the current path (only shows in the "scene" window)
+	// Draw the current path (shows in the "scene" window, but you can turn on "Gizmos" to see it in on the game screen)
 	void DebugDrawPath() {
 		
 		Grid grid = (Grid)(grids[gameObject.tag]);
@@ -142,37 +145,44 @@ public class AStarTargeter : Targeter {
 			return;
 		}
 
+		// Update the set of "temporary blocked" nodes (this is how the snakes avoid their own eggs)
 		grid.UpdateTempBlocked();
-		
+
+		// Visual debugging
 		if (drawDebug) {
 			DebugDrawPath();
 		}
-		
 		if (drawDebug) {
 			grid.DebugDrawBlocked();
 		}
 		
 		timeSinceUpdate += Time.deltaTime;
-		
+
+		// If updateFrequency > 0 then the path won't attempt to update on every frame.
+		// This is pretty critical for the snakes - they'll cause a lot of slowdown otherwise!
+		// We're still able to update fast enough the snake behaviour to look intelligent (0.2 sec is their current setting)
 		if (timeSinceUpdate > updateFrequency) {
 			
 			timeSinceUpdate = 0.0f;
-			
-			// Update path if target has updated
+
+			// The underlying targeter tells us where we're trying to head.
+			// For example, it could be a "mouse targeter" (i.e. move the frog to where we clicked)
+			// or a "GameObject targeter" (i.e. when the snakes are targetting the frog).
 			Vector2? tempTarget = underlyingTargeter.GetTarget();
 			
 			if (tempTarget != null) {
 				
-				// TO DO: If the closest square is blocked then return the nearest unblocked square
+				// If the closest node to the target is blocked then return the nearest unblocked square
 				Node tempGoal = grid.GetClosestSquare((Vector2)tempTarget);
 				tempGoal = grid.GetClosestUnblockedNode(tempGoal);
-				
+
+				// Only update the path if target has changed
 				if ((tempGoal != null) && (!tempGoal.Equals (goalNode))) {
 					goalNode = tempGoal;
 					
 					ArrayList tempPath = GetAStarPath ();
 					
-					// Ensure that A* managed to find a path
+					// Only update the current path if A* successfully found a path
 					if (tempPath != null) {
 						path = tempPath;
 						
@@ -191,18 +201,17 @@ public class AStarTargeter : Targeter {
 		}
 		
 		if (path != null && path.Count > 0) {
-			// If we're about to overshoot the mark then move to the next waypoint
-			// TO DO: Replace this 0.2f crap with a better way of detecting when we've reached the target
-			if ((targetPos - (Vector2)transform.position).magnitude < 0.2f) {
-				
-				// Move to the next point
+
+			// Move to the next waypoint on the path when we're close-ish to the the current waypoint
+			if ((targetPos - (Vector2)transform.position).magnitude < moveNextNodeRadius) {
+
 				path.RemoveAt(0);
 				
 				if (path.Count > 0) {
 					// There's another waypoint left, so go to it
 					targetPos = (Vector2)path[0];
 				} else {
-					// We've arrived at the destination
+					// Otherwise, we've arrived at the destination
 					path = null;
 				}
 			}
@@ -214,7 +223,8 @@ public class AStarTargeter : Targeter {
 	}
 	
 	private ArrayList GetAStarPath() {
-		
+
+		// For timing how long the path took to calculate
 		float startTime = Time.realtimeSinceStartup;
 		
 		Grid grid = (Grid)(grids[gameObject.tag]);
@@ -223,64 +233,60 @@ public class AStarTargeter : Targeter {
 		startPoint = grid.GetClosestUnblockedNode(startPoint);
 		
 		if (startPoint == null) {
-			Debug.Log("WARNING: Starting point is outside the grid.");
+			Debug.Log("ERROR: A* can't calculate a path because the start point is bad!");
 			return null;
 		}
 		
-		//startPoint.SetFScore(DistanceFromGoal((Vector2)transform.position));
-		//startPoint.SetGScore(0.0f);
-		
-		// TO DO: A sorted list would be better for this because it would allow faster insertion time and no explicit sorting
-		//ArrayList openList = new ArrayList();
+		// Store the frontier nodes in a priority queue (implemented as a binary heap) for efficiency
 		PriorityQueue<float, Node> frontier = new PriorityQueue<float, Node>();
-		Hashtable openSet = new Hashtable(); // For efficient reasons, faster to check membership
-		
+
+		// Again for efficient reasons, use hashtables to store the open and closed sets
+		Hashtable openSet = new Hashtable();
 		Hashtable closedSet = new Hashtable();
 		
-		if (grid.IsBlocked(goalNode))
+		if (grid.IsBlocked(goalNode)) {
 			return null;
-		
-		//openList.Add(startPoint);
+		}
+
 		frontier.Add(new KeyValuePair<float, Node>(DistanceFromGoal((Vector2)transform.position), startPoint));
 		openSet.Add(startPoint, startPoint);
-		
+
+		// Don't attempt a path if the start and goal nodes are disconnected because we'll end up
+		// searching the whole area the start node is connected to and taking a long time to run!
 		if (!grid.IsConnected(startPoint, goalNode)) {
 			return null;
 		}
 		
-		Hashtable nodeParent = new Hashtable(); // Node, parent
+		Hashtable nodeParent = new Hashtable(); // <Node, parent>
 		nodeParent.Add(startPoint, null);
-		
-		Hashtable fScoresMap = new Hashtable(); // Node, fScore
-		fScoresMap.Add (startPoint, DistanceFromGoal((Vector2)transform.position));
-		
-		Hashtable gScoresMap = new Hashtable(); // Node, gScore
+
+		// G scores are stored in a map rather than in the nodes themselves,
+		// because this way the grid can be shared between multiple creatures.
+		Hashtable gScoresMap = new Hashtable(); // <Node, gScore>
 		gScoresMap.Add (startPoint, 0.0f);
-		
+
 		Node currentNode = startPoint;
 		
 		nodesExploredLastMove.Clear();
-		
-		//while (openList.Count != 0) {
+
 		while (frontier.Count != 0) {
-			
-			//openList.Sort(new FScoreComparer(fScoresMap));
-			
-			// Wiki: current := the node in openset having the lowest f_score[] value
-			//currentNode = (Node)openList[0];
+
 			currentNode = frontier.DequeueValue();
+
+			// Remove current from openset
+			openSet.Remove(currentNode);
 			
-			float currentNodeGScore;
-			if (gScoresMap.ContainsKey(currentNode)) {
-				currentNodeGScore = (float)(gScoresMap[currentNode]);
-			} else {
-				currentNodeGScore = 0.0f;
+			// Add current to closedset
+			if (!closedSet.Contains(currentNode)) {
+				closedSet.Add(currentNode, currentNode);
 			}
+			
+			float currentNodeGScore = (float)(gScoresMap[currentNode]);
 			
 			// For drawing debug info
 			nodesExploredLastMove.Add(currentNode);
 			
-			// Wiki: if current = goal return reconstruct_path(came_from, goal)
+			// If we've reached the goal then reconstruct the path
 			if (currentNode.Equals(goalNode)) {
 				
 				ArrayList path = new ArrayList();
@@ -329,16 +335,7 @@ public class AStarTargeter : Targeter {
 					return path;
 				}
 			}
-			
-			// Wiki: remove current from openset
-			//openList.RemoveAt(0);
-			openSet.Remove(currentNode);
-			
-			// Wiki: add current to closedset
-			if (!closedSet.Contains(currentNode)) {
-				closedSet.Add(currentNode, currentNode);
-			}
-			
+
 			if (searchMode == Mode.AStarWithJPS) {
 				
 				ArrayList jpsSuccessors = identifySuccessors(grid, currentNode, (Node)(nodeParent[currentNode]), goalNode);
@@ -346,65 +343,39 @@ public class AStarTargeter : Targeter {
 				foreach (object o in jpsSuccessors) {
 					
 					Node n = (Node)o;
+
+					float tentG = currentNodeGScore + (n.GetPosition() - currentNode.GetPosition()).magnitude;
+					float fsc = tentG + DistanceFromGoal(n.GetPosition());
 					
-					if (n != null) {
-						
-						float tentG = currentNodeGScore + (n.GetPosition() - currentNode.GetPosition()).magnitude;
-						float fsc = tentG + DistanceFromGoal(n.GetPosition());
-						
-						if (!grid.IsBlocked(n) && !closedSet.Contains(n)) {
-							if (!openSet.Contains(n)) {
-								//n.SetFScore(fsc);
-								
-								//n.SetGScore(tentG);
-								
-								//n.SetParent(currentNode);
-								
-								if (fScoresMap.ContainsKey(n)) {
-									fScoresMap.Remove(n);
-								}
-								fScoresMap.Add (n, fsc);
-								
-								
-								if (gScoresMap.ContainsKey(n)) {
-									gScoresMap.Remove(n);
-								}
-								gScoresMap.Add(n, tentG);
-								
-								if (nodeParent.ContainsKey(n)) {
-									nodeParent.Remove(n);
-								}
+					if (!grid.IsBlocked(n) && !closedSet.Contains(n)) {
+
+						if (!openSet.Contains(n)) {
+
+							nodeParent.Add(n, currentNode);
+							gScoresMap.Add(n, tentG);
+							frontier.Add(new KeyValuePair<float, Node>(fsc, n));
+							openSet.Add(n, n);
+
+						} else {
+							
+							// Neighbour is already in the open set. If the tentative g score is lower
+							// than the existing one, update the parent and existing f and g scores.
+							float existingGScore = (float)(gScoresMap[n]);
+							
+							if (tentG < existingGScore) {
+
+								nodeParent.Remove(n);
 								nodeParent.Add(n, currentNode);
-								//openList.Add(n);
-								frontier.Add(new KeyValuePair<float, Node>(fsc, n));
-								openSet.Add(n, n);
-							} else {
-								
-								// Update existing G score
-								float existingGScore;
-								
-								if (gScoresMap.ContainsKey(n)) {
-									existingGScore = (float)(gScoresMap[n]);
-								} else {
-									existingGScore = 0.0f;
-								}
-								
-								if (tentG < existingGScore) {
-									//n.SetGScore(tentG);
-									if (gScoresMap.ContainsKey(n)) {
-										gScoresMap.Remove(n);
-									}
-									gScoresMap.Add(n, tentG);
-									//n.SetParent(currentNode);
-									if (nodeParent.ContainsKey(n)) {
-										nodeParent.Remove(n);
-									}
-									nodeParent.Add(n, currentNode);
-								}
+
+								frontier.UpdatePriority(n, fsc);
+
+								gScoresMap.Remove(n);
+								gScoresMap.Add(n, tentG);
 							}
 						}
 					}
 				}
+
 			} else if (searchMode == Mode.AStarVanilla) {
 				
 				float[] tentativeGScores = new float[(int)NodeDirections.Last + 1];
@@ -422,7 +393,6 @@ public class AStarTargeter : Targeter {
 				Node[] neighbours = new Node[(int)NodeDirections.Last + 1];
 				float[] fScores = new float[(int)NodeDirections.Last + 1];
 				
-				
 				for (int i = (int)NodeDirections.First; i <= (int)NodeDirections.Last; i++) {
 					neighbours[i] = currentNode.GetNeighbours()[i];
 					if (neighbours[i] != null) {
@@ -433,49 +403,34 @@ public class AStarTargeter : Targeter {
 				for (int i = 0; i < neighbours.Length; i++) {
 					
 					Node n = neighbours[i];
-					
+
+					// Some of the neighbours may have been blocked or off the grid
 					if (n != null) {
-						
-						float nGScore;
-						if (gScoresMap.ContainsKey(n)) {
-							nGScore = (float)(gScoresMap[n]);
-						} else {
-							nGScore = 0.0f;
-						}
-						
+
 						if (!grid.IsBlocked(n) && !closedSet.Contains(n)) {
+
 							if (!openSet.Contains(n)) {
-								//n.SetFScore(fScores[i]);
-								if (fScoresMap.ContainsKey(n)) {
-									fScoresMap.Remove(n);
-								}
-								fScoresMap.Add (n, fScores[i]);
-								//n.SetGScore(tentativeGScores[i]);
-								if (gScoresMap.ContainsKey(n)) {
-									gScoresMap.Remove(n);
-								}
-								gScoresMap.Add(n, tentativeGScores[i]);
-								//n.SetParent(currentNode);
-								if (nodeParent.ContainsKey(n)) {
-									nodeParent.Remove(n);
-								}
+
 								nodeParent.Add(n, currentNode);
-								//openList.Add(n);
+								gScoresMap.Add(n, tentativeGScores[i]);
 								frontier.Add(new KeyValuePair<float, Node>(fScores[i], n));
 								openSet.Add(n, n);
+
 							} else {
-								// Update existing G score
-								if (tentativeGScores[i] < nGScore) {
-									//n.SetGScore(tentativeGScores[i]);
-									if (gScoresMap.ContainsKey(n)) {
-										gScoresMap.Remove(n);
-									}
-									gScoresMap.Add(n, tentativeGScores[i]);
-									//n.SetParent(currentNode);
-									if (nodeParent.ContainsKey(n)) {
-										nodeParent.Remove(n);
-									}
+
+								// Neighbour is already in the open set. If the tentative g score is lower
+								// than the existing one, update the parent and existing f and g scores.
+								float existingGScore = (float)(gScoresMap[n]);
+
+								if (tentativeGScores[i] < existingGScore) {
+									
+									nodeParent.Remove(n);
 									nodeParent.Add(n, currentNode);
+									
+									frontier.UpdatePriority(n, fScores[i]);
+									
+									gScoresMap.Remove(n);
+									gScoresMap.Add(n, tentativeGScores[i]);
 								}
 							}
 						}

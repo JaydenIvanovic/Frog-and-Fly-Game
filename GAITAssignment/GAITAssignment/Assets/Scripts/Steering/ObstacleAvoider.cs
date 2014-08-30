@@ -19,11 +19,12 @@ public class ObstacleAvoider : MonoBehaviour
 	private float confirmStuckTime = 0.5f;
 	private Vector2 testPosition = Vector2.zero;
 	private float stuckRadius = 0.1f;
-	private float kickForce = 5.0f;
+	private float kickForce = 50.0f;
+	private Collider2D lastColliderTouched = null;
+	private float conservativeMultiplier = 1.5f;
 
 	public float detectionDist = 2.0f;
 	public float anglePrecision = 10.0f;
-	public float raycastDelay = 0.2f;
 	public float speedAdjustment = 0.5f;
 	public bool drawDebug;
 	public string[] obstacleLayerNames;
@@ -80,6 +81,20 @@ public class ObstacleAvoider : MonoBehaviour
 		
 	}
 
+	void OnTriggerEnter2D(Collider2D other) {
+		lastColliderTouched = other;
+	}
+
+	void OnTriggerStay2D(Collider2D other) {
+		lastColliderTouched = other;
+	}
+
+	void OnTriggerExit2D(Collider2D other) {
+		if (lastColliderTouched == other) {
+			lastColliderTouched = null;
+		}
+	}
+
 	public Vector2 AvoidObstacles(Vector2 steering) {
 		
 		bool freePathFound = false;
@@ -89,7 +104,10 @@ public class ObstacleAvoider : MonoBehaviour
 
 		// Kick the object back to hopefully unstick it!
 		if (isStuck) {
-			rigidbody2D.AddForce(-kickForce * steering);
+
+			if (lastColliderTouched != null) {
+				rigidbody2D.AddForce(-kickForce * (lastColliderTouched.transform.position - transform.position).normalized);
+			}
 		}
 
 		foreach (string layerName in obstacleLayerNames) {
@@ -98,18 +116,25 @@ public class ObstacleAvoider : MonoBehaviour
 		
 		// Calculate the four corners of the box collider.
 		Vector2[] boxPoints = new Vector2[4];
-		boxPoints[0] = boxCollider.center + boxCollider.size / 2.0f;
-		boxPoints[1] = boxCollider.center - boxCollider.size / 2.0f;
-		boxPoints[2] = boxCollider.center + new Vector2(boxCollider.size.x, -boxCollider.size.y) / 2.0f;
-		boxPoints[3] = boxCollider.center + new Vector2(-boxCollider.size.x, boxCollider.size.y) / 2.0f;
+		boxPoints[0] = boxCollider.center + conservativeMultiplier * boxCollider.size / 2.0f;
+		boxPoints[1] = boxCollider.center - conservativeMultiplier * boxCollider.size / 2.0f;
+		boxPoints[2] = boxCollider.center + conservativeMultiplier * new Vector2(boxCollider.size.x, -boxCollider.size.y) / 2.0f;
+		boxPoints[3] = boxCollider.center + conservativeMultiplier * new Vector2(-boxCollider.size.x, boxCollider.size.y) / 2.0f;
 		
-		// Try finding a path twice. The first time we'll try fitting the whole boxCollider along the path,
-		// but if that fails (hopefully rare!) then we'll just try a single raycast on the assumption that
-		// there may be a narrow gap we can fit through.
-		for (int attempt = 0; attempt <= 1; attempt++) {
+		// Try finding a path three times:
+		// - The first time we'll try a conservative approach with a hitbox larger than the actual collider
+		// - Only the second attempt we'll try fitting the actual collider
+		// - If the previous attempts failed (hopefully rare!) then we'll just try a single raycast on the
+		//   assumption that there may be a narrow gap we can fit through.
+		for (int attempt = 0; attempt <= 2; attempt++) {
 			
 			// Relax the condition of fitting the full collider through if we couldn't find a path the first time
 			if (attempt == 1) {
+				for (int i = 0; i < 4; i++) {
+					boxPoints[i] /= conservativeMultiplier;
+				}
+			}
+			else if (attempt == 2) {
 				boxPoints = new Vector2[1];
 				boxPoints[0] = Vector2.zero;
 			}
@@ -131,7 +156,7 @@ public class ObstacleAvoider : MonoBehaviour
 					
 					foreach (Vector2 boxPoint in boxPoints) {
 						
-						RaycastHit2D[] rayHits = Physics2D.RaycastAll((Vector2)(transform.position) + boxPoint - raycastDelay * rayCastVec, rayCastVec, detectionDist, layerMask);
+						RaycastHit2D[] rayHits = Physics2D.RaycastAll((Vector2)(transform.position) + boxPoint, rayCastVec, detectionDist, layerMask);
 						
 						foreach (var rayHit in rayHits)
 						{
