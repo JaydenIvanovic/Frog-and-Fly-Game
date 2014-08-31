@@ -1,10 +1,6 @@
 UNITY:
 - Make bubble around snake flash when about to expire
-- Stop predators veering away when they start chasing (is there actually a bug?)
 - Stop snakes laying eggs in the lakes
-
-Nice to have:
-- Add a score for drowned snakes
 
 WRITE UP:
 - Explain jolty snake rotation

@@ -32,7 +32,7 @@ public class Mouth : MonoBehaviour {
 
 	void SprayWater()
 	{
-		if (Input.GetMouseButtonDown(0) && PlayerInfo.GetWaterLevel() > PlayerInfo.BUBBLE_COST)
+		if (!PlayerInfo.isPaused && Input.GetMouseButtonDown(0) && PlayerInfo.GetWaterLevel() > PlayerInfo.BUBBLE_COST)
 		{
 			Vector2 clickPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 			

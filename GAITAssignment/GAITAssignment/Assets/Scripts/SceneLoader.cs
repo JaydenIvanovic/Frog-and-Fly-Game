@@ -17,7 +17,17 @@ public class SceneLoader : MonoBehaviour
 
 	void OnMouseDown()
 	{
-		Application.LoadLevel (sceneName);
+		if (sceneName == "") {
+			if (PlayerPrefs.HasKey("CurrentLevel")) {
+				Application.LoadLevel(PlayerPrefs.GetString("CurrentLevel"));
+			} else {
+				// Default if we don't know where to go
+				Application.LoadLevel("Menu");
+			}
+		} else {
+			PlayerPrefs.SetString("CurrentLevel", sceneName);
+			Application.LoadLevel(sceneName);
+		}	
 	}
 
 	void OnMouseEnter()

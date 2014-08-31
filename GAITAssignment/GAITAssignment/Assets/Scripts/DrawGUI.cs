@@ -9,12 +9,13 @@ public class DrawGUI : MonoBehaviour
 	public Sprite Heart;
 	public Texture Fly;
 	public Sprite Egg;
+	public Sprite Snake;
 	public Sprite Water;
 	public Sprite WaterMeter;
 	public GUISkin skin;
 	public GUIStyle pauseText;
 
-	private Texture2D heartTex, eggTex, waterTex, waterMeterTex;
+	private Texture2D heartTex, eggTex, snakeTex, waterTex, waterMeterTex;
 	private bool isPaused;
 
 	void Start () 
@@ -22,6 +23,7 @@ public class DrawGUI : MonoBehaviour
 		isPaused = false;
 		heartTex = SpriteToTexture(Heart);
 		eggTex = SpriteToTexture(Egg);
+		snakeTex = SpriteToTexture(Snake);
 		waterTex = SpriteToTexture(Water);
 		waterMeterTex = SpriteToTexture(WaterMeter);
 	}
@@ -37,7 +39,7 @@ public class DrawGUI : MonoBehaviour
 	{
 		GUI.skin = skin;
 
-		GUI.Box (new Rect (10, 10, 100, 120), "");
+		GUI.Box (new Rect (10, 10, 100, 140), "");
 
 		int health = PlayerInfo.GetHealth();
 
@@ -48,11 +50,13 @@ public class DrawGUI : MonoBehaviour
 		// This could probably be made better by using GUI groups. 
 		GUI.DrawTexture(new Rect(20, 45, heartSize, heartSize), waterTex, ScaleMode.ScaleToFit, true, 0.0f);
 		GUI.DrawTexture(new Rect(20, 70, heartSize, heartSize), Fly, ScaleMode.ScaleToFit, true, 0.0f);
-		GUI.DrawTexture(new Rect(20, 90, heartSize, heartSize), eggTex, ScaleMode.ScaleToFit, true, 0.0f);
+		GUI.DrawTexture(new Rect(20, 95, heartSize, heartSize), eggTex, ScaleMode.ScaleToFit, true, 0.0f);
+		GUI.DrawTexture(new Rect(20, 120, heartSize, heartSize), snakeTex, ScaleMode.ScaleToFit, true, 0.0f);
 
 		GUI.DrawTexture(new Rect(50 - 2, 45 + 3, PlayerInfo.GetWaterLevel() / 2.0f, 14), waterMeterTex, ScaleMode.StretchToFill, true, 0.0f);
 		GUI.Label (new Rect (40, 70, 120, 20), ": " + PlayerInfo.GetScore());
 		GUI.Label (new Rect (40, 95, 120, 20), ": " + PlayerInfo.GetEggsDestroyed());
+		GUI.Label (new Rect (40, 120, 120, 20), ": " + PlayerInfo.GetSnakesDrowned());
 
 		// Draw the pause menu
 		if (isPaused) {
@@ -62,14 +66,19 @@ public class DrawGUI : MonoBehaviour
 			// Center the menu on the screen.
 			GUI.BeginGroup(new Rect (Screen.width / 2 - menuWidth / 2, Screen.height / 2 - menuHeight / 2, menuWidth, menuHeight));
 			GUI.Box (new Rect (0, 0, menuWidth, menuHeight), "");
-			GUI.Label(new Rect (55, 30, 100, 30), "Game Paused", pauseText);
+			GUI.Label(new Rect (79, 30, 100, 30), "Game Paused", pauseText);
 			// Draw the button which will take the player back to the main menu.
 			// And handle the situation in which it is pressed.
 			if(GUI.Button(new Rect (100, 70, 100, 30), "Main Menu")) {
-				isPaused = false;
-				Time.timeScale = 1;
+				UnPause();
 				AStarTargeter.ClearGrids();
 				Application.LoadLevel("Menu");
+			}
+			if(GUI.Button(new Rect (100, 110, 100, 30), "Resume")) {
+				UnPause();
+			}
+			if(GUI.Button(new Rect (100, 150, 100, 30), "Exit Game")) {
+				AppHelper.Quit();
 			}
 			GUI.EndGroup();
 		}
@@ -92,17 +101,23 @@ public class DrawGUI : MonoBehaviour
 		return texture;
 	}
 
-
+	private void UnPause() {
+		Time.timeScale = 1;
+		isPaused = false;
+		PlayerInfo.isPaused = false;
+	}
+	
+	
 	private void CheckForPause() 
 	{
 		if (Input.GetKeyDown(KeyCode.Escape)) {
 			if (isPaused) {
-				Time.timeScale = 1;
-				isPaused = false;
+				UnPause();
 			}
 			else {
 				Time.timeScale = 0;
 				isPaused = true;
+				PlayerInfo.isPaused = true;
 			}
 		}
 	}

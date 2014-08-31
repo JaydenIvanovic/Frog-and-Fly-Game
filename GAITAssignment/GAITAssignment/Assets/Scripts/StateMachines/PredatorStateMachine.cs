@@ -18,6 +18,8 @@ public enum SnakeDirections
 [RequireComponent(typeof(Animator))]
 public class PredatorStateMachine : MonoBehaviour 
 {
+	private static int MaxSnakes = 8;
+
 	private GameObjectTargeter homeTargeter;
 	private HuntTargeter huntTargeter;
 	private AStarTargeter aStarTargeter;
@@ -239,6 +241,7 @@ public class PredatorStateMachine : MonoBehaviour
 			timeUnderwater += Time.deltaTime;
 				
 			if (timeUnderwater > SunkDeadTime) {
+				PlayerInfo.IncrementSnakesDrowned();
 				Destroy(this.gameObject);
 			}
 
@@ -270,8 +273,12 @@ public class PredatorStateMachine : MonoBehaviour
 		if (parentingTimer >= ParentAge && !child) 
 		{
 			parentingTimer = 0f;
+
+			GameObject[] snakes = GameObject.FindGameObjectsWithTag("Predator");
+			GameObject[] eggs = GameObject.FindGameObjectsWithTag("Egg");
+
 			// Extra randomization step to see if an egg is to be created.
-			if (Random.Range(0f,1f) <= ParentDesire) {
+				if ((snakes.Length + eggs.Length < MaxSnakes) && (Random.Range(0f,1f) <= ParentDesire)) {
 				LayEgg();
 				currentState = State.Parenting;
 				return;

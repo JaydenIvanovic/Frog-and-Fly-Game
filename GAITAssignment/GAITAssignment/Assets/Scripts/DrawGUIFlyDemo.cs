@@ -59,14 +59,19 @@ public class DrawGUIFlyDemo : MonoBehaviour {
 			// Center the menu on the screen.
 			GUI.BeginGroup(new Rect (Screen.width / 2 - menuWidth / 2, Screen.height / 2 - menuHeight / 2, menuWidth, menuHeight));
 			GUI.Box (new Rect (0, 0, menuWidth, menuHeight), "");
-			GUI.Label(new Rect (55, 30, 100, 30), "Game Paused", pauseText);
+			GUI.Label(new Rect (79, 30, 100, 30), "Game Paused", pauseText);
 			// Draw the button which will take the player back to the main menu.
 			// And handle the situation in which it is pressed.
 			if(GUI.Button(new Rect (100, 70, 100, 30), "Main Menu")) {
-				isPaused = false;
-				Time.timeScale = 1;
+				UnPause();
 				AStarTargeter.ClearGrids();
 				Application.LoadLevel("Menu");
+			}
+			if(GUI.Button(new Rect (100, 110, 100, 30), "Resume")) {
+				UnPause();
+			}
+			if(GUI.Button(new Rect (100, 150, 100, 30), "Exit Game")) {
+				AppHelper.Quit();
 			}
 			GUI.EndGroup();
 		}
@@ -90,16 +95,23 @@ public class DrawGUIFlyDemo : MonoBehaviour {
 	}
 	
 	
+	private void UnPause() {
+		Time.timeScale = 1;
+		isPaused = false;
+		PlayerInfo.isPaused = false;
+	}
+	
+	
 	private void CheckForPause() 
 	{
 		if (Input.GetKeyDown(KeyCode.Escape)) {
 			if (isPaused) {
-				Time.timeScale = 1;
-				isPaused = false;
+				UnPause();
 			}
 			else {
 				Time.timeScale = 0;
 				isPaused = true;
+				PlayerInfo.isPaused = true;
 			}
 		}
 	}

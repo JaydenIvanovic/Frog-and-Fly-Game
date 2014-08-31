@@ -12,8 +12,14 @@ public class CameraMovementRTS : MonoBehaviour {
 	public float AdditionalRightBuffer;
 	public float AdditionalTopBuffer;
 	public float AdditionalBottomBuffer;
+
+	// To ensure that the screen size gives the player a decent view
+	public float RequiredWidth = 10.0f;
+	public float RequiredHeight = 10.0f;
 	
 	void Update () {
+
+		Camera.main.orthographicSize = Mathf.Max(RequiredWidth / Camera.main.aspect, RequiredHeight);
 
 		float nonScrollWidth = 0.5f * Screen.width * scrollPctOfScreen;
 		float nonScrollHeight = 0.5f * Screen.height * scrollPctOfScreen;

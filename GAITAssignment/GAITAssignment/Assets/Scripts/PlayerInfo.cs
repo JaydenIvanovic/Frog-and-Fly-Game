@@ -10,6 +10,8 @@ public class PlayerInfo : MonoBehaviour {
 
 	public static float BUBBLE_COST = 20.0f;
 
+	public static bool isPaused = false;
+
 	public int StartingHealth = 3;
 	public float InvulnerableTimeWhenHit = 2.0f;
 	public float InvulnerableFlickerFrequency = 8.0f;
@@ -19,6 +21,7 @@ public class PlayerInfo : MonoBehaviour {
 	public float WaterLossRate = 2.0f;
 	public float WaterRefillRate = 10.0f;
 
+	private static int snakesDrowned;
 	private static int eggsDestroyed;
 	private static int health;
 	private static int score;
@@ -77,6 +80,7 @@ public class PlayerInfo : MonoBehaviour {
 		health = StartingHealth;
 		score = 0;
 		eggsDestroyed = 0;
+		snakesDrowned = 0;
 		invulnerableTime = 0.0f;
 		waterLevel = 100f;
 		_isUnderwater = false;
@@ -88,6 +92,10 @@ public class PlayerInfo : MonoBehaviour {
 
 	public static int GetEggsDestroyed() {
 		return eggsDestroyed;
+	}
+
+	public static int GetSnakesDrowned() {
+		return snakesDrowned;
 	}
 
 	public static float GetWaterLevel() {
@@ -114,6 +122,10 @@ public class PlayerInfo : MonoBehaviour {
 
 	public static void IncrementEggs() {
 		eggsDestroyed++;
+	}
+
+	public static void IncrementSnakesDrowned() {
+		snakesDrowned++;
 	}
 
 	public static void ReduceWaterAfterBubble() {
