@@ -3,24 +3,25 @@ using System.Collections;
 
 public class Music : MonoBehaviour {
 
-	private AudioSource SoundSource;
-	private int currentClip = 0;
+	public static Music music;
+
+	private static AudioSource SoundSource;
+	private static int currentClip = 0;
 
 	public AudioClip[] SoundClips;
 	public float[] VolumeAdjustments;
 
 	void Awake()
 	{
-		GameObject[] existingPlayers = GameObject.FindGameObjectsWithTag("Music");
-		foreach (GameObject existingPlayer in existingPlayers) {
-			if (existingPlayer != this.gameObject) {
-				Destroy(existingPlayer);
-			}
+		if(music != null)
+			Destroy(this.gameObject);
+		else {
+			music = this;
+			SoundSource = gameObject.AddComponent<AudioSource> ();
+			SoundSource.loop = true;
 		}
-
-		DontDestroyOnLoad(gameObject);
-		SoundSource = gameObject.AddComponent<AudioSource> ();
-		SoundSource.loop = true;
+		
+		DontDestroyOnLoad(this);
 	}
 	
 	void Start()

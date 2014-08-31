@@ -9,6 +9,13 @@ public enum SnakeDirections
 	Right = 3
 };
 
+public enum DemoMode
+{
+	Off = 0,
+	Dumb = 1,
+	Smart = 2
+};
+
 [RequireComponent(typeof(GameObjectTargeter))]
 [RequireComponent(typeof(HuntTargeter))]
 [RequireComponent(typeof(AStarTargeter))]
@@ -18,7 +25,7 @@ public enum SnakeDirections
 [RequireComponent(typeof(Animator))]
 public class PredatorStateMachine : MonoBehaviour 
 {
-	private static int MaxSnakes = 8;
+	private static int MaxSnakes;
 
 	private GameObjectTargeter homeTargeter;
 	private HuntTargeter huntTargeter;
@@ -37,6 +44,8 @@ public class PredatorStateMachine : MonoBehaviour
 	private float bubbleFlickerTime = 1.0f;
 	private float bubbleFlickerFrequency = 8.0f;
 	private float chaseTimeLeft = 0.0f;
+	private float normalSpeed;
+	private float chaseSpeed;
 	private float timeUnderwater = 0.0f;
 	private Vector3 originalScale;
 
@@ -54,14 +63,15 @@ public class PredatorStateMachine : MonoBehaviour
 	public GameObject Home;
 	public GameObject Player;
 	public GameObject Egg;
-	public float ParentAge = 30f; // age in seconds
+	public DemoMode DemonstrationMode = DemoMode.Off;
+	public float ParentAge; // age in seconds
 	public float ParentDesire = 0.3f;
-	public float LeashLength = 6.0f;
+	public float LeashLength;
 	public float GiveUpDistance = 4.0f;
 	public float MinChaseTime = 5.0f;
 	public float GoHomeTimeout = 1.5f;
 	public float KnockForce = 250.0f;
-	public float BubbleTime = 3.0f;
+	public float BubbleTime;
 	public float StaySunkTime = 1.0f;
 	public float SunkDeadTime = 2.0f;
 	public float MinReemergenceTime = 0.1f;
@@ -116,6 +126,65 @@ public class PredatorStateMachine : MonoBehaviour
 		
 		SoundSource = gameObject.AddComponent<AudioSource>();
 		SoundSource.loop = false;
+
+		// Difficulty settings
+		int difficulty = 1;
+		GameObject optionsGameObj = GameObject.Find("GameOptions");
+
+		// We won't be able to find the options GameObject if we haven't gone via the main menu
+		if (optionsGameObj != null) {
+			GameOptions options = optionsGameObj.GetComponent<GameOptions>();
+			difficulty = options.difficulty;
+		}
+
+		switch (difficulty) {
+			case 0:
+				// Easy
+				BubbleTime = 6.0f;
+				normalSpeed = 1.5f;
+				chaseSpeed = 1.9f;
+				LeashLength = 8.0f;
+				break;
+			case 1:
+			default:
+				// Normal
+				BubbleTime = 3.0f;
+				normalSpeed = 2.0f;
+				chaseSpeed = 3.0f;
+				LeashLength = 8.0f;
+				break;
+			case 2:
+				// Hard
+				BubbleTime = 2.0f;
+				normalSpeed = 2.0f;
+				chaseSpeed = 3.5f;
+				LeashLength = 12.0f;
+				break;
+			case 3:
+				// Insane
+				BubbleTime = 1.5f;
+				normalSpeed = 3.0f;
+				chaseSpeed = 4.0f;
+				LeashLength = 9999.0f;
+				break;
+		}
+
+		if (difficulty == 0) {
+			huntTargeter.dumbAttack = true;
+		}
+		
+		MaxSnakes = 5 + difficulty;
+		
+		ParentAge = 40.0f - 10.0f * (float)(difficulty);
+
+		// For the class demonstration
+		if (DemonstrationMode == DemoMode.Dumb) {
+			huntTargeter.dumbAttack = true;
+			LeashLength = 9999.0f;
+		} else if (DemonstrationMode == DemoMode.Smart) {
+			huntTargeter.dumbAttack = false;
+			LeashLength = 9999.0f;
+		}
 	}
 	
 	// Update is called once per frame
@@ -152,7 +221,7 @@ public class PredatorStateMachine : MonoBehaviour
 			child = null;
 			wanderer.weight = 0.0f;
 			movement.acceleration = 5.0f;
-			movement.speed = 3.0f;
+			movement.speed = chaseSpeed;
 			if (!wasChasing) {
 				if (!soundPlaying) {
 					soundPlaying = true;
@@ -169,7 +238,7 @@ public class PredatorStateMachine : MonoBehaviour
 			homeTargeter.Target = Home;
 			wanderer.weight = 0.0f;
 			movement.acceleration = 1.0f;
-			movement.speed = 2.0f;
+			movement.speed = normalSpeed;
 			
 			if (wasChasing) {
 				timeSinceWentHome = 0.0f;
@@ -185,7 +254,7 @@ public class PredatorStateMachine : MonoBehaviour
 			seek.weight = 0.0f;
 			wanderer.weight = 1.0f;
 			movement.acceleration = 1.0f;
-			movement.speed = 2.0f;
+			movement.speed = normalSpeed;
 			wasChasing = false;
 			break;
 		case State.Bubbled:

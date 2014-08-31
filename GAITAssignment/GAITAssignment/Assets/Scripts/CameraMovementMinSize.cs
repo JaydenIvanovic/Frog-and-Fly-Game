@@ -6,8 +6,15 @@ public class CameraMovementMinSize : MonoBehaviour {
 	
 	public float RequiredWidth = 10.0f;
 	public float RequiredHeight = 10.0f;
-	
-	void Update () {
+
+	void Awake() {
+		GameObject music = GameObject.Find("Music");
+		if (music != null) {
+			music.transform.position = Vector3.zero;
+		}
+	}
+
+	void Update() {
 
 		Camera.main.orthographicSize = Mathf.Max(RequiredWidth / Camera.main.aspect, RequiredHeight);
 	}

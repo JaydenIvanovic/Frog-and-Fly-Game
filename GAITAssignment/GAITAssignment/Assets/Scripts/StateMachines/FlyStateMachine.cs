@@ -20,10 +20,10 @@ public class FlyStateMachine : MonoBehaviour {
 	private State currentState;
 	private float timeEating;
 	private bool doneEating;
+	private float fleeSpeed;
 	private static AudioSource SoundSource; // Static so we don't get a weird chorus effect when all flies flee at once
 
 	public float fleeDistance;
-	public float fleeSpeed;
 	public float appleTreeSpeed;
 	public float appleTreeDist;
 	public float maxEatTime;
@@ -41,6 +41,37 @@ public class FlyStateMachine : MonoBehaviour {
 		ResetEatingVars();
 
 		addAudioSource();
+
+		// Difficulty settings
+		
+		int difficulty = 1;
+		GameObject optionsGameObj = GameObject.Find("GameOptions");
+		
+		// We won't be able to find the options GameObject if we haven't gone via the main menu
+		if (optionsGameObj != null) {
+			GameOptions options = optionsGameObj.GetComponent<GameOptions>();
+			difficulty = options.difficulty;
+		}
+
+		switch (difficulty) {
+		case 0:
+			// Easy
+			fleeSpeed = 2.5f;
+			break;
+		case 1:
+		default:
+			// Normal
+			fleeSpeed = 3.0f;
+			break;
+		case 2:
+			// Hard
+			fleeSpeed = 3.2f;
+			break;
+		case 3:
+			// Insane
+			fleeSpeed = 4.0f;
+			break;
+		}
 	}
 
 	private void addAudioSource() {
