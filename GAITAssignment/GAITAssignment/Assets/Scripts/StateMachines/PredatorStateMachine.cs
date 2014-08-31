@@ -31,9 +31,11 @@ public class PredatorStateMachine : MonoBehaviour
 	private bool wasChasing = false;
 	private GameObject child = null;
 	private float parentingTimer;
-	private State currentState;
+	public State currentState; // Made public just for debugging purposes
 	private AudioSource SoundSource;
 	private float bubbleTimeLeft = 0.0f;
+	private float bubbleFlickerTime = 1.0f;
+	private float bubbleFlickerFrequency = 8.0f;
 	private float chaseTimeLeft = 0.0f;
 	private float timeUnderwater = 0.0f;
 	private Vector3 originalScale;
@@ -63,11 +65,12 @@ public class PredatorStateMachine : MonoBehaviour
 	public float StaySunkTime = 1.0f;
 	public float SunkDeadTime = 2.0f;
 	public float MinReemergenceTime = 0.1f;
+	public bool nearObstacle = false;
 	public SpriteRenderer bubble;
 	public AudioClip AttackSound;
 	public AudioClip SplashSound;
 	
-	private enum State
+	public enum State
 	{
 		Chasing,
 		Wandering,
@@ -121,6 +124,12 @@ public class PredatorStateMachine : MonoBehaviour
 		if (soundWasPlaying && !SoundSource.isPlaying) {
 			soundPlaying = false;
 			soundWasPlaying = false;
+		}
+
+		if (currentState != State.Sunk) {
+			transform.localScale = originalScale;
+		} else {
+			transform.localScale = GameObject.FindGameObjectWithTag("Player").transform.localScale; // So that the underwater animation is the same size as the frog's
 		}
 
 		timeSinceWentHome += Time.deltaTime;
@@ -180,8 +189,17 @@ public class PredatorStateMachine : MonoBehaviour
 			wasChasing = false;
 			break;
 		case State.Bubbled:
-			gameObject.layer = LayerMask.NameToLayer("BubbledSnake");
+
 			bubble.enabled = true;
+
+			// Make the bubble flicker if it's about to expire
+			if (bubbleTimeLeft < bubbleFlickerTime) {
+				if (((int)(Time.unscaledTime * bubbleFlickerFrequency * 2.0f)) % 2 == 0) {
+					bubble.enabled = false;
+				}
+			}
+
+			gameObject.layer = LayerMask.NameToLayer("BubbledSnake");
 			child = null;
 			seek.weight = 0.0f;
 			wanderer.weight = 0.0f;
@@ -213,7 +231,6 @@ public class PredatorStateMachine : MonoBehaviour
 			// Emerge from water
 			if ((currentState == State.Sunk) && lastOnLand) {
 				currentState = State.Bubbled;
-				transform.localScale = originalScale;
 				if (!soundPlaying) {
 					soundPlaying = true;
 					soundWasPlaying = true;
@@ -225,7 +242,6 @@ public class PredatorStateMachine : MonoBehaviour
 			// Go into water
 			if ((currentState != State.Sunk) && !lastOnLand) {
 				currentState = State.Sunk;
-				transform.localScale = GameObject.FindGameObjectWithTag("Player").transform.localScale; // So that the underwater animation is the same size as the frog's
 				timeUnderwater = 0.0f;
 				if (!soundPlaying) {
 					soundPlaying = true;
@@ -269,8 +285,9 @@ public class PredatorStateMachine : MonoBehaviour
 				return;
 			}
 		}
-		
-		if (parentingTimer >= ParentAge && !child) 
+
+		// Don't attempt to lay eggs near obstacles - we don't want to lay eggs in the lake!
+		if (!nearObstacle && (parentingTimer >= ParentAge) && !child) 
 		{
 			parentingTimer = 0f;
 
@@ -278,16 +295,11 @@ public class PredatorStateMachine : MonoBehaviour
 			GameObject[] eggs = GameObject.FindGameObjectsWithTag("Egg");
 
 			// Extra randomization step to see if an egg is to be created.
-				if ((snakes.Length + eggs.Length < MaxSnakes) && (Random.Range(0f,1f) <= ParentDesire)) {
+			if ((snakes.Length + eggs.Length < MaxSnakes) && (Random.Range(0f,1f) <= ParentDesire)) {
 				LayEgg();
 				currentState = State.Parenting;
 				return;
 			}
-		}
-		
-		if (PlayerInfo.IsUnderwater()) {
-			currentState = State.Wandering;
-			return;
 		}
 		
 		if ((((Vector2)(transform.position) - (Vector2)(Home.transform.position)).magnitude > LeashLength)
@@ -306,9 +318,11 @@ public class PredatorStateMachine : MonoBehaviour
 			if (target != null) 
 			{	
 				// Check if we're gonna chase.
-				if ((((Vector2)(Player.transform.position) - (Vector2)(Home.transform.position)).magnitude < LeashLength)
-				    || (((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude < GiveUpDistance)
-				    || (chaseTimeLeft > 0.0f))
+				if (((((Vector2)(Player.transform.position) - (Vector2)(Home.transform.position)).magnitude < LeashLength)
+				      || (((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude < GiveUpDistance)
+				      || (chaseTimeLeft > 0.0f))
+
+				    && !PlayerInfo.IsUnderwater())
 				{
 					currentState = State.Chasing;	
 				} 
@@ -405,6 +419,17 @@ public class PredatorStateMachine : MonoBehaviour
 	
 	public void OnTriggerStay2D(Collider2D other) 
 	{
+		// Try to ensure we don't get stuck ramming against an obstacle
+		if ((LayerMask.LayerToName(other.gameObject.layer) == "Obstacles") || 
+		    (LayerMask.LayerToName(other.gameObject.layer) == "Pond")) {
+
+			AStarTargeter ast = GetComponent<AStarTargeter>();
+
+			if (ast != null) {
+				ast.ForceRecalculate();
+			}
+		}
+
 		CheckIfHitPlayer(other);
 	}
 }

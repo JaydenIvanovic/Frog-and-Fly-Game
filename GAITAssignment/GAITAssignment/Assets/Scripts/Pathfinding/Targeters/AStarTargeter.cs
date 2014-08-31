@@ -118,6 +118,13 @@ public class AStarTargeter : Targeter {
 		if (goalFlag != null)
 			goalFlag.GetComponent<SpriteRenderer>().enabled = false;
 	}
+
+	// Since the seek behaviour doesn't guarantee that the GameObject will move *exactly* to the next waypoint, it's
+	// possible for creatures (most likely the snakes) to get stuck by drifting slightly off course. If they're stuck
+	// ramming against an obstacle then hopefully recalculating the path will get them unstuck.
+	public void ForceRecalculate() {
+		goalNode = null;
+	}
 	
 	// Draw the current path (shows in the "scene" window, but you can turn on "Gizmos" to see it in on the game screen)
 	void DebugDrawPath() {
@@ -177,7 +184,7 @@ public class AStarTargeter : Targeter {
 				tempGoal = grid.GetClosestUnblockedNode(tempGoal);
 
 				// Only update the path if target has changed
-				if ((tempGoal != null) && (!tempGoal.Equals (goalNode))) {
+				if ((tempGoal != null) && (!tempGoal.Equals(goalNode))) {
 					goalNode = tempGoal;
 					
 					ArrayList tempPath = GetAStarPath ();

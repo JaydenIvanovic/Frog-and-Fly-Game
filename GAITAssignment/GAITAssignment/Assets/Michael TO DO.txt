@@ -1,6 +1,5 @@
 UNITY:
-- Make bubble around snake flash when about to expire
-- Stop snakes laying eggs in the lakes
+
 
 WRITE UP:
 - Explain jolty snake rotation
