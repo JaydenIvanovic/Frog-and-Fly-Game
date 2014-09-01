@@ -48,6 +48,7 @@ public class DrawGUIFlyDemo : MonoBehaviour {
 			UpdateFlies();
 		}
 		if(GUI.Button(new Rect (20, 60, 160, 30), "Restart demo")) {
+			UnPause();
 			Application.LoadLevel (Application.loadedLevel);
 		}
 

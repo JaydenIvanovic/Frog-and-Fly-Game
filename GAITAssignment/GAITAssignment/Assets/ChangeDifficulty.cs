@@ -2,12 +2,15 @@
 using System.Collections;
 
 public class ChangeDifficulty : MonoBehaviour {
-	
+
+	public int increment;
+	public GameObject otherArrow;
+
 	private TextMesh textMesh;
 	private GameOptions options;
 	
 	void Awake() {
-		textMesh = GetComponent<TextMesh>();
+		textMesh = GameObject.Find("DifficultyDisplay").GetComponent<TextMesh>();
 		options = GameObject.Find("GameOptions").GetComponent<GameOptions>();
 	}
 	
@@ -18,17 +21,15 @@ public class ChangeDifficulty : MonoBehaviour {
 	
 	void OnMouseDown()
 	{
-		options.difficulty = (options.difficulty + 1) % options.difficulties.Length;
+		options.difficulty = options.difficulty + increment;
+
+		if ((options.difficulty <= 0) || (options.difficulty >= (options.difficulties.Length - 1))) {
+			options.difficulty = Mathf.Clamp(options.difficulty, 0, options.difficulties.Length - 1);
+			gameObject.SetActive(false);
+		}
+
 		textMesh.text = "Difficulty: " + options.difficulties[options.difficulty];
-	}
-	
-	void OnMouseEnter()
-	{
-		transform.localScale *= 1.5f;
-	}
-	
-	void OnMouseExit()
-	{
-		transform.localScale /= 1.5f;
+
+		otherArrow.SetActive(true);
 	}
 }

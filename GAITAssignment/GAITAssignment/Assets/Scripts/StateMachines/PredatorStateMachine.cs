@@ -9,13 +9,6 @@ public enum SnakeDirections
 	Right = 3
 };
 
-public enum DemoMode
-{
-	Off = 0,
-	Dumb = 1,
-	Smart = 2
-};
-
 [RequireComponent(typeof(GameObjectTargeter))]
 [RequireComponent(typeof(HuntTargeter))]
 [RequireComponent(typeof(AStarTargeter))]
@@ -63,7 +56,7 @@ public class PredatorStateMachine : MonoBehaviour
 	public GameObject Home;
 	public GameObject Player;
 	public GameObject Egg;
-	public DemoMode DemonstrationMode = DemoMode.Off;
+	public bool DemoMode = false;
 	public float ParentAge; // age in seconds
 	public float ParentDesire = 0.3f;
 	public float LeashLength;
@@ -178,12 +171,23 @@ public class PredatorStateMachine : MonoBehaviour
 		ParentAge = 40.0f - 10.0f * (float)(difficulty);
 
 		// For the class demonstration
-		if (DemonstrationMode == DemoMode.Dumb) {
-			huntTargeter.dumbAttack = true;
+		if (DemoMode) {
+
+			// Make the snakes chase over the whole map in the demo
 			LeashLength = 9999.0f;
-		} else if (DemonstrationMode == DemoMode.Smart) {
-			huntTargeter.dumbAttack = false;
-			LeashLength = 9999.0f;
+
+			// Default, 1 = true
+			int smart = 1;
+
+			if (PlayerPrefs.HasKey("SmartDemoSnakes")) {
+				smart = PlayerPrefs.GetInt("SmartDemoSnakes");
+			}
+
+			if (smart == 1) {
+				huntTargeter.dumbAttack = false;
+			} else {
+				huntTargeter.dumbAttack = true;
+			}
 		}
 	}
 	
@@ -248,6 +252,9 @@ public class PredatorStateMachine : MonoBehaviour
 		case State.Parenting:
 			homeTargeter.Target = child;
 			wanderer.weight = 0.2f;
+			movement.acceleration = 1.0f;
+			movement.speed = normalSpeed;
+			wasChasing = false;
 			break;
 		case State.Wandering:
 			child = null;
