@@ -11,7 +11,7 @@ public class LakeTrigger : MonoBehaviour {
 			other.gameObject.GetComponent<PredatorStateMachine>().Sink();
 		}
 	}
-	
+
 	public void OnTriggerStay2D(Collider2D other) {
 		if (other.gameObject.tag == "Player") {
 			PlayerInfo.SetUnderwater(true);

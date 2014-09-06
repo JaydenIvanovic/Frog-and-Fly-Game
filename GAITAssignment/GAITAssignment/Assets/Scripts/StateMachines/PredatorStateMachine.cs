@@ -44,9 +44,9 @@ public class PredatorStateMachine : MonoBehaviour
 
 	// Making the snakes go in/out of the water is a bit tricky... When they're on the edge of
 	// a lake's trigger they have a tendency to flicker between being inside/outside of the trigger.
-	// I've made it so that this can only flicker with a frequency of WATER_TRANSITION_TIME.
-	private const float WATER_TRANSITION_TIME = 0.3f;
-	private float waterTransitionTimer = WATER_TRANSITION_TIME;
+	// I've made it so that they have to move a certain distance before flipping state.
+	private const float WATER_TRANSITION_DISTANCE = 0.5f;
+	private Vector2 lastWaterTransitionPos = Vector2.zero;
 	private bool lastOnLand = true;
 
 	// Stop hisses being played while there's another hiss going
@@ -208,7 +208,7 @@ public class PredatorStateMachine : MonoBehaviour
 		timeSinceWentHome += Time.deltaTime;
 		parentingTimer += Time.deltaTime;
 		chaseTimeLeft = Mathf.Max(0.0f, chaseTimeLeft - Time.deltaTime);
-		waterTransitionTimer += Time.deltaTime;
+		//waterTransitionTimer += Time.deltaTime;
 		
 		UpdateState();
 		
@@ -302,11 +302,12 @@ public class PredatorStateMachine : MonoBehaviour
 	private void UpdateState()
 	{
 		// Transition between water and land
-		if (waterTransitionTimer > WATER_TRANSITION_TIME) {
+		if ((((Vector2)transform.position) - lastWaterTransitionPos).magnitude > WATER_TRANSITION_DISTANCE) {
 
 			// Emerge from water
 			if ((currentState == State.Sunk) && lastOnLand) {
 				currentState = State.Bubbled;
+				lastWaterTransitionPos = ((Vector2)transform.position);
 				if (!soundPlaying) {
 					soundPlaying = true;
 					soundWasPlaying = true;
@@ -318,6 +319,7 @@ public class PredatorStateMachine : MonoBehaviour
 			// Go into water
 			if ((currentState != State.Sunk) && !lastOnLand) {
 				currentState = State.Sunk;
+				lastWaterTransitionPos = ((Vector2)transform.position);
 				timeUnderwater = 0.0f;
 				if (!soundPlaying) {
 					soundPlaying = true;
@@ -411,16 +413,10 @@ public class PredatorStateMachine : MonoBehaviour
 	}
 	
 	public void Sink() {
-		if (lastOnLand) {
-			waterTransitionTimer = 0.0f;
-		}
 		lastOnLand = false;
 	}
 	
 	public void Unsink() {
-		if (!lastOnLand) {
-			waterTransitionTimer = 0.0f;
-		}
 		lastOnLand = true;
 	}
 	
@@ -488,7 +484,9 @@ public class PredatorStateMachine : MonoBehaviour
 		if (other.gameObject.tag == "Projectile") {
 			rigidbody2D.velocity = Vector2.zero;
 			bubbleTimeLeft = BubbleTime;
-			currentState = State.Bubbled;
+			if (currentState != State.Sunk) {
+				currentState = State.Bubbled;
+			}
 		}
 	}
 	

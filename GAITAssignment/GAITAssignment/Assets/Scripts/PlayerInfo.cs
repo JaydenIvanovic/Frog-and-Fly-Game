@@ -7,6 +7,7 @@ using System.Collections;
 public class PlayerInfo : MonoBehaviour {
 
 	private static string deathScreen = "DeathSplash";
+	private static string winScreen = "Win";
 
 	public static float BUBBLE_COST = 20.0f;
 
@@ -25,6 +26,7 @@ public class PlayerInfo : MonoBehaviour {
 	private static int eggsDestroyed;
 	private static int health;
 	private static int score;
+	private static int requiredFlies;
 	private static float waterLevel;
 	private static float invulnerableTime;
 	private static bool _isUnderwater;
@@ -74,6 +76,36 @@ public class PlayerInfo : MonoBehaviour {
 				tongueSpriteRenderer = sr;
 			}
 		}
+
+		// Difficulty settings
+		int difficulty = 1;
+		GameObject optionsGameObj = GameObject.Find("GameOptions");
+		
+		// We won't be able to find the options GameObject if we haven't gone via the main menu
+		if (optionsGameObj != null) {
+			GameOptions options = optionsGameObj.GetComponent<GameOptions>();
+			difficulty = options.difficulty;
+		}
+		
+		switch (difficulty) {
+		case 0:
+			// Easy
+			requiredFlies = 10;
+			break;
+		case 1:
+		default:
+			// Normal
+			requiredFlies = 15;
+			break;
+		case 2:
+			// Hard
+			requiredFlies = 20;
+			break;
+		case 3:
+			// Insane
+			requiredFlies = 20;
+			break;
+		}
 	}
 
 	public void Start() {
@@ -105,19 +137,24 @@ public class PlayerInfo : MonoBehaviour {
 	public static void DecrementHealth() {
 
 		health = Mathf.Max(health - 1, 0);
+		SoundSource.clip = _HurtSound;
+		SoundSource.Play();
+
 		if(health == 0) {
 			Application.LoadLevel (deathScreen);
-		} else {
-			SoundSource.clip = _HurtSound;
-			SoundSource.Play();
 		}
 	}
 
 	public static void IncrementScore() {
+
 		score++;
 		tongueAnimator.SetTrigger("Eating");
 		SoundSource.clip = _EatSound;
 		SoundSource.Play();
+
+		if (score >= requiredFlies) {
+			Application.LoadLevel (winScreen);
+		}
 	}
 
 	public static void IncrementEggs() {
@@ -146,6 +183,10 @@ public class PlayerInfo : MonoBehaviour {
 		return score;
 	}
 
+	public static int GetRequiredFlies() {
+		return requiredFlies;
+	}
+
 	public static bool IsInvulnerable() {
 		return invulnerableTime > 0.0f;
 	}
@@ -156,6 +197,19 @@ public class PlayerInfo : MonoBehaviour {
 
 	public static bool IsUnderwater() {
 		return _isUnderwater;
+	}
+
+	public void OnTriggerStay2D(Collider2D other) 
+	{
+		// Try to ensure we don't get stuck ramming against an obstacle
+		if (LayerMask.LayerToName(other.gameObject.layer) == "Obstacles") {
+			
+			AStarTargeter ast = GetComponent<AStarTargeter>();
+			
+			if (ast != null) {
+				ast.ForceRecalculate();
+			}
+		}
 	}
 
 	public void Update() {

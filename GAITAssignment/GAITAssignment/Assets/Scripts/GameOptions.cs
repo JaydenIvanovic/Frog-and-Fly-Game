@@ -6,12 +6,10 @@ public class GameOptions : MonoBehaviour
 	public static GameOptions gameOptions;
 	
 	public string[] difficulties = {"Easy", "Normal", "Hard", "Insane"};
-	public int difficulty;
+	public int difficulty = 1;
 
 	void Awake()
 	{
-		difficulty = 1;
-
 		if(gameOptions != null)
 			Destroy(this.gameObject);
 		else

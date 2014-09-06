@@ -32,7 +32,10 @@ public class AStarTargeter : Targeter {
 	private float timeSinceUpdate = 0.0f;
 	private float blockDetectionRadius;
 	private ArrayList nodesExploredLastMove = new ArrayList(); // For drawing debug info
-	
+
+	private float minRecalculationTime = 0.2f;
+	private float timeSinceRecalculated = 0.0f;
+
 	private static int gridDivisionsPerSquare = 3; // Still runs ok on 2 if this is making things laggy
 	private static Hashtable grids = new Hashtable();
 	
@@ -59,14 +62,24 @@ public class AStarTargeter : Targeter {
 	}
 	
 	public float DistanceFromGoal(Vector2 pos) {
-		
+
 		// Manhattan distance
-		// This metric isn't really "admissable" now that we're allowing diagonal grid movement,
-		// but in practice it's a lot faster than using Euclidean distance
-		return (float)(Math.Abs(goalNode.GetPosition().x - pos.x) + Math.Abs(goalNode.GetPosition().y - pos.y));
-		
+		// This metric isn't really "admissable" now that we're allowing diagonal grid movement.
+		//return (float)(Math.Abs(goalNode.GetPosition().x - pos.x) + Math.Abs(goalNode.GetPosition().y - pos.y));
+
 		// Euclidean distance
 		//return (goalNode.GetPosition() - pos).magnitude;
+
+		// Customised metric for the type of grid we're using, which is soft of an analog of the Manhattan distance for grids with diagonal movement allowed.
+		// Returns the diagonal distance required plus the leftover -- we can never reach the goal faster than this.
+		float xDiff = Mathf.Abs((goalNode.GetPosition() - pos).x);
+		float yDiff = Mathf.Abs((goalNode.GetPosition() - pos).y);
+
+		if (xDiff > yDiff) {
+			return Mathf.Sqrt(2.0f * yDiff * yDiff) + xDiff - yDiff;
+		} else {
+			return Mathf.Sqrt(2.0f * xDiff * xDiff) + yDiff - xDiff;
+		}
 	}
 	
 	public static void ClearGrids() {
@@ -123,7 +136,11 @@ public class AStarTargeter : Targeter {
 	// possible for creatures (most likely the snakes) to get stuck by drifting slightly off course. If they're stuck
 	// ramming against an obstacle then hopefully recalculating the path will get them unstuck.
 	public void ForceRecalculate() {
-		goalNode = null;
+
+		if (timeSinceRecalculated > minRecalculationTime) {
+			goalNode = null;
+			timeSinceRecalculated = 0.0f;
+		}
 	}
 	
 	// Draw the current path (shows in the "scene" window, but you can turn on "Gizmos" to see it in on the game screen)
@@ -144,7 +161,9 @@ public class AStarTargeter : Targeter {
 	}
 	
 	void Update() {
-		
+
+		timeSinceRecalculated += Time.deltaTime;
+
 		Grid grid = (Grid)(grids[gameObject.tag]);
 
 		// Stop null reference errors when we reset all grids and return to the main menu
