@@ -21,34 +21,65 @@ public abstract class GAController<T> : GeneticAlgorithm_I<T>
 	}
 
 
-	public void InitPopulation()
+	// Getters and Setters
+	public List<T> Population 
 	{
-		population = new List<T>(populationSize);
+		get{return population;}
+		set{this.population = value;}
 	}
 
 
+	public void SetIndividual(int index, T value)
+	{
+		population.Insert(index, value);
+	}
+
+
+	public List<float> Fitness 
+	{
+		get{return fitness;}
+		set{this.fitness = value;}
+	}
+
+
+	public int PopulationSize
+	{
+		get{return populationSize;}
+	}
+
+
+	public float MutationRate 
+	{
+		get{return mutationRate;}
+	}
+
+
+	// Methods to be overidden by the subclass
+	public abstract void InitPopulation();
+	
 	public abstract T SelectParent();
-
+	
 	public abstract float CalcFitness(T chromosome);
-
+	
 	public abstract T[] CrossOver(T parent1, T parent2);
 	
-	public abstract T Mutate(T chromosome);
+	public abstract void Mutate(T chromosome);
 
 
+	// The core Genetic Algorithm
 	// Run one generation of evolution.
 	public void RunEpoch()
 	{
 		// Update the fitness values
 		for (int i = 0; i < populationSize; ++i) {
-			fitness[i] = CalcFitness(population[i]);
+			fitness.Insert(i, CalcFitness(population[i]));
 		}
-
+		
 		// For storing the children as they are created.
 		List<T> children = new List<T>(populationSize);
 		// Keep track of the number of individuals in the new population.
 		int numChildren = 0;
-
+		
 		while (numChildren < populationSize) {		
 			// Selection
 			T parent1 = SelectParent();
@@ -63,20 +94,17 @@ public abstract class GAController<T> : GeneticAlgorithm_I<T>
 				child[0] = parent1;
 				child[1] = parent2;
 			}
-
+			
 			// Mutation step.
-			// Check if this child should be mutated.
-			if (Random.value < mutationRate) {
-				child[0] = Mutate(child[0]);
-				child[1] = Mutate(child[1]);
-			}
-
+			Mutate(child[0]);
+			Mutate(child[1]);
+			
 			children.Add(child[0]);
 			children.Add(child[1]);
-
+			
 			numChildren += 2;
 		}
-
+		
 		// Replace the population with the newly calculated one. 
 		population = children;
 	}
