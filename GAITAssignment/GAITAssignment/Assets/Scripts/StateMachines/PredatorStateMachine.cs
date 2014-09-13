@@ -122,12 +122,12 @@ public class PredatorStateMachine : MonoBehaviour
 
 		// Difficulty settings
 		int difficulty = 1;
-		GameObject optionsGameObj = GameObject.Find("GameOptions");
+		GameObject gameMasterGameObj = GameObject.Find("GameMaster");
+		GameMaster gameMaster = null;
 
-		// We won't be able to find the options GameObject if we haven't gone via the main menu
-		if (optionsGameObj != null) {
-			GameOptions options = optionsGameObj.GetComponent<GameOptions>();
-			difficulty = options.difficulty;
+		if (gameMasterGameObj != null) {
+			gameMaster = gameMasterGameObj.GetComponent<GameMaster>();
+			difficulty = gameMaster.difficulty;
 		}
 
 		switch (difficulty) {
@@ -176,17 +176,15 @@ public class PredatorStateMachine : MonoBehaviour
 			// Make the snakes chase over the whole map in the demo
 			LeashLength = 9999.0f;
 
-			// Default, 1 = true
-			int smart = 1;
-
-			if (PlayerPrefs.HasKey("SmartDemoSnakes")) {
-				smart = PlayerPrefs.GetInt("SmartDemoSnakes");
-			}
-
-			if (smart == 1) {
-				huntTargeter.dumbAttack = false;
+			if (gameMaster != null) {
+				if (gameMaster.SmartDemoSnakes) {
+					huntTargeter.dumbAttack = false;
+				} else {
+					huntTargeter.dumbAttack = true;
+				}
 			} else {
-				huntTargeter.dumbAttack = true;
+				// Default
+				huntTargeter.dumbAttack = false;
 			}
 		}
 	}

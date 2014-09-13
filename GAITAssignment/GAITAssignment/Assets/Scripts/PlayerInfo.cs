@@ -14,6 +14,10 @@ public class PlayerInfo : MonoBehaviour {
 	public static bool isPaused = false;
 
 	public bool TrainingMode = false;
+	public bool IsMainFrog = true;
+
+	public int score;
+	public float waterLevel;
 
 	public int StartingHealth = 3;
 	public float InvulnerableTimeWhenHit = 2.0f;
@@ -27,9 +31,7 @@ public class PlayerInfo : MonoBehaviour {
 	private static int snakesDrowned;
 	private static int eggsDestroyed;
 	private static int health;
-	private static int score;
 	private static int requiredFlies;
-	private static float waterLevel;
 	private static float invulnerableTime;
 	private static bool _isUnderwater;
 
@@ -37,9 +39,9 @@ public class PlayerInfo : MonoBehaviour {
 	private static AudioSource SoundSource;
 
 	// For flickering
-	private static Animator animator;
-	private static SpriteRenderer spriteRenderer;
-	private static Animator tongueAnimator;
+	private Animator animator;
+	private SpriteRenderer spriteRenderer;
+	private Animator tongueAnimator;
 	private static SpriteRenderer tongueSpriteRenderer;
 	
 	// Static copies
@@ -82,12 +84,11 @@ public class PlayerInfo : MonoBehaviour {
 		// Difficulty settings
 		if (!TrainingMode) {
 			int difficulty = 1;
-			GameObject optionsGameObj = GameObject.Find("GameOptions");
-			
-			// We won't be able to find the options GameObject if we haven't gone via the main menu
-			if (optionsGameObj != null) {
-				GameOptions options = optionsGameObj.GetComponent<GameOptions>();
-				difficulty = options.difficulty;
+			GameObject gameMasterGameObj = GameObject.Find("GameMaster");
+
+			if (gameMasterGameObj != null) {
+				GameMaster gameMaster = gameMasterGameObj.GetComponent<GameMaster>();
+				difficulty = gameMaster.difficulty;
 			}
 			
 			switch (difficulty) {
@@ -136,10 +137,6 @@ public class PlayerInfo : MonoBehaviour {
 		return snakesDrowned;
 	}
 
-	public static float GetWaterLevel() {
-		return waterLevel;
-	}
-
 	public static void DecrementHealth() {
 
 		health = Mathf.Max(health - 1, 0);
@@ -152,14 +149,14 @@ public class PlayerInfo : MonoBehaviour {
 		}
 	}
 
-	public static void IncrementScore() {
+	public void IncrementScore() {
 
 		score++;
 		tongueAnimator.SetTrigger("Eating");
 		SoundSource.clip = _EatSound;
 		SoundSource.Play();
 
-		if (score >= requiredFlies) {
+		if (IsMainFrog && (score >= requiredFlies)) {
 			Application.LoadLevel (winScreen);
 		}
 	}
@@ -172,7 +169,7 @@ public class PlayerInfo : MonoBehaviour {
 		snakesDrowned++;
 	}
 
-	public static void ReduceWaterAfterBubble() {
+	public void ReduceWaterAfterBubble() {
 		waterLevel -= BUBBLE_COST;
 	}
 
@@ -186,8 +183,39 @@ public class PlayerInfo : MonoBehaviour {
 		_isUnderwater = isUnderwater;
 	}
 
-	public static int GetScore() {
-		return score;
+	private static PlayerInfo getMainFrogInfo() {
+
+		GameObject[] frogs = GameObject.FindGameObjectsWithTag("Player");
+		foreach (GameObject frog in frogs) {
+			PlayerInfo frogInfo = frog.GetComponent<PlayerInfo>();
+			if (frogInfo != null && frogInfo.IsMainFrog) {
+				return frogInfo;
+			}
+		}
+
+		return null;
+	}
+
+	public static int GetMainFrogScore() {
+
+		PlayerInfo mainFrogInfo = getMainFrogInfo();
+
+		if (mainFrogInfo != null) {
+			return mainFrogInfo.score;
+		} else {
+			return 0;
+		}
+	}
+
+	public static float GetMainFrogWaterLevel() {
+
+		PlayerInfo mainFrogInfo = getMainFrogInfo();
+		
+		if (mainFrogInfo != null) {
+			return mainFrogInfo.waterLevel;
+		} else {
+			return 0;
+		}
 	}
 
 	public static int GetRequiredFlies() {
@@ -249,6 +277,8 @@ public class PlayerInfo : MonoBehaviour {
 			} else {
 				animator.SetBool("Sitting", true);
 			}
+		} else {
+			animator.SetBool("Sitting", false); // Bit dodgy... Just assume we're in training mode
 		}
 
 		// Make the music follow the player (you get a weird panning effect otherwise)

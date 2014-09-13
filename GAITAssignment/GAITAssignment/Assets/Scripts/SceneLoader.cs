@@ -6,9 +6,14 @@ public class SceneLoader : MonoBehaviour
 	public string sceneName;
 	public int difficultyIncrement = 0;
 
+	private GameMaster gameMaster;
+
 	// Use this for initialization
 	void Start () {
-	
+		GameObject gameMasterGameObj = GameObject.Find("GameMaster");
+		if (gameMasterGameObj != null) {
+			gameMaster = gameMasterGameObj.GetComponent<GameMaster>();
+		}
 	}
 	
 	// Update is called once per frame
@@ -19,22 +24,22 @@ public class SceneLoader : MonoBehaviour
 	void OnMouseDown()
 	{
 		// Increase the difficulty if required
-		GameObject optionsGameObj = GameObject.Find("GameOptions");
-		if (optionsGameObj != null) {
-			GameOptions options = optionsGameObj.GetComponent<GameOptions>();
-			options.difficulty += difficultyIncrement;
-			options.difficulty = Mathf.Clamp(options.difficulty, 0, options.difficulties.Length - 1);
+		GameObject gameMasterGameObj = GameObject.Find("GameMaster");
+		if (gameMasterGameObj != null) {
+			GameMaster gameMaster = gameMasterGameObj.GetComponent<GameMaster>();
+			gameMaster.difficulty += difficultyIncrement;
+			gameMaster.difficulty = Mathf.Clamp(gameMaster.difficulty, 0, gameMaster.difficulties.Length - 1);
 		}
 
 		if (sceneName == "") {
-			if (PlayerPrefs.HasKey("CurrentLevel")) {
-				Application.LoadLevel(PlayerPrefs.GetString("CurrentLevel"));
+			if (gameMaster.currentLevel != "") {
+				Application.LoadLevel(gameMaster.currentLevel);
 			} else {
 				// Default if we don't know where to go
 				Application.LoadLevel("Menu");
 			}
 		} else {
-			PlayerPrefs.SetString("CurrentLevel", sceneName);
+			gameMaster.currentLevel = sceneName;
 			Application.LoadLevel(sceneName);
 		}	
 	}

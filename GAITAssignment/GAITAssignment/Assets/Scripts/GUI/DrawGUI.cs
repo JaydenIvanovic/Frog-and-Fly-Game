@@ -53,8 +53,8 @@ public class DrawGUI : MonoBehaviour
 		GUI.DrawTexture(new Rect(20, 95, heartSize, heartSize), eggTex, ScaleMode.ScaleToFit, true, 0.0f);
 		GUI.DrawTexture(new Rect(20, 120, heartSize, heartSize), snakeTex, ScaleMode.ScaleToFit, true, 0.0f);
 
-		GUI.DrawTexture(new Rect(50 - 2, 45 + 3, PlayerInfo.GetWaterLevel() / 2.0f, 14), waterMeterTex, ScaleMode.StretchToFill, true, 0.0f);
-		GUI.Label (new Rect (40, 70, 120, 20), ": " + PlayerInfo.GetScore() + "/" + PlayerInfo.GetRequiredFlies());
+		GUI.DrawTexture(new Rect(50 - 2, 45 + 3, PlayerInfo.GetMainFrogWaterLevel() / 2.0f, 14), waterMeterTex, ScaleMode.StretchToFill, true, 0.0f);
+		GUI.Label (new Rect (40, 70, 120, 20), ": " + PlayerInfo.GetMainFrogScore() + "/" + PlayerInfo.GetRequiredFlies());
 		GUI.Label (new Rect (40, 95, 120, 20), ": " + PlayerInfo.GetEggsDestroyed());
 		GUI.Label (new Rect (40, 120, 120, 20), ": " + PlayerInfo.GetSnakesDrowned());
 

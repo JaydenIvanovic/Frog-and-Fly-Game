@@ -13,12 +13,12 @@ public class RandomCompliment : MonoBehaviour
 			musicPlayer.transform.position = Vector3.zero;
 		}
 
-		GameObject optionsGameObj = GameObject.Find("GameOptions");
+		GameObject gameMasterGameObj = GameObject.Find("GameMaster");
 		
 		// Give a different continue message if we're already on the hardest difficulty setting
-		if (optionsGameObj != null) {
-			GameOptions options = optionsGameObj.GetComponent<GameOptions>();
-			if (options.difficulty >= (options.difficulties.Length - 1)) {
+		if (gameMasterGameObj != null) {
+			GameMaster gameMaster = gameMasterGameObj.GetComponent<GameMaster>();
+			if (gameMaster.difficulty >= (gameMaster.difficulties.Length - 1)) {
 				GameObject continueButton = GameObject.Find("Continue");
 				if (continueButton != null) {
 					continueButton.GetComponent<TextMesh>().text = "Try that again...";

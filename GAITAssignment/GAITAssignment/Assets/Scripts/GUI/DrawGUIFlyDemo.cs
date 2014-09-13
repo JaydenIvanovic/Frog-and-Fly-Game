@@ -7,19 +7,20 @@ public class DrawGUIFlyDemo : MonoBehaviour {
 	public GUIStyle pauseText;
 
 	private bool isPaused;
-	private bool avoidObstacles = true;
+
+	private GameMaster gameMaster;
 
 	void Start () 
 	{
 		isPaused = false;
 
-		if (!PlayerPrefs.HasKey("AvoidObstacles")) {
-			PlayerPrefs.SetInt("AvoidObstacles", avoidObstacles? 1 : -1);
+		GameObject gameMasterGameObj = GameObject.Find("GameMaster");
+		if (gameMasterGameObj != null) {
+			gameMaster = gameMasterGameObj.GetComponent<GameMaster>();
 		}
 
 		UpdateFlies();
 	}
-	
 	
 	void Update ()
 	{
@@ -32,7 +33,11 @@ public class DrawGUIFlyDemo : MonoBehaviour {
 		foreach (GameObject fly in flys) {
 			SteeringController sc = fly.GetComponent<SteeringController>();
 			if (sc != null) {
-				sc.avoidObstacles = (PlayerPrefs.GetInt("AvoidObstacles") == 1)? true : false;
+				if (gameMaster != null) {
+					sc.avoidObstacles = gameMaster.FlyDemoObstacleAvoidance;
+				} else {
+					sc.avoidObstacles = true;
+				}
 			}
 		}
 	}
@@ -42,9 +47,16 @@ public class DrawGUIFlyDemo : MonoBehaviour {
 		GUI.skin = skin;
 
 		GUI.Box (new Rect (10, 10, 180, 90), "");
+	
+		bool avoidObstacles = true; // Default
+		if (gameMaster != null) {
+			avoidObstacles = gameMaster.FlyDemoObstacleAvoidance;
+		}
 
-		if(GUI.Button(new Rect (20, 20, 160, 30), "Avoid obstacles: " + ((PlayerPrefs.GetInt("AvoidObstacles") == 1)? "On" : "Off"))) {
-			PlayerPrefs.SetInt("AvoidObstacles", PlayerPrefs.GetInt("AvoidObstacles") * -1);
+		if(GUI.Button(new Rect (20, 20, 160, 30), "Avoid obstacles: " + (avoidObstacles? "On" : "Off"))) {
+			if (gameMaster != null) {
+				gameMaster.FlyDemoObstacleAvoidance = !gameMaster.FlyDemoObstacleAvoidance;
+			}
 			UpdateFlies();
 		}
 		if(GUI.Button(new Rect (20, 60, 160, 30), "Restart demo")) {

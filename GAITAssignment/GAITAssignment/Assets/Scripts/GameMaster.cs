@@ -1,19 +1,22 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class GameOptions : MonoBehaviour
+public class GameMaster : MonoBehaviour
 {
-	public static GameOptions gameOptions;
+	public static GameMaster gameMaster;
 	
 	public string[] difficulties = {"Easy", "Normal", "Hard", "Insane"};
 	public int difficulty = 1;
+	public string currentLevel;
+	public bool SmartDemoSnakes = true;
+	public bool FlyDemoObstacleAvoidance = true;
 
 	void Awake()
 	{
-		if(gameOptions != null)
+		if(gameMaster != null)
 			Destroy(this.gameObject);
 		else
-			gameOptions = this;
+			gameMaster = this;
 		
 		DontDestroyOnLoad(this);
 	}

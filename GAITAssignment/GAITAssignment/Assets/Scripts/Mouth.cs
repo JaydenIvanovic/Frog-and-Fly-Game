@@ -5,6 +5,7 @@ using System.Collections;
 public class Mouth : MonoBehaviour {
 	
 	private float rotationOffset;
+	private PlayerInfo playerInfo;
 
 	public float BubbleCost = 20.0f;
 	public float BubbleLaunchDistance = 0.3f;
@@ -12,6 +13,7 @@ public class Mouth : MonoBehaviour {
 	
 	void Awake () {
 		rotationOffset = transform.parent.rotation.eulerAngles.z;
+		playerInfo = transform.parent.gameObject.GetComponent<PlayerInfo>();
 	}
 	
 	// Update is called once per frame
@@ -32,13 +34,14 @@ public class Mouth : MonoBehaviour {
 			}
 
 			Destroy (other.gameObject);
-			PlayerInfo.IncrementScore();
+
+			transform.parent.gameObject.GetComponent<PlayerInfo>().IncrementScore();
 		}
 	}
 
 	void SprayWater()
 	{
-		if (!PlayerInfo.isPaused && Input.GetMouseButtonDown(0) && PlayerInfo.GetWaterLevel() > PlayerInfo.BUBBLE_COST)
+		if (!PlayerInfo.isPaused && Input.GetMouseButtonDown(0) && playerInfo.waterLevel > PlayerInfo.BUBBLE_COST)
 		{
 			Vector2 clickPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 			
@@ -50,16 +53,28 @@ public class Mouth : MonoBehaviour {
 				transform.parent.GetComponent<Animator>().SetBool("Sitting", false);
 			}
 
-			transform.parent.GetComponent<Movement>().OverrideRotation(angle);
-			transform.parent.GetComponent<MouseTargeter>().StopTargeting();
-			transform.parent.GetComponent<AStarTargeter>().StopTargeting();
+			Movement movement = transform.parent.GetComponent<Movement>();
+			if (movement != null) {
+				movement.OverrideRotation(angle);
+			}
+
+			MouseTargeter mouseTargeter = transform.parent.GetComponent<MouseTargeter>();
+			if (mouseTargeter != null) {
+				mouseTargeter.StopTargeting();
+			}
+
+			AStarTargeter aStarTargeter = transform.parent.GetComponent<AStarTargeter>();
+			if (aStarTargeter != null) {
+				aStarTargeter.StopTargeting();
+			}
+
 			shotDirection.Normalize();
 			
 			Instantiate(waterProjectilePrefab,
 			            new Vector3(transform.position.x + shotDirection.x * BubbleLaunchDistance, transform.position.y + shotDirection.y * BubbleLaunchDistance, transform.position.z),
 			            Quaternion.Euler(0.0f, 0.0f, angle - rotationOffset));
 
-			PlayerInfo.ReduceWaterAfterBubble();
+			playerInfo.ReduceWaterAfterBubble();
 		}
 	}
 }

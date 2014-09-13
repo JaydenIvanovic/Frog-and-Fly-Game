@@ -17,6 +17,8 @@ public class DrawGUISnakeDemo : MonoBehaviour
 	
 	private Texture2D heartTex, eggTex, snakeTex, waterTex, waterMeterTex;
 	private bool isPaused;
+
+	private GameMaster gameMaster;
 	
 	void Start () 
 	{
@@ -26,6 +28,11 @@ public class DrawGUISnakeDemo : MonoBehaviour
 		snakeTex = SpriteToTexture(Snake);
 		waterTex = SpriteToTexture(Water);
 		waterMeterTex = SpriteToTexture(WaterMeter);
+
+		GameObject gameMasterGameObj = GameObject.Find("GameMaster");
+		if (gameMasterGameObj != null) {
+			gameMaster = gameMasterGameObj.GetComponent<GameMaster>();
+		}
 	}
 	
 	
@@ -53,27 +60,31 @@ public class DrawGUISnakeDemo : MonoBehaviour
 		GUI.DrawTexture(new Rect(20, 95, heartSize, heartSize), eggTex, ScaleMode.ScaleToFit, true, 0.0f);
 		GUI.DrawTexture(new Rect(20, 120, heartSize, heartSize), snakeTex, ScaleMode.ScaleToFit, true, 0.0f);
 		
-		GUI.DrawTexture(new Rect(50 - 2, 45 + 3, PlayerInfo.GetWaterLevel() / 2.0f, 14), waterMeterTex, ScaleMode.StretchToFill, true, 0.0f);
-		GUI.Label (new Rect (40, 70, 120, 20), ": " + PlayerInfo.GetScore() + "/" + PlayerInfo.GetRequiredFlies());
+		GUI.DrawTexture(new Rect(50 - 2, 45 + 3, PlayerInfo.GetMainFrogWaterLevel() / 2.0f, 14), waterMeterTex, ScaleMode.StretchToFill, true, 0.0f);
+		GUI.Label (new Rect (40, 70, 120, 20), ": " + PlayerInfo.GetMainFrogScore() + "/" + PlayerInfo.GetRequiredFlies());
 		GUI.Label (new Rect (40, 95, 120, 20), ": " + PlayerInfo.GetEggsDestroyed());
 		GUI.Label (new Rect (40, 120, 120, 20), ": " + PlayerInfo.GetSnakesDrowned());
 
 		GUI.Box (new Rect (120, 10, 200, 140), "");
 
-		int smart = 1;
-		if (PlayerPrefs.HasKey("SmartDemoSnakes")) {
-			smart = PlayerPrefs.GetInt("SmartDemoSnakes");
+		bool smart = true; // Default
+		if (gameMaster != null) {
+			smart = gameMaster.SmartDemoSnakes;
 		}
 
-		GUI.Label (new Rect (140, 27, 170, 23), "Snakes are currently " + ((smart == 1)? "smart" : "dumb"));
+		GUI.Label (new Rect (140, 27, 170, 23), "Snakes are currently " + (smart? "smart" : "dumb"));
 
 		if (GUI.Button(new Rect (130, 60, 180, 30), "Restart with smart snakes")) {
-			PlayerPrefs.SetInt("SmartDemoSnakes", 1);
+			if (gameMaster != null) {
+				gameMaster.SmartDemoSnakes = true;
+			}
 			UnPause();
 			Application.LoadLevel (Application.loadedLevel);
 		}
 		if (GUI.Button(new Rect (130, 100, 180, 30), "Restart with dumb snakes")) {
-			PlayerPrefs.SetInt("SmartDemoSnakes", 0);
+			if (gameMaster != null) {
+				gameMaster.SmartDemoSnakes = false;
+			}
 			UnPause();
 			Application.LoadLevel (Application.loadedLevel);
 		}

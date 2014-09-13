@@ -19,20 +19,20 @@ public class SnakePit : MonoBehaviour {
 		// Default
 		minimumSnakes = 1;
 
-		GameObject optionsGameObj = GameObject.Find("GameOptions");
+		GameObject gameMasterGameObj = GameObject.Find("GameMaster");
 
-		if (optionsGameObj != null) {
+		if (gameMasterGameObj != null) {
 
-			GameOptions options = optionsGameObj.GetComponent<GameOptions>();
+			GameMaster gameMaster = gameMasterGameObj.GetComponent<GameMaster>();
 
-			if (options.difficulty == 0) {
+			if (gameMaster.difficulty == 0) {
 				minimumSnakes = 0;
-			} else if (options.difficulty == 3) {
+			} else if (gameMaster.difficulty == 3) {
 				minimumSnakes = 4;
 			}
 
 		} else {
-			// Defaults if options can't be found (probably because we're debugging a scene without going via the menu)
+			// Defaults if game master can't be found
 		}
 	}
 

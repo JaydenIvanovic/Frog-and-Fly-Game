@@ -45,12 +45,11 @@ public class FlyStateMachine : MonoBehaviour {
 		// Difficulty settings
 		
 		int difficulty = 1;
-		GameObject optionsGameObj = GameObject.Find("GameOptions");
-		
-		// We won't be able to find the options GameObject if we haven't gone via the main menu
-		if (optionsGameObj != null) {
-			GameOptions options = optionsGameObj.GetComponent<GameOptions>();
-			difficulty = options.difficulty;
+		GameObject gameMasterGameObj = GameObject.Find("GameMaster");
+
+		if (gameMasterGameObj != null) {
+			GameMaster gameMaster = gameMasterGameObj.GetComponent<GameMaster>();
+			difficulty = gameMaster.difficulty;
 		}
 
 		switch (difficulty) {
