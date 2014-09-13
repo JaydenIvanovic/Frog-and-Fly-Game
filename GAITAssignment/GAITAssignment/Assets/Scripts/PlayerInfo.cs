@@ -13,6 +13,8 @@ public class PlayerInfo : MonoBehaviour {
 
 	public static bool isPaused = false;
 
+	public bool TrainingMode = false;
+
 	public int StartingHealth = 3;
 	public float InvulnerableTimeWhenHit = 2.0f;
 	public float InvulnerableFlickerFrequency = 8.0f;
@@ -78,33 +80,37 @@ public class PlayerInfo : MonoBehaviour {
 		}
 
 		// Difficulty settings
-		int difficulty = 1;
-		GameObject optionsGameObj = GameObject.Find("GameOptions");
-		
-		// We won't be able to find the options GameObject if we haven't gone via the main menu
-		if (optionsGameObj != null) {
-			GameOptions options = optionsGameObj.GetComponent<GameOptions>();
-			difficulty = options.difficulty;
-		}
-		
-		switch (difficulty) {
-		case 0:
-			// Easy
-			requiredFlies = 10;
-			break;
-		case 1:
-		default:
-			// Normal
-			requiredFlies = 15;
-			break;
-		case 2:
-			// Hard
-			requiredFlies = 20;
-			break;
-		case 3:
-			// Insane
-			requiredFlies = 20;
-			break;
+		if (!TrainingMode) {
+			int difficulty = 1;
+			GameObject optionsGameObj = GameObject.Find("GameOptions");
+			
+			// We won't be able to find the options GameObject if we haven't gone via the main menu
+			if (optionsGameObj != null) {
+				GameOptions options = optionsGameObj.GetComponent<GameOptions>();
+				difficulty = options.difficulty;
+			}
+			
+			switch (difficulty) {
+			case 0:
+				// Easy
+				requiredFlies = 10;
+				break;
+			case 1:
+			default:
+				// Normal
+				requiredFlies = 15;
+				break;
+			case 2:
+				// Hard
+				requiredFlies = 20;
+				break;
+			case 3:
+				// Insane
+				requiredFlies = 20;
+				break;
+			}
+		} else {
+			requiredFlies = 99999;
 		}
 	}
 
@@ -137,6 +143,7 @@ public class PlayerInfo : MonoBehaviour {
 	public static void DecrementHealth() {
 
 		health = Mathf.Max(health - 1, 0);
+
 		SoundSource.clip = _HurtSound;
 		SoundSource.Play();
 
@@ -235,11 +242,13 @@ public class PlayerInfo : MonoBehaviour {
 		}
 
 		// Sitting or walking
-		Vector2? target = targeter.GetTarget();
-		if (target != null) {
-			animator.SetBool("Sitting", false);
-		} else {
-			animator.SetBool("Sitting", true);
+		if (targeter != null) {
+			Vector2? target = targeter.GetTarget();
+			if (target != null) {
+				animator.SetBool("Sitting", false);
+			} else {
+				animator.SetBool("Sitting", true);
+			}
 		}
 
 		// Make the music follow the player (you get a weird panning effect otherwise)

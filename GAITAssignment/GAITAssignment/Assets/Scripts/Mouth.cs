@@ -23,8 +23,14 @@ public class Mouth : MonoBehaviour {
 	void OnTriggerEnter2D(Collider2D other) {
 
 		if (other.gameObject.tag.Equals ("Fly")) {
-			Destroy (other.gameObject.GetComponent<Flocking>());
-			Flocking.DestroyFlockMember(other.gameObject);
+
+			Flocking flocker = other.gameObject.GetComponent<Flocking>();
+
+			if (flocker != null) {
+				Destroy (other.gameObject.GetComponent<Flocking>());
+				Flocking.DestroyFlockMember(other.gameObject);
+			}
+
 			Destroy (other.gameObject);
 			PlayerInfo.IncrementScore();
 		}
