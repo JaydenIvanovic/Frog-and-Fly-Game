@@ -6,13 +6,13 @@ public class NeuralNetSteering : SteeringBehaviour {
 	public float updateFrequency = 0.2f;
 	public SpawnDumbFlies flyManager;
 	public float minSteeringMag = 1.0f;
+	public NeuralNet neuralNet;
 
 	private float updateTimer = 0.0f;
-	private NeuralNet net;
 	private float[] netInput;
 
 	public void Start() {
-		net = new NeuralNet(2, 2);
+		neuralNet = new NeuralNet(2, 2);
 	}
 	
 	public void Update() {
@@ -41,7 +41,7 @@ public class NeuralNetSteering : SteeringBehaviour {
 	public override Vector2 GetSteering()
 	{
 		if (netInput != null) {
-			float[] netOutput = net.CalculateOutput(netInput);
+			float[] netOutput = neuralNet.CalculateOutput(netInput);
 			Vector2 steering = new Vector2(netOutput[0], netOutput[1]);
 			if (steering.magnitude < minSteeringMag) {
 				steering = steering.normalized * minSteeringMag;

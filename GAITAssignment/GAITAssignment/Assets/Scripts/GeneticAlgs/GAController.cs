@@ -2,12 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public abstract class GAController<T> : GeneticAlgorithm_I<T>
+public abstract class GAController<T> : MonoBehaviour, GeneticAlgorithm_I<T>
 {
-	private List<T> population;
-	private List<float> fitness;
-	private float mutationRate, crossoverRate;
-	private int populationSize;
+	public List<T> population;
+	public List<float> fitness;
+	public float mutationRate, crossoverRate;
+	public int populationSize;
 
 
 	// Defaults for mutation and crossover rates are as recommended in 
@@ -63,7 +63,10 @@ public abstract class GAController<T> : GeneticAlgorithm_I<T>
 	
 	public abstract T[] CrossOver(T parent1, T parent2);
 	
-	public abstract void Mutate(T chromosome);
+	public abstract T Mutate(T chromosome);
+
+	// Just to ensure that the old population always gets replaced
+	public abstract T Clone(T chromosome);
 
 
 	// The core Genetic Algorithm
@@ -91,13 +94,13 @@ public abstract class GAController<T> : GeneticAlgorithm_I<T>
 				child = CrossOver(parent1, parent2);
 			} else {
 				child = new T[2];
-				child[0] = parent1;
-				child[1] = parent2;
+				child[0] = Clone(parent1);
+				child[1] = Clone(parent2);
 			}
 			
 			// Mutation step.
-			Mutate(child[0]);
-			Mutate(child[1]);
+			child[0] = Mutate(child[0]);
+			child[1] = Mutate(child[1]);
 			
 			children.Add(child[0]);
 			children.Add(child[1]);

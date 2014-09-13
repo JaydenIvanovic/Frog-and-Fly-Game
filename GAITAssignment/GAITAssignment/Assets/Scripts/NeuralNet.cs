@@ -1,16 +1,17 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[System.Serializable]
 public class NeuralNet {
 
-	private float bias = 0.0f;
-	private int hiddenLayerNeurons = 4;
+	public float bias = 0.0f;
+	public int hiddenLayerNeurons = 4;
 
-	private int inputNeurons;
-	private int outputNeurons;
+	public int inputNeurons;
+	public int outputNeurons;
 
-	float[][] neuronValues = new float[3][]; // For storing calculated values
-	float[][] weights = new float[2][];
+	public float[][] neuronValues = new float[3][]; // For storing calculated values
+	public float[][] weights = new float[2][];
 
 	public NeuralNet(int inputNeurons, int outputNeurons) {
 
