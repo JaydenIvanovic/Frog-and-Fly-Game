@@ -16,7 +16,7 @@ public class NeuralNetSteering : SteeringBehaviour {
 	private float[] netInput;
 	
 	public void Awake() {
-		neuralNet = new NeuralNet(2, 2);
+		neuralNet = new NeuralNet(2, 4, 2);
 	}
 	
 	public void Update() {

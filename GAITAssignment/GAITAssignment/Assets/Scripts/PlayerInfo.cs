@@ -54,8 +54,11 @@ public class PlayerInfo : MonoBehaviour {
 	{
 		targeter = GetComponent<AStarTargeter>();
 
-		SoundSource = gameObject.AddComponent<AudioSource>();
-		SoundSource.loop = false;
+		SoundSource = GetComponent<AudioSource>();
+		if (SoundSource == null) {
+			SoundSource = gameObject.AddComponent<AudioSource>();
+			SoundSource.loop = false;
+		}
 
 		// So we can access from static functions... Ugly but it works
 		_InvulnerableTimeWhenHit = InvulnerableTimeWhenHit;
@@ -116,6 +119,10 @@ public class PlayerInfo : MonoBehaviour {
 	}
 
 	public void Start() {
+		Reset();
+	}
+
+	public void Reset() {
 		health = StartingHealth;
 		score = 0;
 		eggsDestroyed = 0;

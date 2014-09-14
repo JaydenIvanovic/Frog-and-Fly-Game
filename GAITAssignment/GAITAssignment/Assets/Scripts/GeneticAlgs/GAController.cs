@@ -66,7 +66,7 @@ public abstract class GAController<T> : MonoBehaviour, GeneticAlgorithm_I<T>
 	public abstract T Mutate(T chromosome);
 
 	// Just to ensure that the old population always gets replaced
-	public abstract T Clone(T chromosome);
+	public abstract T CopyChromosome(T chromosome);
 
 
 	// The core Genetic Algorithm
@@ -95,8 +95,8 @@ public abstract class GAController<T> : MonoBehaviour, GeneticAlgorithm_I<T>
 				child = CrossOver(parent1, parent2);
 			} else {
 				child = new T[2];
-				child[0] = Clone(parent1);
-				child[1] = Clone(parent2);
+				child[0] = CopyChromosome(parent1);
+				child[1] = CopyChromosome(parent2);
 			}
 			
 			// Mutation step.

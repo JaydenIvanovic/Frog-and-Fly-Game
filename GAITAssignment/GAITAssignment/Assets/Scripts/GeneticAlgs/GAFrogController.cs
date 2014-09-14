@@ -7,6 +7,22 @@ using System.Collections.Generic;
 
 public class GAFrogController : GAController<GameObject> {
 
+	public enum ParentSelectionMode
+	{
+		Proportional = 0,
+		Exponential = 1
+	};
+
+	public ParentSelectionMode parentSelectionMode = ParentSelectionMode.Proportional;
+
+	// These "accentuation" variables make it so that the best performers get a bigger slice of the pie
+	// when it comes to parent selection. I didn't get this out of the book but it just seems like a 
+	// natural thing to try.
+	public float propSelectionAccentuation = 0.5f; // Should be between 0 and 1
+	public float expSelectionAccentuation = 0.5f;
+
+	public bool verbose = false;
+
 	public float updateFrequency = 2.0f;
 	private float updateTimer = 0.0f;
 	
@@ -52,7 +68,21 @@ public class GAFrogController : GAController<GameObject> {
 				Destroy(fly);
 			}
 
-			fitness = new List<float>(populationSize);
+			// If a frog did badly enough then just randomise its weights again
+			float resetThreshold = 2.9f;
+			int resetCount = 0;
+			foreach (GameObject frog in population) {
+				if (CalcFitness(frog) < resetThreshold) {
+					frog.GetComponent<NeuralNetSteering>().neuralNet.RandomiseWeights();
+					frog.GetComponent<PlayerInfo>().Reset();
+					resetCount++;
+				}
+			}
+
+			if (verbose) {
+				Debug.Log("Reset " + resetCount + " frogs due to bad performance");
+			}
+
 			RunEpoch();
 
 			// Remove old population
@@ -76,34 +106,72 @@ public class GAFrogController : GAController<GameObject> {
 			updateTimer = 0.0f;
 		}
 	}
-	
+
 	public override GameObject SelectParent() {
 
-		GameObject result = null;
+		switch (parentSelectionMode) {
+		case ParentSelectionMode.Proportional:
+			return SelectParentProportional();
+		case ParentSelectionMode.Exponential:
+			return SelectParentExponential();
+		default:
+			return SelectParentProportional();
+		}
+	}
+	
+	private GameObject SelectParentProportional() {
+
 		float sumFitness = 0.0f;
+		float maxFitness = float.MinValue;
 
-		// Temp
-		//float maxFitness = float.MinValue;
-		//int bestIndex = -1;
-
+		// Find the maximum fitness
 		for (int i = 0; i < fitness.Count; i++) {
-
-			// Temp
-			//if (fitness[i] > maxFitness) {
-				//bestIndex = i;
-				//maxFitness = fitness[i];
-			//}
-
-			sumFitness += fitness[i];
+			if (fitness[i] > maxFitness) {
+				maxFitness = fitness[i];
+			}
 		}
 
-		//return population[bestIndex];
+		// Calculate the total population's fitness
+		for (int i = 0; i < fitness.Count; i++) {
+			sumFitness += Mathf.Max(fitness[i] - maxFitness * propSelectionAccentuation, 0.0f);
+		}
 
 		// Just return a random frog if there were no flies caught
 		if (sumFitness == 0.0f) {
-			result = population[Random.Range(0, population.Count)];
-			//Debug.Log("Parent fitness was " + CalcFitness(result));
-			return result;
+			return CopyChromosome(population[Random.Range(0, population.Count)]);
+		}
+		
+		// Weight the change of a frog being chosen based on its fitness
+		float cumuFitness = 0.0f;
+		float threshold = Random.Range(0.0f, sumFitness);
+		
+		for (int i = 0; i < fitness.Count; i++) {
+
+			cumuFitness += Mathf.Max(fitness[i] - maxFitness * propSelectionAccentuation, 0.0f);
+
+			if (cumuFitness >= threshold) {
+				if (verbose) {
+					Debug.Log("Selected parent " + i + ", fitness = " + fitness[i]);
+				}
+				return CopyChromosome(population[i]);
+			}
+		}
+		
+		// Should never reach this point
+		return null; 
+	}
+
+	private GameObject SelectParentExponential() {
+
+		float sumFitness = 0.0f;
+
+		for (int i = 0; i < fitness.Count; i++) {
+			sumFitness += Mathf.Exp(fitness[i] * expSelectionAccentuation);
+		}
+
+		// Just return a random frog if there were no flies caught
+		if (sumFitness == 0.0f) {
+			return CopyChromosome(population[Random.Range(0, population.Count)]);
 		}
 
 		// Weight the change of a frog being chosen based on its fitness
@@ -111,10 +179,12 @@ public class GAFrogController : GAController<GameObject> {
 		float threshold = Random.Range(0.0f, sumFitness);
 
 		for (int i = 0; i < fitness.Count; i++) {
-			cumuFitness += fitness[i];
+			cumuFitness += Mathf.Exp(fitness[i] * expSelectionAccentuation);
 			if (cumuFitness >= threshold) {
-				result = population[i];
-				return result;
+				if (verbose) {
+					Debug.Log("Selected parent with fitness = " + fitness[i]);
+				}
+				return CopyChromosome(population[i]);
 			}
 		}
 
@@ -134,73 +204,61 @@ public class GAFrogController : GAController<GameObject> {
 	// Now follows the advice from the bottom of page 258 in the "AI Techniques for Game Programming" book.
 	public override GameObject[] CrossOver(GameObject parent1, GameObject parent2) {
 
-		GameObject child1 = (GameObject)Instantiate(parent1);
-		GameObject child2 = (GameObject)Instantiate(parent2);
+		GameObject child1 = CopyChromosome(parent1);
+		GameObject child2 = CopyChromosome(parent2);
 
-		NeuralNet net1 = parent1.GetComponent<NeuralNetSteering>().neuralNet;
-		NeuralNet net2 = parent2.GetComponent<NeuralNetSteering>().neuralNet;
-
-		float[][] newWeights1 = (float[][])(net1.weights.Clone());
-		float[][] newWeights2 = (float[][])(net2.weights.Clone());
+		NeuralNet net1 = child1.GetComponent<NeuralNetSteering>().neuralNet;
+		NeuralNet net2 = child2.GetComponent<NeuralNetSteering>().neuralNet;
 
 		int crossOverPoint = net1.GetRandomCrossOverIndex();
 		int counter = 0;
 		float tempWeight;
 
-		for (int i = 0; i < newWeights1.Length; i++) {
+		for (int i = 0; i < net1.weights.Length; i++) {
 
-			for (int j = 0; j < newWeights1[i].Length; j++) {
+			for (int j = 0; j < net1.weights[i].Length; j++) {
 
 				if (counter >= crossOverPoint) {
-					tempWeight = newWeights1[i][j];
-					newWeights1[i][j] = newWeights2[i][j];
-					newWeights2[i][j] = tempWeight;
+					tempWeight = net1.weights[i][j];
+					net1.weights[i][j] = net2.weights[i][j];
+					net2.weights[i][j] = tempWeight;
 				}
 
 				counter++;
 			}
 		}
 
-		child1.GetComponent<NeuralNetSteering>().neuralNet.weights = newWeights1;
-		child2.GetComponent<NeuralNetSteering>().neuralNet.weights = newWeights2;
-
-		child1.GetComponent<PlayerInfo>().score = 0;
-		child2.GetComponent<PlayerInfo>().score = 0;
-
 		return new GameObject[]{child1, child2};
 	}
 	
 	public override GameObject Mutate(GameObject chromosome) {
 
-		float perturbationAmount = 0.05f;
+		float perturbationAmount = 0.5f;
 
-		GameObject clonedFrog = (GameObject)Instantiate(chromosome);
+		GameObject clonedFrog = CopyChromosome(chromosome);
 		
-		NeuralNet net = chromosome.GetComponent<NeuralNetSteering>().neuralNet;
-		
-		float[][] newWeights = (float[][])(net.weights.Clone());
-		
-		for (int i = 0; i < newWeights.Length; i++) {
+		NeuralNet net = clonedFrog.GetComponent<NeuralNetSteering>().neuralNet;
+
+		for (int i = 0; i < net.weights.Length; i++) {
 			
-			for (int j = 0; j < newWeights[i].Length; j++) {
+			for (int j = 0; j < net.weights[i].Length; j++) {
 				
-				if (Random.Range(0.0f, 1.0f) >= mutationRate) {
-					newWeights[i][j] += Random.Range(-1.0f, 1.0f) * perturbationAmount;
+				if (Random.Range(0.0f, 1.0f) <= mutationRate) {
+					Debug.Log("Old " + i + ", " + j + " was " + net.weights[i][j]);
+					net.weights[i][j] += Random.Range(-1.0f, 1.0f) * perturbationAmount;
+					Debug.Log("Mutated " + i + ", " + j + " to " + net.weights[i][j]);
 				}
 			}
 		}
 		
-		clonedFrog.GetComponent<NeuralNetSteering>().neuralNet.weights = newWeights;
-		clonedFrog.GetComponent<PlayerInfo>().score = 0;
-		
 		return clonedFrog;
 	}
 
-	public override GameObject Clone(GameObject chromosome) {
+	public override GameObject CopyChromosome(GameObject chromosome) {
 
 		GameObject clonedFrog = (GameObject)Instantiate(chromosome);
-		clonedFrog.GetComponent<NeuralNetSteering>().neuralNet.weights = (float[][])(chromosome.GetComponent<NeuralNetSteering>().neuralNet.weights.Clone());
-		clonedFrog.GetComponent<PlayerInfo>().score = 0;
+		clonedFrog.GetComponent<NeuralNetSteering>().neuralNet = (NeuralNet)(chromosome.GetComponent<NeuralNetSteering>().neuralNet.Clone());
+		clonedFrog.GetComponent<PlayerInfo>().Reset();
 		return clonedFrog;
 	}
 }
