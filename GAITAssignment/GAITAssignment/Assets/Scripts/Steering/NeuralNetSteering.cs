@@ -10,8 +10,6 @@ public class NeuralNetSteering : SteeringBehaviour {
 	public NeuralNet neuralNet;
 	public GameObject selectedFly;
 
-	public List<float> weightsAsVector; // For checking in the inspector
-
 	private float updateTimer = 0.0f;
 	private float[] netInput;
 	
@@ -20,15 +18,6 @@ public class NeuralNetSteering : SteeringBehaviour {
 	}
 	
 	public void Update() {
-
-		weightsAsVector = new List<float>();
-
-		for (int i = 0; i < neuralNet.weights[0].Length; i++) {
-			weightsAsVector.Add(neuralNet.weights[0][i]);
-		}
-		for (int i = 0; i < neuralNet.weights[1].Length; i++) {
-			weightsAsVector.Add(neuralNet.weights[1][i]);
-		}
 
 		updateTimer += Time.deltaTime;
 
@@ -39,15 +28,24 @@ public class NeuralNetSteering : SteeringBehaviour {
 				selectedFly = flyManager.getClosestFly((Vector2)(transform.FindChild("Mouth").position));
 			}
 
-			Vector2 selectedFlyPos = (Vector2)(selectedFly.transform.position);
+			// Couldn't find any flies, possibly because we just started a new epoch and they haven't spawned yet
+			if (selectedFly == null) {
 
-			Vector2 positionDifference = (Vector2)(transform.FindChild("Mouth").position) - selectedFlyPos;
+				netInput = new float[]{0.0f, 0.0f};
 
-			float inputMag = Mathf.Clamp(10.0f - positionDifference.magnitude, 0.0f, 10.0f) / 10.0f;
+			} else {
 
-			Vector2 inputVec = positionDifference.normalized * inputMag;
+				Vector2 selectedFlyPos = (Vector2)(selectedFly.transform.position);
 
-			netInput = new float[]{inputVec.x, inputVec.y};
+				Vector2 positionDifference = (Vector2)(transform.FindChild("Mouth").position) - selectedFlyPos;
+
+				float inputMag = Mathf.Clamp(10.0f - positionDifference.magnitude, 0.0f, 10.0f) / 10.0f;
+
+				Vector2 inputVec = positionDifference.normalized * inputMag;
+
+				netInput = new float[]{inputVec.x, inputVec.y};
+			}
+
 			updateTimer = 0.0f;
 		}
 	}

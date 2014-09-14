@@ -27,11 +27,14 @@ public class SpawnDumbFlies : MonoBehaviour {
 
 		foreach (Transform child in transform)
 		{
-			currentDistance = (position - (Vector2)(child.position)).magnitude;
+			if (child.gameObject != null) {
 
-			if (currentDistance < smallestDistance) {
-				closestFly = child.gameObject;
-				smallestDistance = currentDistance;
+				currentDistance = (position - (Vector2)(child.position)).magnitude;
+
+				if (currentDistance < smallestDistance) {
+					closestFly = child.gameObject;
+					smallestDistance = currentDistance;
+				}
 			}
 		}
 

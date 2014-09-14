@@ -63,7 +63,7 @@ public abstract class GAController<T> : MonoBehaviour, GeneticAlgorithm_I<T>
 	
 	public abstract T[] CrossOver(T parent1, T parent2);
 	
-	public abstract T Mutate(T chromosome);
+	public abstract void Mutate(T chromosome);
 
 	// Just to ensure that the old population always gets replaced
 	public abstract T CopyChromosome(T chromosome);
@@ -98,10 +98,14 @@ public abstract class GAController<T> : MonoBehaviour, GeneticAlgorithm_I<T>
 				child[0] = CopyChromosome(parent1);
 				child[1] = CopyChromosome(parent2);
 			}
-			
+
+			if (child[0].Equals(child[1])) {
+				Debug.Log("Children are equal!");
+			}
+
 			// Mutation step.
-			child[0] = Mutate(child[0]);
-			child[1] = Mutate(child[1]);
+			Mutate(child[0]);
+			Mutate(child[1]);
 			
 			children.Add(child[0]);
 			children.Add(child[1]);

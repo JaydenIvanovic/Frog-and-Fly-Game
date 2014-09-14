@@ -5,6 +5,9 @@ using System.Collections.Generic;
 [System.Serializable]
 public class NeuralNet : System.ICloneable {
 
+	public GameObject ParentFrog;
+	public float fitness = 0.0f;
+
 	public float bias = 0.0f;
 	
 	public int inputNeurons;
@@ -13,13 +16,27 @@ public class NeuralNet : System.ICloneable {
 
 	public float[][] neuronValues = new float[3][]; // For storing calculated values
 	public float[][] weights = new float[2][];
+
+	public List<float> weightsAsVector; // For viewing in the inspector
 	
 	public System.Object Clone() {
 
 		NeuralNet clone = new NeuralNet(inputNeurons, hiddenLayerNeurons, outputNeurons);
 		clone.bias = bias;
-		clone.weights = (float[][])(weights.Clone());
+		clone.weights = new float[][]{(float[])(weights[0].Clone()), (float[])(weights[1].Clone())}; // Deep copy!
 		return (System.Object)clone;
+	}
+
+	public void UpdateDisplayWeights() {
+
+		weightsAsVector = new List<float>();
+		
+		for (int i = 0; i < weights[0].Length; i++) {
+			weightsAsVector.Add(weights[0][i]);
+		}
+		for (int i = 0; i < weights[1].Length; i++) {
+			weightsAsVector.Add(weights[1][i]);
+		}
 	}
 
 	public void RandomiseWeights() {
@@ -33,6 +50,8 @@ public class NeuralNet : System.ICloneable {
 		for (int i = 0; i < weights[1].Length; i++) {
 			weights[1][i] = Random.value - 0.5f;
 		}
+
+		UpdateDisplayWeights();
 	}
 
 	public NeuralNet(int inputNeurons, int hiddenLayerNeurons, int outputNeurons) {

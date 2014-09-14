@@ -5,7 +5,7 @@ using System.Collections.Generic;
 // TO DO:
 // I'm not sure if we really need constructors - Unity likes you to use Awake() / Start() instead
 
-public class GAFrogController : GAController<GameObject> {
+public class GAFrogController : GAController<NeuralNet> {
 
 	public enum ParentSelectionMode
 	{
@@ -21,10 +21,17 @@ public class GAFrogController : GAController<GameObject> {
 	public float propSelectionAccentuation = 0.5f; // Should be between 0 and 1
 	public float expSelectionAccentuation = 0.5f;
 
+	public float discardThreshold = 2.9f;
+
 	public bool verbose = false;
 
 	public float updateFrequency = 2.0f;
 	private float updateTimer = 0.0f;
+
+	public int CurrentEpoch = 0;
+	public int CurrentBatch = 0;
+
+	private int currentPopIndex = 0;
 	
 	// Defaults for mutation and crossover rates are as recommended in 
 	// the "AI Techniques for Game Programming" book.
@@ -37,13 +44,29 @@ public class GAFrogController : GAController<GameObject> {
 		// Not needed - handled by Awake()
 	}
 
-	public void Awake() {
+	public void Awake() {}
 
-		population = new List<GameObject>();
+	// Michael: It's CRITICAL that this stuff goes in Start(), not Awake() since the frogs may not
+	// all be initialised before this component. It was causing me nightmares!
+	public void Start() {
+
+		population = new List<NeuralNet>();
+		
+		for (int i = 0; i < populationSize; i++) {
+			population.Add(new NeuralNet(2, 4, 2));
+		}
+		
 		GameObject[] frogs = GameObject.FindGameObjectsWithTag("Player");
-		population.AddRange(frogs);
+		
+		foreach (GameObject frog in frogs) {
+			frog.GetComponent<NeuralNetSteering>().neuralNet = population[currentPopIndex];
+			frog.GetComponent<NeuralNetSteering>().neuralNet.ParentFrog = frog;
+			IncrementPopulationIndex();
+		}
+	}
 
-		populationSize = population.Count;
+	public void IncrementPopulationIndex() {
+		currentPopIndex = (currentPopIndex + 1) % populationSize;
 	}
 
 	public void Update() {
@@ -52,62 +75,73 @@ public class GAFrogController : GAController<GameObject> {
 		
 		if (updateTimer > updateFrequency) {
 
-			// Get the old positions and fly managers so we can restore them for the new population
-			Queue<Vector3> oldFrogPositions = new Queue<Vector3>();
-			Queue<SpawnDumbFlies> flySpawners = new Queue<SpawnDumbFlies>();
+			CurrentBatch++;
 
 			GameObject[] frogs = GameObject.FindGameObjectsWithTag("Player");
-			foreach (GameObject frog in frogs) {
-				oldFrogPositions.Enqueue(frog.GetComponent<NeuralNetSteering>().flyManager.transform.position);
-				flySpawners.Enqueue(frog.GetComponent<NeuralNetSteering>().flyManager);
-			}
 
-			// Reset the flies so we don't end up with a bunch of hard-to-reach ones
+			// Reset the flies each time the frogs are reset so that we don't just end up
+			// with the hard-to-reach flies
 			GameObject[] flies = GameObject.FindGameObjectsWithTag("Fly");
 			foreach (GameObject fly in flies) {
 				Destroy(fly);
 			}
 
-			// If a frog did badly enough then just randomise its weights again
-			float resetThreshold = 2.9f;
-			int resetCount = 0;
-			foreach (GameObject frog in population) {
-				if (CalcFitness(frog) < resetThreshold) {
-					frog.GetComponent<NeuralNetSteering>().neuralNet.RandomiseWeights();
-					frog.GetComponent<PlayerInfo>().Reset();
+			// Loop over the last neural nets used and store their fitnesses on the nets themselves.
+			// This is necessary because the frogs are about to have their scores reset.
+
+			int resetCount = 0; // If a neural net performed badly enough then just randomise its weights again
+			float minFitness = 0.0001f; // Prevent divide by zero when selecting a parent
+
+			for (int i = 1; i <= frogs.Length; i++) {
+
+				int popIndex = (currentPopIndex - i + populationSize) % populationSize; // We have to count backwards from currentPopIndex using modular arithmetic to find the neural nets just used
+				NeuralNet net = population[popIndex];
+				PlayerInfo frogInfo = net.ParentFrog.GetComponent<PlayerInfo>();
+				net.fitness = frogInfo.score + minFitness;
+
+				if (net.fitness < discardThreshold) {
+					net.RandomiseWeights();
 					resetCount++;
 				}
 			}
 
 			if (verbose) {
-				Debug.Log("Reset " + resetCount + " frogs due to bad performance");
+				Debug.Log("Reset " + resetCount + " neural nets due to bad performance");
 			}
 
-			RunEpoch();
-
-			// Remove old population
-			frogs = GameObject.FindGameObjectsWithTag("Player");
-			foreach (GameObject frog in frogs) {
-				if (!population.Contains(frog)) {
-					Destroy(frog);
-				}
+			// If we've completed a batch then run the genetic algorithm thingy
+			if (currentPopIndex == 0) {
+				RunEpoch();
+				CurrentEpoch++;
+				CurrentBatch = 0;
 			}
 
-			frogs = GameObject.FindGameObjectsWithTag("Player");
-			foreach (GameObject frog in frogs) {
-				if (population.Contains(frog)) {
-					frog.transform.position = oldFrogPositions.Dequeue();
-					frog.GetComponent<NeuralNetSteering>().flyManager = flySpawners.Dequeue();
-					frog.GetComponent<NeuralNetSteering>().flyManager.frog = frog;
-					frog.GetComponent<NeuralNetSteering>().selectedFly = null;
-				}
+			GameObject[] flySpawners = GameObject.FindGameObjectsWithTag("FlySpawner");
+
+			for (int i = 0; i < frogs.Length; i++) {
+
+				// Move the frog back to its start position
+				frogs[i].transform.position = flySpawners[i].transform.position;
+
+				frogs[i].GetComponent<NeuralNetSteering>().neuralNet = population[currentPopIndex];
+				frogs[i].GetComponent<NeuralNetSteering>().neuralNet.UpdateDisplayWeights();
+				frogs[i].GetComponent<NeuralNetSteering>().flyManager = flySpawners[i].GetComponent<SpawnDumbFlies>();
+				population[currentPopIndex].ParentFrog = frogs[i];
+
+				// Find a new fly to select on the next update
+				frogs[i].GetComponent<NeuralNetSteering>().selectedFly = null;
+
+				// Reset the frog's score
+				frogs[i].GetComponent<PlayerInfo>().Reset();
+
+				IncrementPopulationIndex();
 			}
 
 			updateTimer = 0.0f;
 		}
 	}
 
-	public override GameObject SelectParent() {
+	public override NeuralNet SelectParent() {
 
 		switch (parentSelectionMode) {
 		case ParentSelectionMode.Proportional:
@@ -119,7 +153,7 @@ public class GAFrogController : GAController<GameObject> {
 		}
 	}
 	
-	private GameObject SelectParentProportional() {
+	private NeuralNet SelectParentProportional() {
 
 		float sumFitness = 0.0f;
 		float maxFitness = float.MinValue;
@@ -161,7 +195,7 @@ public class GAFrogController : GAController<GameObject> {
 		return null; 
 	}
 
-	private GameObject SelectParentExponential() {
+	private NeuralNet SelectParentExponential() {
 
 		float sumFitness = 0.0f;
 
@@ -192,73 +226,59 @@ public class GAFrogController : GAController<GameObject> {
 		return null; 
 	}
 	
-	public override float CalcFitness(GameObject chromosome) {
+	public override float CalcFitness(NeuralNet chromosome) {
 
-		// Prevent divide by zero when selecting a parent
-		float minFitness = 0.0001f;
-
-		PlayerInfo frogInfo = chromosome.GetComponent<PlayerInfo>();
-		return frogInfo.score + minFitness;
+		return chromosome.fitness;
 	}
 
 	// Now follows the advice from the bottom of page 258 in the "AI Techniques for Game Programming" book.
-	public override GameObject[] CrossOver(GameObject parent1, GameObject parent2) {
+	public override NeuralNet[] CrossOver(NeuralNet parent1, NeuralNet parent2) {
 
-		GameObject child1 = CopyChromosome(parent1);
-		GameObject child2 = CopyChromosome(parent2);
+		NeuralNet child1 = (NeuralNet)(parent1.Clone());
+		NeuralNet child2 = (NeuralNet)(parent2.Clone());
 
-		NeuralNet net1 = child1.GetComponent<NeuralNetSteering>().neuralNet;
-		NeuralNet net2 = child2.GetComponent<NeuralNetSteering>().neuralNet;
-
-		int crossOverPoint = net1.GetRandomCrossOverIndex();
+		int crossOverPoint = child1.GetRandomCrossOverIndex();
 		int counter = 0;
 		float tempWeight;
 
-		for (int i = 0; i < net1.weights.Length; i++) {
+		for (int i = 0; i < child1.weights.Length; i++) {
 
-			for (int j = 0; j < net1.weights[i].Length; j++) {
+			for (int j = 0; j < child1.weights[i].Length; j++) {
 
 				if (counter >= crossOverPoint) {
-					tempWeight = net1.weights[i][j];
-					net1.weights[i][j] = net2.weights[i][j];
-					net2.weights[i][j] = tempWeight;
+					tempWeight = child1.weights[i][j];
+					child1.weights[i][j] = child2.weights[i][j];
+					child2.weights[i][j] = tempWeight;
 				}
 
 				counter++;
 			}
 		}
 
-		return new GameObject[]{child1, child2};
+		return new NeuralNet[]{child1, child2};
 	}
 	
-	public override GameObject Mutate(GameObject chromosome) {
+	public override void Mutate(NeuralNet chromosome) {
 
 		float perturbationAmount = 0.5f;
 
-		GameObject clonedFrog = CopyChromosome(chromosome);
-		
-		NeuralNet net = clonedFrog.GetComponent<NeuralNetSteering>().neuralNet;
-
-		for (int i = 0; i < net.weights.Length; i++) {
+		for (int i = 0; i < chromosome.weights.Length; i++) {
 			
-			for (int j = 0; j < net.weights[i].Length; j++) {
+			for (int j = 0; j < chromosome.weights[i].Length; j++) {
 				
 				if (Random.Range(0.0f, 1.0f) <= mutationRate) {
-					Debug.Log("Old " + i + ", " + j + " was " + net.weights[i][j]);
-					net.weights[i][j] += Random.Range(-1.0f, 1.0f) * perturbationAmount;
-					Debug.Log("Mutated " + i + ", " + j + " to " + net.weights[i][j]);
+
+					chromosome.weights[i][j] += Random.Range(-1.0f, 1.0f) * perturbationAmount;
+
+					if (verbose) {
+						Debug.Log("Mutated " + i + ", " + j + " to " + chromosome.weights[i][j]);
+					}
 				}
 			}
 		}
-		
-		return clonedFrog;
 	}
 
-	public override GameObject CopyChromosome(GameObject chromosome) {
-
-		GameObject clonedFrog = (GameObject)Instantiate(chromosome);
-		clonedFrog.GetComponent<NeuralNetSteering>().neuralNet = (NeuralNet)(chromosome.GetComponent<NeuralNetSteering>().neuralNet.Clone());
-		clonedFrog.GetComponent<PlayerInfo>().Reset();
-		return clonedFrog;
+	public override NeuralNet CopyChromosome(NeuralNet chromosome) {
+		return (NeuralNet)(chromosome.Clone());
 	}
 }
