@@ -74,6 +74,7 @@ public abstract class GAController<T> : MonoBehaviour, GeneticAlgorithm_I<T>
 	public void RunEpoch()
 	{
 		// Update the fitness values
+		fitness.Clear();
 		for (int i = 0; i < populationSize; ++i) {
 			fitness.Insert(i, CalcFitness(population[i]));
 		}

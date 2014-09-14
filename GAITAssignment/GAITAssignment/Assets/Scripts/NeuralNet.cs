@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 [System.Serializable]
 public class NeuralNet {
@@ -73,6 +74,29 @@ public class NeuralNet {
 		}
 
 		return neuronValues[2];
+	}
+
+	public int GetRandomCrossOverIndex() {
+
+		List<int> crossOverPoints = new List<int>();
+		int counter = 0;
+
+		// Hidden layer
+		for (int i = 0; i < hiddenLayerNeurons; i++) {
+			crossOverPoints.Add(counter);
+			counter += (inputNeurons + 1);
+		}
+		
+		// Output
+		for (int i = 0; i < outputNeurons; i++) {
+			crossOverPoints.Add(counter);
+			counter += (hiddenLayerNeurons + 1);
+		}
+
+		// Don't crossover right at the start because then it's not really a crossover
+		crossOverPoints.Remove(0);
+
+		return crossOverPoints[Random.Range(0, crossOverPoints.Count)];
 	}
 
 	private float Squash(float unsquashedValue) {

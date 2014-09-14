@@ -69,6 +69,7 @@ public class GAFrogController : GAController<GameObject> {
 					frog.transform.position = oldFrogPositions.Dequeue();
 					frog.GetComponent<NeuralNetSteering>().flyManager = flySpawners.Dequeue();
 					frog.GetComponent<NeuralNetSteering>().flyManager.frog = frog;
+					frog.GetComponent<NeuralNetSteering>().selectedFly = null;
 				}
 			}
 
@@ -78,15 +79,31 @@ public class GAFrogController : GAController<GameObject> {
 	
 	public override GameObject SelectParent() {
 
+		GameObject result = null;
 		float sumFitness = 0.0f;
 
+		// Temp
+		//float maxFitness = float.MinValue;
+		//int bestIndex = -1;
+
 		for (int i = 0; i < fitness.Count; i++) {
+
+			// Temp
+			//if (fitness[i] > maxFitness) {
+				//bestIndex = i;
+				//maxFitness = fitness[i];
+			//}
+
 			sumFitness += fitness[i];
 		}
 
+		//return population[bestIndex];
+
 		// Just return a random frog if there were no flies caught
 		if (sumFitness == 0.0f) {
-			return population[Random.Range(0, population.Count)];
+			result = population[Random.Range(0, population.Count)];
+			//Debug.Log("Parent fitness was " + CalcFitness(result));
+			return result;
 		}
 
 		// Weight the change of a frog being chosen based on its fitness
@@ -96,7 +113,8 @@ public class GAFrogController : GAController<GameObject> {
 		for (int i = 0; i < fitness.Count; i++) {
 			cumuFitness += fitness[i];
 			if (cumuFitness >= threshold) {
-				return population[i];
+				result = population[i];
+				return result;
 			}
 		}
 
@@ -106,53 +124,83 @@ public class GAFrogController : GAController<GameObject> {
 	
 	public override float CalcFitness(GameObject chromosome) {
 
-		// Ensure that all frogs have a chance of being selected
-		float minFitness = 1.0f;
+		// Prevent divide by zero when selecting a parent
+		float minFitness = 0.0001f;
 
 		PlayerInfo frogInfo = chromosome.GetComponent<PlayerInfo>();
 		return frogInfo.score + minFitness;
 	}
-	
+
+	// Now follows the advice from the bottom of page 258 in the "AI Techniques for Game Programming" book.
 	public override GameObject[] CrossOver(GameObject parent1, GameObject parent2) {
 
 		GameObject child1 = (GameObject)Instantiate(parent1);
 		GameObject child2 = (GameObject)Instantiate(parent2);
 
-		float[][] newWeights1 = parent1.GetComponent<NeuralNetSteering>().neuralNet.weights;
-		float[][] newWeights2 = parent2.GetComponent<NeuralNetSteering>().neuralNet.weights;
+		NeuralNet net1 = parent1.GetComponent<NeuralNetSteering>().neuralNet;
+		NeuralNet net2 = parent2.GetComponent<NeuralNetSteering>().neuralNet;
+
+		float[][] newWeights1 = (float[][])(net1.weights.Clone());
+		float[][] newWeights2 = (float[][])(net2.weights.Clone());
+
+		int crossOverPoint = net1.GetRandomCrossOverIndex();
+		int counter = 0;
 		float tempWeight;
 
-		// Randomly swap weights
-		float crossOverChance = 0.5f;
-
 		for (int i = 0; i < newWeights1.Length; i++) {
+
 			for (int j = 0; j < newWeights1[i].Length; j++) {
-				if (Random.Range(0.0f, 1.0f) < crossOverChance) {
+
+				if (counter >= crossOverPoint) {
 					tempWeight = newWeights1[i][j];
 					newWeights1[i][j] = newWeights2[i][j];
 					newWeights2[i][j] = tempWeight;
 				}
+
+				counter++;
 			}
 		}
 
 		child1.GetComponent<NeuralNetSteering>().neuralNet.weights = newWeights1;
 		child2.GetComponent<NeuralNetSteering>().neuralNet.weights = newWeights2;
 
+		child1.GetComponent<PlayerInfo>().score = 0;
+		child2.GetComponent<PlayerInfo>().score = 0;
+
 		return new GameObject[]{child1, child2};
 	}
-
-	// TO DO: Fix this so it doesn't just clone
+	
 	public override GameObject Mutate(GameObject chromosome) {
 
+		float perturbationAmount = 0.05f;
+
 		GameObject clonedFrog = (GameObject)Instantiate(chromosome);
-		clonedFrog.GetComponent<NeuralNetSteering>().neuralNet.weights = chromosome.GetComponent<NeuralNetSteering>().neuralNet.weights;
+		
+		NeuralNet net = chromosome.GetComponent<NeuralNetSteering>().neuralNet;
+		
+		float[][] newWeights = (float[][])(net.weights.Clone());
+		
+		for (int i = 0; i < newWeights.Length; i++) {
+			
+			for (int j = 0; j < newWeights[i].Length; j++) {
+				
+				if (Random.Range(0.0f, 1.0f) >= mutationRate) {
+					newWeights[i][j] += Random.Range(-1.0f, 1.0f) * perturbationAmount;
+				}
+			}
+		}
+		
+		clonedFrog.GetComponent<NeuralNetSteering>().neuralNet.weights = newWeights;
+		clonedFrog.GetComponent<PlayerInfo>().score = 0;
+		
 		return clonedFrog;
 	}
 
 	public override GameObject Clone(GameObject chromosome) {
 
 		GameObject clonedFrog = (GameObject)Instantiate(chromosome);
-		clonedFrog.GetComponent<NeuralNetSteering>().neuralNet.weights = chromosome.GetComponent<NeuralNetSteering>().neuralNet.weights;
+		clonedFrog.GetComponent<NeuralNetSteering>().neuralNet.weights = (float[][])(chromosome.GetComponent<NeuralNetSteering>().neuralNet.weights.Clone());
+		clonedFrog.GetComponent<PlayerInfo>().score = 0;
 		return clonedFrog;
 	}
 }
