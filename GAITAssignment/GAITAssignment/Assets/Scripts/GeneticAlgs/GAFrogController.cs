@@ -189,6 +189,9 @@ public class GAFrogController : GAController<NeuralNet> {
 		case ParentSelectionMode.Tournament:
 			Debug.Log("Tournament Selected.");
 			return SelectParentTournament(2); // Binary tournament
+		case ParentSelectionMode.RankRoulette:
+			Debug.Log("RankRoulette Selected.");
+			return SelectParentRankRoulette(1.5f); // 2 >= sp >= 1
 		default:
 			Debug.Log("Proportional Selected.");
 			return SelectParentProportional();
@@ -325,10 +328,51 @@ public class GAFrogController : GAController<NeuralNet> {
 	// Jayden: And here is the rank-based roulette wheel method.
 	// This one is supposed to find a higher quality solution
 	// but takes longer to converge.
-	private NeuralNet SelectParentRankRoulette(int tournamentSize) {
+	private NeuralNet SelectParentRankRoulette(float selectivePressure) {
+		
+		// We want to store a sorted list of indexes based on rank.
+		int[] sortedPop = new int[populationSize];
+		// Scaled rank values for the sorted population.
+		float[] scaledRank = new float[populationSize];
+		int bestIndex = 0;
+
+		// O(n^2) sort, if it's too slow I'll change it.
+		List<float> copyFitness =  new List<float>(fitness);
+		for (int p = 0; p < populationSize; ++p) {
+			bestIndex = 0;
+			for (int i = 1; i < copyFitness.Count; ++i) {
+				if (copyFitness[bestIndex] < copyFitness[i]) {
+					bestIndex = i;
+				}
+			}
+			sortedPop[p] = bestIndex;
+			copyFitness.RemoveAt(bestIndex);
+		}
+
+		// Scale the rank according to the selective pressure parameter (2 >= SP >= 1).
+		for (int i = 0; i < populationSize; ++i) {
+			// From the paper: Genetic Algorithm Performance with Different Selection Strategies in Solving TSP
+			// Link: http://www.iaeng.org/publication/WCE2011/WCE2011_pp1134-1139.pdf
+			scaledRank[i] = 2 - selectivePressure + ( 2 * (selectivePressure - 1) * ( (i - 1) / (populationSize - 1f) ) );
+		}
+
+		// Get the sum of the ranks i.e. sumFitness.
+		float sumFitness = 0f;
+		for (int i = 0; i <populationSize; ++i)
+			sumFitness += scaledRank[i];
+
+		// Now use a standard roulette wheel selection method using the scaled ranks.
+		float cumuFitness = 0f;
+		float threshold = Random.Range(0f, sumFitness);
+
+		for (int i = 0; i < populationSize; ++i) {
+			cumuFitness += scaledRank[i];
+			if(cumuFitness >= threshold) {
+				return CopyChromosome(population[sortedPop[i]]);
+			}
+		}
 
 		return null;
-		
 	}
 
 	public override float CalcFitness(NeuralNet chromosome) {
