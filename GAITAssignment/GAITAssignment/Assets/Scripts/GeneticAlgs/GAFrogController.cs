@@ -10,7 +10,9 @@ public class GAFrogController : GAController<NeuralNet> {
 	public enum ParentSelectionMode
 	{
 		Proportional = 0,
-		Exponential = 1
+		Exponential = 1,
+		Tournament = 2,
+		RankRoulette = 3
 	};
 
 	public ParentSelectionMode parentSelectionMode = ParentSelectionMode.Proportional;
@@ -289,6 +291,40 @@ public class GAFrogController : GAController<NeuralNet> {
 		return null; 
 	}
 	
+	// Jayden: If I understood this selection method it's quite straightforward.
+	// Pick x individuals from population N and the one with the best fitness
+	// goes into the new population. Rinse and repeat. 
+	private NeuralNet SelectParentTournament(int tournamentSize) {
+
+		// We can just store the index of the competitors.
+		int[] tournamentPopulation = new int[tournamentSize];
+
+		// Create the tournament pool of competitors.
+		for (int i = 0; i < tournamentSize; ++i) {
+			int randIndex = (int)(Random.value * tournamentSize);
+			tournamentPopulation[i] = randIndex;
+		}
+
+		int bestIndex = tournamentPopulation[0];
+		// Find the competitor with the best fitness, they win!
+		foreach (int i in tournamentPopulation) {
+			if (fitness[i] > fitness[bestIndex]) {
+				bestIndex = i;
+			}
+		}
+		
+		return CopyChromosome(population[bestIndex]);
+	}
+
+	// Jayden: And here is the rank-based roulette wheel method.
+	// This one is supposed to find a higher quality solution
+	// but takes longer to converge.
+	private NeuralNet SelectParentRankRoulette(int tournamentSize) {
+
+		return null;
+		
+	}
+
 	public override float CalcFitness(NeuralNet chromosome) {
 
 		return chromosome.fitness;
