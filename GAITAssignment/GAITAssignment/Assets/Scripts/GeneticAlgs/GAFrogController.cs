@@ -181,10 +181,16 @@ public class GAFrogController : GAController<NeuralNet> {
 
 		switch (parentSelectionMode) {
 		case ParentSelectionMode.Proportional:
+			Debug.Log("Proportional Selected.");
 			return SelectParentProportional();
 		case ParentSelectionMode.Exponential:
+			Debug.Log("Exponential Selected.");
 			return SelectParentExponential();
+		case ParentSelectionMode.Tournament:
+			Debug.Log("Tournament Selected.");
+			return SelectParentTournament(2); // Binary tournament
 		default:
+			Debug.Log("Proportional Selected.");
 			return SelectParentProportional();
 		}
 	}
