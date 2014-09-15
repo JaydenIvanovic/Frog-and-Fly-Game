@@ -5,6 +5,7 @@ public class SpawnDumbFlies : MonoBehaviour {
 	
 	public GameObject dumbFlyPrefab;
 	public GameObject frog;
+	public GameObject snake;
 
 	public int numFlies;
 	public int minFlies;

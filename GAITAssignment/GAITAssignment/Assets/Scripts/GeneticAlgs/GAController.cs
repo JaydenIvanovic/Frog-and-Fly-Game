@@ -7,7 +7,7 @@ public abstract class GAController<T> : MonoBehaviour, GeneticAlgorithm_I<T>
 	public List<T> population;
 	public List<float> fitness;
 	public float mutationRate, crossoverRate;
-	public int populationSize;
+	protected int populationSize;
 
 
 	// Defaults for mutation and crossover rates are as recommended in 

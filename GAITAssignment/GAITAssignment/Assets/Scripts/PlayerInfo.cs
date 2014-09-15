@@ -17,6 +17,7 @@ public class PlayerInfo : MonoBehaviour {
 	public bool IsMainFrog = true;
 
 	public int score;
+	public int DamageTaken;
 	public float waterLevel;
 
 	public int StartingHealth = 3;
@@ -30,9 +31,9 @@ public class PlayerInfo : MonoBehaviour {
 
 	private static int snakesDrowned;
 	private static int eggsDestroyed;
-	private static int health;
+	private int health;
 	private static int requiredFlies;
-	private static float invulnerableTime;
+	private float invulnerableTime;
 	private static bool _isUnderwater;
 
 	private AStarTargeter targeter;
@@ -42,10 +43,9 @@ public class PlayerInfo : MonoBehaviour {
 	private Animator animator;
 	private SpriteRenderer spriteRenderer;
 	private Animator tongueAnimator;
-	private static SpriteRenderer tongueSpriteRenderer;
+	private SpriteRenderer tongueSpriteRenderer;
 	
 	// Static copies
-	private static float _InvulnerableTimeWhenHit;
 	private static AudioClip _HurtSound;
 	private static AudioClip _EatSound;
 	private static AudioClip _SplashSound;
@@ -61,7 +61,6 @@ public class PlayerInfo : MonoBehaviour {
 		}
 
 		// So we can access from static functions... Ugly but it works
-		_InvulnerableTimeWhenHit = InvulnerableTimeWhenHit;
 		_HurtSound = HurtSound;
 		_EatSound = EatSound;
 		_SplashSound = SplashSound;
@@ -124,6 +123,7 @@ public class PlayerInfo : MonoBehaviour {
 
 	public void Reset() {
 		health = StartingHealth;
+		DamageTaken = 0;
 		score = 0;
 		eggsDestroyed = 0;
 		snakesDrowned = 0;
@@ -132,7 +132,7 @@ public class PlayerInfo : MonoBehaviour {
 		_isUnderwater = false;
 	}
 
-	public static int GetHealth() {
+	public int GetHealth() {
 		return health;
 	}
 
@@ -144,9 +144,13 @@ public class PlayerInfo : MonoBehaviour {
 		return snakesDrowned;
 	}
 
-	public static void DecrementHealth() {
+	public void DecrementHealth() {
 
-		health = Mathf.Max(health - 1, 0);
+		if (!TrainingMode) {
+			health = Mathf.Max(health - 1, 0);
+		}
+
+		DamageTaken++;
 
 		SoundSource.clip = _HurtSound;
 		SoundSource.Play();
@@ -214,6 +218,17 @@ public class PlayerInfo : MonoBehaviour {
 		}
 	}
 
+	public static int GetMainFrogHealth() {
+		
+		PlayerInfo mainFrogInfo = getMainFrogInfo();
+		
+		if (mainFrogInfo != null) {
+			return mainFrogInfo.health;
+		} else {
+			return 0;
+		}
+	}
+
 	public static float GetMainFrogWaterLevel() {
 
 		PlayerInfo mainFrogInfo = getMainFrogInfo();
@@ -221,7 +236,7 @@ public class PlayerInfo : MonoBehaviour {
 		if (mainFrogInfo != null) {
 			return mainFrogInfo.waterLevel;
 		} else {
-			return 0;
+			return 0.0f;
 		}
 	}
 
@@ -229,12 +244,12 @@ public class PlayerInfo : MonoBehaviour {
 		return requiredFlies;
 	}
 
-	public static bool IsInvulnerable() {
+	public bool IsInvulnerable() {
 		return invulnerableTime > 0.0f;
 	}
 
-	public static void MakeInvulnerable() {
-		invulnerableTime = _InvulnerableTimeWhenHit;
+	public void MakeInvulnerable() {
+		invulnerableTime = InvulnerableTimeWhenHit;
 	}
 
 	public static bool IsUnderwater() {
@@ -261,7 +276,7 @@ public class PlayerInfo : MonoBehaviour {
 		tongueSpriteRenderer.enabled = true;
 		
 		// Flicker when invulnerable
-		if (PlayerInfo.IsInvulnerable()) {
+		if (IsInvulnerable()) {
 			if (((int)(Time.unscaledTime * InvulnerableFlickerFrequency * 2.0f)) % 2 == 0) {
 				spriteRenderer.enabled = false;
 				tongueSpriteRenderer.enabled = false;

@@ -48,7 +48,7 @@ public class DrawGUISnakeDemo : MonoBehaviour
 		
 		GUI.Box (new Rect (10, 10, 100, 140), "");
 		
-		int health = PlayerInfo.GetHealth();
+		int health = PlayerInfo.GetMainFrogHealth();
 		
 		for (int i = 0; i < health; i++) {
 			GUI.DrawTexture(new Rect(20 + (heartSize + heartSeparation) * i, 20, heartSize, heartSize), heartTex, ScaleMode.ScaleToFit, true, 0.0f);

@@ -57,6 +57,7 @@ public class PredatorStateMachine : MonoBehaviour
 	public GameObject Player;
 	public GameObject Egg;
 	public bool DemoMode = false;
+	public bool TrainingMode = false;
 	public float ParentAge; // age in seconds
 	public float ParentDesire = 0.3f;
 	public float LeashLength;
@@ -299,6 +300,11 @@ public class PredatorStateMachine : MonoBehaviour
 	
 	private void UpdateState()
 	{
+		if (TrainingMode) {
+			currentState = State.Chasing;
+			return;
+		}
+
 		// Transition between water and land
 		if ((((Vector2)transform.position) - lastWaterTransitionPos).magnitude > WATER_TRANSITION_DISTANCE) {
 
@@ -454,14 +460,16 @@ public class PredatorStateMachine : MonoBehaviour
 	private void CheckIfHitPlayer(Collider2D other) 
 	{
 		if ((currentState != State.Bubbled) && (currentState != State.Sunk) && (other.gameObject.tag.Equals ("Player"))) {
-			
-			if (!PlayerInfo.IsInvulnerable()) {
+
+			PlayerInfo playerInfo = other.gameObject.GetComponent<PlayerInfo>();
+
+			if (!playerInfo.IsInvulnerable()) {
 				
-				PlayerInfo.DecrementHealth();
-				PlayerInfo.MakeInvulnerable();
+				playerInfo.DecrementHealth();
+				playerInfo.MakeInvulnerable();
 				
 				// Knock the player
-				GameObject player = GameObject.FindGameObjectWithTag("Player");
+				GameObject player = other.gameObject;
 				Vector2 knockDirection = ((Vector2)(player.transform.position - transform.position)).normalized;
 				player.rigidbody2D.AddForce(knockDirection * KnockForce);
 			}

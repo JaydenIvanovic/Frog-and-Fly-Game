@@ -28,6 +28,9 @@ public class GAFrogController : GAController<NeuralNet> {
 	public float updateFrequency = 2.0f;
 	private float updateTimer = 0.0f;
 
+	public int NumberOfBatches = 1;
+	public int FrogsOnScreen = 8;
+
 	public int CurrentEpoch = 0;
 	public int CurrentBatch = 0;
 
@@ -51,9 +54,11 @@ public class GAFrogController : GAController<NeuralNet> {
 	public void Start() {
 
 		population = new List<NeuralNet>();
-		
+
+		populationSize = NumberOfBatches * FrogsOnScreen;
+
 		for (int i = 0; i < populationSize; i++) {
-			population.Add(new NeuralNet(2, 4, 2));
+			population.Add(new NeuralNet(4, 4, 2));
 		}
 		
 		GameObject[] frogs = GameObject.FindGameObjectsWithTag("Player");
@@ -70,6 +75,27 @@ public class GAFrogController : GAController<NeuralNet> {
 	}
 
 	public void Update() {
+
+		GameObject[] penManagers = GameObject.FindGameObjectsWithTag("PenManager");
+
+		for (int i = 0; i < penManagers.Length; i++) {
+			penManagers[i].GetComponent<SpawnDumbFlies>().snake.SetActive(false);
+		}
+
+		// I was thinking of using some sort of progressive training schedule, but it hasn't worked too well so far
+		/*
+		for (int i = 0; i < penManagers.Length; i++) {
+			GameObject snake = penManagers[i].GetComponent<SpawnDumbFlies>().snake;
+			if (CurrentEpoch < 3) {
+				snake.SetActive(false);
+			} else {
+				snake.SetActive(true);
+			}
+
+			penManagers[i].GetComponent<SpawnDumbFlies>().numFlies = Mathf.Clamp(8 - CurrentEpoch, 2, 8);
+			penManagers[i].GetComponent<SpawnDumbFlies>().minFlies = Mathf.Clamp(8 - CurrentEpoch, 2, 8);
+		}
+		*/
 
 		updateTimer += Time.deltaTime;
 		
@@ -90,14 +116,15 @@ public class GAFrogController : GAController<NeuralNet> {
 			// This is necessary because the frogs are about to have their scores reset.
 
 			int resetCount = 0; // If a neural net performed badly enough then just randomise its weights again
-			float minFitness = 0.0001f; // Prevent divide by zero when selecting a parent
 
 			for (int i = 1; i <= frogs.Length; i++) {
 
 				int popIndex = (currentPopIndex - i + populationSize) % populationSize; // We have to count backwards from currentPopIndex using modular arithmetic to find the neural nets just used
 				NeuralNet net = population[popIndex];
 				PlayerInfo frogInfo = net.ParentFrog.GetComponent<PlayerInfo>();
-				net.fitness = frogInfo.score + minFitness;
+				net.fitness = frogInfo.score - (float)(Mathf.Clamp(CurrentEpoch, 0, 10)) * frogInfo.DamageTaken;
+
+				net.fitness = Mathf.Max(net.fitness, 0.0f); // Stop the really bad snakes distoring parent selection
 
 				if (net.fitness < discardThreshold) {
 					net.RandomiseWeights();
@@ -116,17 +143,24 @@ public class GAFrogController : GAController<NeuralNet> {
 				CurrentBatch = 0;
 			}
 
-			GameObject[] flySpawners = GameObject.FindGameObjectsWithTag("FlySpawner");
-
-			for (int i = 0; i < frogs.Length; i++) {
+			for (int i = 0; i < penManagers.Length; i++) {
 
 				// Move the frog back to its start position
-				frogs[i].transform.position = flySpawners[i].transform.position;
+				frogs[i].transform.position = penManagers[i].transform.position;
 
 				frogs[i].GetComponent<NeuralNetSteering>().neuralNet = population[currentPopIndex];
 				frogs[i].GetComponent<NeuralNetSteering>().neuralNet.UpdateDisplayWeights();
-				frogs[i].GetComponent<NeuralNetSteering>().flyManager = flySpawners[i].GetComponent<SpawnDumbFlies>();
+				frogs[i].GetComponent<NeuralNetSteering>().flyManager = penManagers[i].GetComponent<SpawnDumbFlies>();
 				population[currentPopIndex].ParentFrog = frogs[i];
+
+				// Ensure that the snakes are targeting the right frogs
+				GameObject snake = penManagers[i].GetComponent<SpawnDumbFlies>().snake;
+				snake.GetComponent<GameObjectTargeter>().Target = frogs[i];
+				snake.GetComponent<HuntTargeter>().Target = frogs[i];
+				snake.GetComponent<PredatorStateMachine>().Player = frogs[i];
+				snake.transform.position = new Vector3(snake.GetComponent<PredatorStateMachine>().Home.transform.position.x,
+				                                       snake.GetComponent<PredatorStateMachine>().Home.transform.position.y,
+				                                       snake.transform.position.z);
 
 				// Find a new fly to select on the next update
 				frogs[i].GetComponent<NeuralNetSteering>().selectedFly = null;
@@ -157,11 +191,25 @@ public class GAFrogController : GAController<NeuralNet> {
 
 		float sumFitness = 0.0f;
 		float maxFitness = float.MinValue;
+		float minFitness = float.MaxValue;
 
-		// Find the maximum fitness
+		// Find the maximum and minimum fitnesses
 		for (int i = 0; i < fitness.Count; i++) {
 			if (fitness[i] > maxFitness) {
 				maxFitness = fitness[i];
+			}
+			if (fitness[i] < minFitness) {
+				minFitness = fitness[i];
+			}
+		}
+
+		// Ensure that all fitnesses are positive
+		if (minFitness < 0.0f) {
+
+			maxFitness -= minFitness;
+
+			for (int i = 0; i < fitness.Count; i++) {
+				fitness[i] -= minFitness;
 			}
 		}
 
@@ -198,6 +246,21 @@ public class GAFrogController : GAController<NeuralNet> {
 	private NeuralNet SelectParentExponential() {
 
 		float sumFitness = 0.0f;
+		float minFitness = float.MaxValue;
+		
+		// Find the minimum fitness
+		for (int i = 0; i < fitness.Count; i++) {
+			if (fitness[i] < minFitness) {
+				minFitness = fitness[i];
+			}
+		}
+
+		// Ensure that all fitnesses are positive
+		if (minFitness < 0.0f) {
+			for (int i = 0; i < fitness.Count; i++) {
+				fitness[i] -= minFitness;
+			}
+		}
 
 		for (int i = 0; i < fitness.Count; i++) {
 			sumFitness += Mathf.Exp(fitness[i] * expSelectionAccentuation);

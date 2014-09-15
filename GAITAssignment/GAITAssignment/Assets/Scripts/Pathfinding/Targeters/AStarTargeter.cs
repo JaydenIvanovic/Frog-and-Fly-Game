@@ -20,7 +20,8 @@ enum NodeDirections
 public enum Mode
 {
 	AStarVanilla,
-	AStarWithJPS
+	AStarWithJPS,
+	Direct
 }
 
 [RequireComponent(typeof(Collider2D))]
@@ -49,6 +50,11 @@ public class AStarTargeter : Targeter {
 	
 	public override Vector2? GetTarget ()
 	{
+		if (searchMode == Mode.Direct) {
+			return null; // Don't let the snakes move for now
+			//return underlyingTargeter.GetTarget();
+		}
+
 		if (path == null || path.Count == 0) {
 			return null;
 		} else {
@@ -161,6 +167,13 @@ public class AStarTargeter : Targeter {
 	}
 	
 	void Update() {
+
+		// For frog training it was easier to just make the A* targeter directly target the frog
+		// rather than changing all the snake components. With direct targeting, it just returns
+		// the position of the frog so there's no need to update the A* path.
+		if (searchMode == Mode.Direct) {
+			return;
+		}
 
 		timeSinceRecalculated += Time.deltaTime;
 
