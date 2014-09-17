@@ -51,8 +51,8 @@ public class AStarTargeter : Targeter {
 	public override Vector2? GetTarget ()
 	{
 		if (searchMode == Mode.Direct) {
-			return null; // Don't let the snakes move for now
-			//return underlyingTargeter.GetTarget();
+			//return null; // Don't let the snakes move for now
+			return underlyingTargeter.GetTarget();
 		}
 
 		if (path == null || path.Count == 0) {

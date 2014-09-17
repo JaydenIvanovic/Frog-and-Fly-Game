@@ -10,6 +10,7 @@ public class SteeringController : MonoBehaviour
 	private SteeringBehaviour[] steeringBehaviours;
 	private Movement movement;
 	private ObstacleAvoider avoider;
+	private ObstacleAvoiderFrog avoiderFrog;
 
 	public bool avoidObstacles;
 	
@@ -18,6 +19,7 @@ public class SteeringController : MonoBehaviour
 		steeringBehaviours = GetComponents<SteeringBehaviour>();
 		movement = GetComponent<Movement>();
 		avoider = GetComponent<ObstacleAvoider>();
+		avoiderFrog = GetComponent<ObstacleAvoiderFrog>();
 	}
 
 	protected void Update()
@@ -28,8 +30,14 @@ public class SteeringController : MonoBehaviour
 		foreach (var steeringBehaviour in steeringBehaviours)
 			steering += steeringBehaviour.GetSteering();
 
-		if (avoidObstacles && (avoider != null)) {
-			steering = avoider.AvoidObstacles(steering);
+		// TO DO: Make this properly polymorphic (i.e. make a parent "ObstacleAvoider" class with subclasses for fly and frog)
+		if (avoidObstacles) {
+			if (avoider != null) {
+				steering = avoider.AvoidObstacles(steering);
+			}
+			if (avoiderFrog != null) {
+				steering = avoiderFrog.AvoidObstacles(steering);
+			}
 		}
 
 		movement.Move(steering);

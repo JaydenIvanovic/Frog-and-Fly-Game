@@ -1,22 +1,38 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
-public class SpawnDumbFlies : MonoBehaviour {
+public class ManagePen : MonoBehaviour {
 	
 	public GameObject dumbFlyPrefab;
 	public GameObject frog;
 	public GameObject snake;
 
+	public bool spawnFlies = true;
 	public int numFlies;
 	public int minFlies;
 	public float minDistanceFromFrog;
-	
+
+	private static List<Vector3> sharedSpawnPositions;
+	private static bool initialised = false;
+	public int currentSpawnPosition = 0;
+
+	public void ResetSpawnPositions(int listLen) {
+
+		sharedSpawnPositions = new List<Vector3>();
+		currentSpawnPosition = 0;
+
+		for (int i = 0; i < listLen; i++) {
+			sharedSpawnPositions.Add(GetSpawnPosition());
+		}
+	}
+
 	// Use this for initialization
 	void Start () {
-		
-		// Create flies
-		for (int i = 0; i < numFlies; i++) {
-			CreateFly(GetSpawnPosition());
+
+		if (!initialised) {
+			ResetSpawnPositions(100); // TO DO: Remove magic number
+			initialised = true;
 		}
 	}
 
@@ -51,8 +67,9 @@ public class SpawnDumbFlies : MonoBehaviour {
 			}
 		}
 
-		if (flyCount < minFlies) {
-			CreateFly(GetSpawnPosition());
+		if (spawnFlies && (flyCount < minFlies)) {
+			CreateFly(transform.position + sharedSpawnPositions[currentSpawnPosition]);
+			currentSpawnPosition++;
 		}
 	}
 	
@@ -69,11 +86,11 @@ public class SpawnDumbFlies : MonoBehaviour {
 
 		// Make the flies spawn away from the frog
 		do {
-			spawnLocation = new Vector3(Random.Range(transform.position.x - transform.localScale.x / 2, transform.position.x + transform.localScale.x / 2),
-			                            Random.Range(transform.position.y - transform.localScale.y / 2, transform.position.y + transform.localScale.y / 2),
+			spawnLocation = new Vector3(Random.Range(-transform.localScale.x / 2, transform.localScale.x / 2),
+			                            Random.Range(-transform.localScale.y / 2, transform.localScale.y / 2),
 			                            10.0f);
 
-		} while (((Vector2)(spawnLocation - frog.transform.position)).magnitude < minDistanceFromFrog);
+		} while (((Vector2)(spawnLocation + transform.position - frog.transform.position)).magnitude < minDistanceFromFrog);
 
 		return spawnLocation;
 	}

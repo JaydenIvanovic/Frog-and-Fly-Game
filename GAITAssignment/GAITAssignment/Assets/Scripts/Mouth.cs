@@ -7,6 +7,7 @@ public class Mouth : MonoBehaviour {
 	private float rotationOffset;
 	private PlayerInfo playerInfo;
 
+	public bool BubbleEnabled = true;
 	public float BubbleCost = 20.0f;
 	public float BubbleLaunchDistance = 0.3f;
 	public GameObject waterProjectilePrefab;
@@ -41,7 +42,7 @@ public class Mouth : MonoBehaviour {
 
 	void SprayWater()
 	{
-		if (!PlayerInfo.isPaused && Input.GetMouseButtonDown(0) && playerInfo.waterLevel > PlayerInfo.BUBBLE_COST)
+		if (BubbleEnabled && !PlayerInfo.isPaused && Input.GetMouseButtonDown(0) && playerInfo.waterLevel > PlayerInfo.BUBBLE_COST)
 		{
 			Vector2 clickPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 			

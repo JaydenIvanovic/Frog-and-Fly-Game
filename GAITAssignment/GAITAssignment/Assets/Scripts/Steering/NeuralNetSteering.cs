@@ -5,27 +5,24 @@ using System.Collections.Generic;
 public class NeuralNetSteering : SteeringBehaviour {
 	
 	public float updateFrequency = 0.2f;
-	public SpawnDumbFlies flyManager;
+	public ManagePen manager;
 	public float minSteeringMag = 1.0f;
 	public NeuralNet neuralNet;
 	public GameObject selectedFly;
 	public float InputFlickerPreventionFactor = 0.2f; // 0.0f means it will always choose the closest fly
 	                                                  // A value of 0.2f means that the chosen fly won't change unless another fly is 20% closer
-
 	private float updateTimer = 0.0f;
 	private float[] netInput;
-	
-	public void Awake() {
-		neuralNet = new NeuralNet(4, 4, 2);
-	}
 	
 	public void Update() {
 
 		updateTimer += Time.deltaTime;
 
+		Vector2 inputVec = Vector2.zero;
+
 		if (updateTimer > updateFrequency) {
 
-			GameObject tempFly = flyManager.getClosestFly((Vector2)(transform.FindChild("Mouth").position));
+			GameObject tempFly = manager.getClosestFly((Vector2)(transform.FindChild("Mouth").position));
 
 			// Couldn't find any flies, possibly because we just started a new epoch and they haven't spawned yet
 			if (tempFly != null) {
@@ -45,24 +42,20 @@ public class NeuralNetSteering : SteeringBehaviour {
 				// Make it so that closer flies send a stronger signal, but the signal is always between 0 and 1
 				float inputMag = Mathf.Exp(-posDiffSelected.magnitude / 10.0f);
 
-				Vector2 inputVec = posDiffSelected.normalized * inputMag;
-
-
-
-
-
-				Vector2 posDiffSnake = (Vector2)(transform.position) - (Vector2)(flyManager.snake.transform.position);
-
-				float inputMagSnake = Mathf.Exp(-posDiffSnake.magnitude / 10.0f);
-
-				Vector2 inputVecSnake = posDiffSnake.normalized * inputMagSnake;
-
-				if (!flyManager.snake.activeSelf) {
-					inputVecSnake = Vector2.zero;
-				}
-
-				netInput = new float[]{inputVec.x, inputVec.y, inputVecSnake.x, inputVecSnake.y};
+				inputVec = posDiffSelected.normalized * inputMag;
 			}
+
+			Vector2 posDiffSnake = (Vector2)(transform.position) - (Vector2)(manager.snake.transform.position);
+
+			float inputMagSnake = Mathf.Exp(-posDiffSnake.magnitude / 5.0f);
+
+			Vector2 inputVecSnake = posDiffSnake.normalized * inputMagSnake;
+
+			if (!manager.snake.activeSelf) {
+				inputVecSnake = Vector2.zero;
+			}
+
+			netInput = new float[]{inputVec.x, inputVec.y, inputVecSnake.x, inputVecSnake.y};
 
 			updateTimer = 0.0f;
 		}
