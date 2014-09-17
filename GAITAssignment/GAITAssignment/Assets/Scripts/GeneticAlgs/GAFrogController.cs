@@ -78,7 +78,7 @@ public class GAFrogController : GAController<NeuralNet> {
 		populationSize = currentParams.NumberOfBatches * FrogsOnScreen;
 
 		for (int i = 0; i < populationSize; i++) {
-			population.Add(new NeuralNet(4, currentParams.neuralNetSettings.HiddenNeurons, 2, currentParams.neuralNetSettings.useRotationSymmetry, currentParams.neuralNetSettings.useReflectionSymmetry));
+			population.Add(new NeuralNet(6, currentParams.neuralNetSettings.HiddenNeurons, 2, currentParams.neuralNetSettings.useRotationSymmetry, currentParams.neuralNetSettings.useReflectionSymmetry));
 		}
 
 		GameObject[] frogs = GameObject.FindGameObjectsWithTag("Player");
@@ -128,17 +128,22 @@ public class GAFrogController : GAController<NeuralNet> {
 		UpdatePens();
 
 		updateTimer += Time.deltaTime;
+
+		GameObject[] penManagers = GameObject.FindGameObjectsWithTag("PenManager");
+		GameObject[] frogs = GameObject.FindGameObjectsWithTag("Player");
+
+		for (int i = 0; i < penManagers.Length; i++) {
+			NeuralNet net = penManagers[i].GetComponent<ManagePen>().frog.GetComponent<NeuralNetSteering>().neuralNet;
+			net.snakeDistScore += Time.deltaTime * ((Vector2)(penManagers[i].GetComponent<ManagePen>().snake.transform.position) - (Vector2)(penManagers[i].GetComponent<ManagePen>().frog.transform.position)).magnitude;
+		}
 		
 		if (updateTimer > currentParams.batchTime) {
 
 			CurrentBatch++;
 
-			GameObject[] penManagers = GameObject.FindGameObjectsWithTag("PenManager");
 			for (int i = 0; i < penManagers.Length; i++) {
 				penManagers[i].GetComponent<ManagePen>().currentSpawnPosition = 0;
 			}
-
-			GameObject[] frogs = GameObject.FindGameObjectsWithTag("Player");
 
 			// Reset the flies each time the frogs are reset so that we don't just end up
 			// with the hard-to-reach flies
@@ -158,9 +163,8 @@ public class GAFrogController : GAController<NeuralNet> {
 				NeuralNet net = population[popIndex];
 				PlayerInfo frogInfo = net.ParentFrog.GetComponent<PlayerInfo>();
 
-				//net.fitness = Mathf.Max(0.0f, frogInfo.score - (float)(Mathf.Clamp(CurrentEpoch, 0, 10)) * frogInfo.DamageTaken);
-
-				net.fitness = Mathf.Max(0, frogInfo.score + (16 - 4 * frogInfo.DamageTaken));
+				net.fitness = 0.5f * (float)(frogInfo.score) + (currentParams.batchTime - 5.0f * (float)(frogInfo.DamageTaken)) + net.snakeDistScore;
+				net.snakeDistScore = 0.0f;
 
 				if (net.fitness <= currentParams.discardThreshold) {
 					net.RandomiseWeights();
@@ -226,7 +230,7 @@ public class GAFrogController : GAController<NeuralNet> {
 			return SelectParentTournament(2); // Binary tournament
 		case ParentSelectionMode.RankRoulette:
 			Debug.Log("RankRoulette Selected.");
-			return SelectParentRankRoulette(1.5f); // 2 >= sp >= 1
+			return SelectParentRankRoulette(1.8f); // 2 >= sp >= 1
 		default:
 			Debug.Log("Proportional Selected.");
 			return SelectParentProportional();
@@ -372,7 +376,37 @@ public class GAFrogController : GAController<NeuralNet> {
 		int bestIndex = 0;
 
 		// O(n^2) sort, if it's too slow I'll change it.
-		List<float> copyFitness =  new List<float>(fitness);
+		List<float> copyFitness = new List<float>(fitness);
+
+		for (int i = 0; i < populationSize; i++) {
+			sortedPop[i] = i;
+		}
+
+		float tempValue;
+		int tempIndex;
+
+		// Insertion sort
+		// Rank the LOWEST fitness first because it should get the worst scaled rank
+		for (int i = 0; i < (populationSize - 1); i++) {
+
+			for (int j = i + 1; j < populationSize; j++) {
+
+				if (copyFitness[j] < copyFitness[i]) {
+
+					// Swap values
+					tempValue = copyFitness[i];
+					copyFitness[i] = copyFitness[j];
+					copyFitness[j] = tempValue;
+
+					// Swap indices
+					tempIndex = sortedPop[i];
+					sortedPop[i] = sortedPop[j];
+					sortedPop[j] = tempIndex;
+				}
+			}
+		}
+
+		/*
 		for (int p = 0; p < populationSize; ++p) {
 			bestIndex = 0;
 			for (int i = 1; i < copyFitness.Count; ++i) {
@@ -381,14 +415,17 @@ public class GAFrogController : GAController<NeuralNet> {
 				}
 			}
 			sortedPop[p] = bestIndex;
+			Debug.Log(p + ", " + fitness[sortedPop[p]]);
 			copyFitness.RemoveAt(bestIndex);
 		}
+		*/
 
 		// Scale the rank according to the selective pressure parameter (2 >= SP >= 1).
 		for (int i = 0; i < populationSize; ++i) {
 			// From the paper: Genetic Algorithm Performance with Different Selection Strategies in Solving TSP
 			// Link: http://www.iaeng.org/publication/WCE2011/WCE2011_pp1134-1139.pdf
 			scaledRank[i] = 2 - selectivePressure + ( 2 * (selectivePressure - 1) * ( (i - 1) / (populationSize - 1f) ) );
+			//Debug.Log(i + ", " + scaledRank[i] + " fitness: " + fitness[sortedPop[i]]);
 		}
 
 		// Get the sum of the ranks i.e. sumFitness.
@@ -403,6 +440,7 @@ public class GAFrogController : GAController<NeuralNet> {
 		for (int i = 0; i < populationSize; ++i) {
 			cumuFitness += scaledRank[i];
 			if(cumuFitness >= threshold) {
+				//Debug.Log("Rank selected was " + sortedPop[i]);
 				return CopyChromosome(population[sortedPop[i]]);
 			}
 		}
@@ -444,7 +482,7 @@ public class GAFrogController : GAController<NeuralNet> {
 	
 	public override void Mutate(NeuralNet chromosome) {
 
-		float perturbationAmount = 0.5f;
+		float perturbationAmount = 0.2f;
 
 		for (int i = 0; i < chromosome.weights.Length; i++) {
 			

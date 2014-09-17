@@ -7,6 +7,7 @@ public class NeuralNet : System.ICloneable {
 	
 	public GameObject ParentFrog;
 	public float fitness = 0.0f;
+	public float snakeDistScore = 0.0f;
 	
 	public int inputNeurons;
 	public int hiddenLayerNeurons;
