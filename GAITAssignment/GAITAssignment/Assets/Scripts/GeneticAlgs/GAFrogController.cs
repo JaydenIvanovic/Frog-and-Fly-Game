@@ -54,6 +54,7 @@ public class GAFrogController : GAController<NeuralNet> {
 	// Michael: It's CRITICAL that this stuff goes in Start(), not Awake() since the frogs may not
 	// all be initialised before this component. It was causing me nightmares!
 	public void Start() {
+		Time.timeScale *= 3;
 
 		population = new List<NeuralNet>();
 
@@ -81,7 +82,7 @@ public class GAFrogController : GAController<NeuralNet> {
 		GameObject[] penManagers = GameObject.FindGameObjectsWithTag("PenManager");
 
 		for (int i = 0; i < penManagers.Length; i++) {
-			penManagers[i].GetComponent<SpawnDumbFlies>().snake.SetActive(false);
+			penManagers[i].GetComponent<SpawnDumbFlies>().snake.SetActive(true);
 		}
 
 		// I was thinking of using some sort of progressive training schedule, but it hasn't worked too well so far
@@ -124,9 +125,14 @@ public class GAFrogController : GAController<NeuralNet> {
 				int popIndex = (currentPopIndex - i + populationSize) % populationSize; // We have to count backwards from currentPopIndex using modular arithmetic to find the neural nets just used
 				NeuralNet net = population[popIndex];
 				PlayerInfo frogInfo = net.ParentFrog.GetComponent<PlayerInfo>();
-				net.fitness = frogInfo.score - (float)(Mathf.Clamp(CurrentEpoch, 0, 10)) * frogInfo.DamageTaken;
-
-				net.fitness = Mathf.Max(net.fitness, 0.0f); // Stop the really bad snakes distoring parent selection
+				//net.fitness = frogInfo.score - (float)(Mathf.Clamp(CurrentEpoch, 0, 10)) * frogInfo.DamageTaken;
+				//net.fitness = frogInfo.score - frogInfo.score * Mathf.Clamp(frogInfo.DamageTaken/10, 0, 1); // Frogs seemed to stay on the other side of the map, but acted really dumb
+				//net.fitness = frogInfo.score - frogInfo.score * (frogInfo.DamageTaken * 0.1f); // Not enough punishment - frog just pushes snake out of the way for flies
+				//net.fitness = frogInfo.score - 10 * frogInfo.DamageTaken; // Not harsh enough.
+				//net.fitness = frogInfo.score - 50 * frogInfo.DamageTaken; // Much harsher, frogs seem to really stay away from the snake quadrant, but this means they run into the north wall.
+				//net.fitness = frogInfo.score - (frogInfo.score * 0.5f) * frogInfo.DamageTaken; // wrong - if score = 0 then no matter what damage is taken the result will be 0, so frogs just didn't eat flies.
+				net.fitness = frogInfo.score - (frogInfo.score * 0.5f + 1) * frogInfo.DamageTaken; // just can't seem to find a balance between getting flies and avoiding the snake...
+				//net.fitness = Mathf.Max(net.fitness, 0.0f); // Stop the really bad snakes distoring parent selection
 
 				if (net.fitness < discardThreshold) {
 					net.RandomiseWeights();
