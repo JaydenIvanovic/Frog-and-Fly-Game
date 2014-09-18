@@ -63,14 +63,14 @@ public class DragSelectFlies : MonoBehaviour
 		triangles[0] = 0;
 		triangles[1] = 1;
 		triangles[2] = 2;
-		triangles[3] = 0;
-		triangles[4] = 1;
+		triangles[3] = 1; // if 0 and 
+		triangles[4] = 0; // if 1 then it doesn't work, which confuses me.
 		triangles[5] = 3;
 
-		color[0] = new Color(0.2f, 1f, 0f, 0f);
-		color[1] = new Color(0.2f, 1f, 0f, 0f);
-		color[2] = new Color(0.2f, 1f, 0f, 0f);
-		color[3] = new Color(0.2f, 1f, 0f, 0f);
+		color[0] = new Color(0f, 1f, 0.3f, 0.5f);
+		color[1] = new Color(0f, 1f, 0.3f, 0.5f);
+		color[2] = new Color(0f, 1f, 0.3f, 0.5f);
+		color[3] = new Color(0f, 1f, 0.3f, 0.5f);
 
 		mesh.vertices = verts;
 		mesh.colors32 = color;
@@ -90,6 +90,9 @@ public class DragSelectFlies : MonoBehaviour
 				if (fly.transform.position.x >= boundsStart.x && fly.transform.position.x <= boundsEnd.x &&
 					fly.transform.position.y >= boundsStart.y && fly.transform.position.y <= boundsEnd.y) {
 					fly.GetComponent<MouseTargeter>().selected = true;
+				}
+				else {
+					fly.GetComponent<MouseTargeter>().selected = false;
 				}
 			}
 		}

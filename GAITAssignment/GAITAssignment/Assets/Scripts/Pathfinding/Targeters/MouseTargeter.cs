@@ -15,7 +15,7 @@ public class MouseTargeter : Targeter {
 		}
 		else {
 			if (!flyRTS) {
-				FollowMouse();
+				//FollowMouse();
 			}
 		} 
 		
