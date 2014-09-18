@@ -85,7 +85,7 @@ public class DragSelectFlies : MonoBehaviour
 	private void UpdateSelectedFlies(Vector2 boundsStart, Vector2 boundsEnd)
 	{
 		foreach (Transform fly in GetComponentInChildren<Transform>()) {
-			if (fly.name == "DumbFly") {
+			if (fly.name == "PlayerFly") {
 				// Check if fly's current position is within the boundaries.
 				if (fly.transform.position.x >= boundsStart.x && fly.transform.position.x <= boundsEnd.x &&
 					fly.transform.position.y >= boundsStart.y && fly.transform.position.y <= boundsEnd.y) {
