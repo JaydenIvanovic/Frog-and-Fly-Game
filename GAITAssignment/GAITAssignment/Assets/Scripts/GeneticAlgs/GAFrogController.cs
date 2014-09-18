@@ -19,6 +19,7 @@ public class GAFrogController : GAController<NeuralNet> {
 	public class GAParameters {
 		public int NumberOfBatches = 1;
 		public float batchTime = 10.0f;
+		public float timeScale = 3.0f;
 		public bool spawnFlies = true;
 		public bool flyMovement = false;
 		public bool snakesActive = false;
@@ -73,6 +74,8 @@ public class GAFrogController : GAController<NeuralNet> {
 	public void Start() {
 
 		currentParams = parameters[parameterIndexToUse];
+
+		Time.timeScale = currentParams.timeScale;
 
 		population = new List<NeuralNet>();
 		populationSize = currentParams.NumberOfBatches * FrogsOnScreen;
@@ -134,7 +137,7 @@ public class GAFrogController : GAController<NeuralNet> {
 
 		for (int i = 0; i < penManagers.Length; i++) {
 			NeuralNet net = penManagers[i].GetComponent<ManagePen>().frog.GetComponent<NeuralNetSteering>().neuralNet;
-			net.snakeDistScore += Time.deltaTime * ((Vector2)(penManagers[i].GetComponent<ManagePen>().snake.transform.position) - (Vector2)(penManagers[i].GetComponent<ManagePen>().frog.transform.position)).magnitude;
+			net.snakeDistScore += Time.deltaTime * Mathf.Min(1.75f, ((Vector2)(penManagers[i].GetComponent<ManagePen>().snake.transform.position) - (Vector2)(penManagers[i].GetComponent<ManagePen>().frog.transform.position)).magnitude);
 		}
 		
 		if (updateTimer > currentParams.batchTime) {
@@ -163,7 +166,7 @@ public class GAFrogController : GAController<NeuralNet> {
 				NeuralNet net = population[popIndex];
 				PlayerInfo frogInfo = net.ParentFrog.GetComponent<PlayerInfo>();
 
-				net.fitness = 0.5f * (float)(frogInfo.score) + (currentParams.batchTime - 5.0f * (float)(frogInfo.DamageTaken)) + net.snakeDistScore;
+				net.fitness = 1.0f * (float)(frogInfo.score) + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken)) + 0.25f * net.snakeDistScore;
 				net.snakeDistScore = 0.0f;
 
 				if (net.fitness <= currentParams.discardThreshold) {
@@ -373,7 +376,7 @@ public class GAFrogController : GAController<NeuralNet> {
 		int[] sortedPop = new int[populationSize];
 		// Scaled rank values for the sorted population.
 		float[] scaledRank = new float[populationSize];
-		int bestIndex = 0;
+		//int bestIndex = 0;
 
 		// O(n^2) sort, if it's too slow I'll change it.
 		List<float> copyFitness = new List<float>(fitness);

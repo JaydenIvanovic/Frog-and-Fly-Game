@@ -18,7 +18,7 @@ public class NeuralNetSteering : SteeringBehaviour {
 	private float[] netInput;
 	private float[] obstacleInfo;
 	private CircleCollider2D circleCollider;
-	private float conservativeMultiplier = 1.5f;
+	//private float conservativeMultiplier = 1.5f;
 
 	void Awake()
 	{

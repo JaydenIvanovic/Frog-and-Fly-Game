@@ -86,8 +86,8 @@ public class ManagePen : MonoBehaviour {
 
 		// Make the flies spawn away from the frog
 		do {
-			spawnLocation = new Vector3(Random.Range(-transform.localScale.x / 2, transform.localScale.x / 2),
-			                            Random.Range(-transform.localScale.y / 2, transform.localScale.y / 2),
+			spawnLocation = new Vector3(0.7f * Random.Range(-transform.localScale.x / 2, transform.localScale.x / 2),
+			                            0.7f * Random.Range(-transform.localScale.y / 2, transform.localScale.y / 2),
 			                            10.0f);
 
 		} while (((Vector2)(spawnLocation + transform.position - frog.transform.position)).magnitude < minDistanceFromFrog);
