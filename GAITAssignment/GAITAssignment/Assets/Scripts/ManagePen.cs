@@ -36,26 +36,46 @@ public class ManagePen : MonoBehaviour {
 		}
 	}
 
-	public GameObject getClosestFly(Vector2 position) {
+	public List<GameObject> getFliesSortedByDistance(Vector2 position) {
 
 		GameObject closestFly = null;
+		Vector2 frogMouthPos = (Vector2)(frog.transform.FindChild("Mouth").position);
 		float smallestDistance = float.MaxValue;
 		float currentDistance;
+		float existingDistance;
 
-		foreach (Transform child in transform)
-		{
-			if (child.gameObject != null) {
+		List<GameObject> sortedFlies = new List<GameObject>();
 
-				currentDistance = (position - (Vector2)(child.position)).magnitude;
+		for (int i = 0; i < transform.childCount; i++) {
 
-				if (currentDistance < smallestDistance) {
-					closestFly = child.gameObject;
-					smallestDistance = currentDistance;
+			GameObject currentFly = transform.GetChild(i).gameObject;
+			currentDistance = (frogMouthPos - (Vector2)(currentFly.transform.position)).magnitude;
+
+			for (int j = 0; j < transform.childCount; j++) {
+
+				if (j >= sortedFlies.Count) {
+					sortedFlies.Insert(j, currentFly);
+					break;
+				}
+
+				existingDistance = (frogMouthPos - (Vector2)(sortedFlies[j].transform.position)).magnitude;
+
+				if (currentDistance < existingDistance) {
+					sortedFlies.Insert(j, currentFly);
+					break;
 				}
 			}
 		}
 
-		return closestFly;
+		/*
+		Debug.Log("Printing distances");
+		foreach (GameObject fly in sortedFlies) {
+			currentDistance = (frogMouthPos - (Vector2)(fly.transform.position)).magnitude;
+			Debug.Log(fly.transform.position.x + ", " + fly.transform.position.y + ": " + currentDistance);
+		}
+		*/
+
+		return sortedFlies;
 	}
 	
 	void Update () {

@@ -4,9 +4,14 @@ using System.Collections.Generic;
 
 [System.Serializable]
 public class NeuralNet : System.ICloneable {
-	
+
+	[HideInInspector]
 	public GameObject ParentFrog;
+
+	[HideInInspector]
 	public float fitness = 0.0f;
+
+	[HideInInspector]
 	public float snakeDistScore = 0.0f;
 	
 	public int inputNeurons;
@@ -14,6 +19,12 @@ public class NeuralNet : System.ICloneable {
 	public int outputNeurons;
 	public bool useRotationSymmetry;
 	public bool useReflectionSymmetry;
+
+	// Input settings
+	public int NumFlyPositions = 2;
+	public int NumSnakePositions = 1;
+	public bool FeedObstacleInfo = true;
+	public bool FeedOwnVelocity = true;
 	
 	public float defaultInputExponent = 1.0f;
 	public float defaultOutputExponent = 1.0f;
@@ -25,7 +36,8 @@ public class NeuralNet : System.ICloneable {
 	
 	public System.Object Clone() {
 		
-		NeuralNet clone = new NeuralNet(inputNeurons, hiddenLayerNeurons, outputNeurons, useRotationSymmetry, useReflectionSymmetry);
+		NeuralNet clone = new NeuralNet(NumFlyPositions, NumSnakePositions, FeedObstacleInfo, FeedOwnVelocity, hiddenLayerNeurons, useRotationSymmetry, useReflectionSymmetry);
+
 		clone.weights = new float[][]{(float[])(weights[0].Clone()), (float[])(weights[1].Clone())}; // Deep copy!
 		clone.defaultInputExponent = defaultInputExponent;
 		clone.defaultOutputExponent = defaultOutputExponent;
@@ -72,13 +84,32 @@ public class NeuralNet : System.ICloneable {
 		UpdateDisplayWeights();
 	}
 	
-	public NeuralNet(int inputNeurons, int hiddenLayerNeurons, int outputNeurons, bool useRotationSymmetry, bool useReflectionSymmetry) {
-		
-		this.inputNeurons = inputNeurons;
+	public NeuralNet(int NumFlyPositions, int NumSnakePositions, bool FeedObstacleInfo, bool FeedOwnVelocity, int hiddenLayerNeurons, bool useRotationSymmetry, bool useReflectionSymmetry) {
+
+		this.NumFlyPositions = NumFlyPositions;
+		this.NumSnakePositions = NumSnakePositions;
+		this.FeedObstacleInfo = FeedObstacleInfo;
+		this.FeedOwnVelocity = FeedOwnVelocity;
+		this.inputNeurons = (NumFlyPositions + NumSnakePositions) * 2 + (FeedObstacleInfo ? 2 : 0) + (FeedOwnVelocity ? 2 : 0);
 		this.hiddenLayerNeurons = hiddenLayerNeurons;
-		this.outputNeurons = outputNeurons;
+		this.outputNeurons = 2;
 		this.useRotationSymmetry = useRotationSymmetry;
 		this.useReflectionSymmetry = useReflectionSymmetry;
+		
+		neuronValues[0] = new float[inputNeurons];
+		neuronValues[1] = new float[hiddenLayerNeurons];
+		neuronValues[2] = new float[outputNeurons];
+		
+		RandomiseWeights();
+	}
+
+	public NeuralNet(NeuralNet existingNet) {
+
+		this.inputNeurons = existingNet.inputNeurons;
+		this.hiddenLayerNeurons = existingNet.hiddenLayerNeurons;
+		this.outputNeurons = existingNet.outputNeurons;
+		this.useRotationSymmetry = existingNet.useRotationSymmetry;
+		this.useReflectionSymmetry = existingNet.useReflectionSymmetry;
 		
 		neuronValues[0] = new float[inputNeurons];
 		neuronValues[1] = new float[hiddenLayerNeurons];
