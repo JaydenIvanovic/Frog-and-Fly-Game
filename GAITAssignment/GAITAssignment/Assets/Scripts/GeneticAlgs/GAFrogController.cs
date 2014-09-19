@@ -40,6 +40,13 @@ public class GAFrogController : GAController<NeuralNet> {
 
 	[System.Serializable]
 	public class NeuralNetSettings {
+
+		// Input settings
+		public int NumFlyPositions = 2;
+		public int NumSnakePositions = 1;
+		public bool FeedObstacleInfo = true;
+		public bool FeedOwnVelocity = true;
+
 		public int HiddenNeurons = 4;
 		public bool useRotationSymmetry = true;
 		public bool useReflectionSymmetry = true;
@@ -81,7 +88,14 @@ public class GAFrogController : GAController<NeuralNet> {
 		populationSize = currentParams.NumberOfBatches * FrogsOnScreen;
 
 		for (int i = 0; i < populationSize; i++) {
-			population.Add(new NeuralNet(6, currentParams.neuralNetSettings.HiddenNeurons, 2, currentParams.neuralNetSettings.useRotationSymmetry, currentParams.neuralNetSettings.useReflectionSymmetry));
+
+			population.Add(new NeuralNet(currentParams.neuralNetSettings.NumFlyPositions,
+			                             currentParams.neuralNetSettings.NumSnakePositions,
+			                             currentParams.neuralNetSettings.FeedObstacleInfo,
+			                             currentParams.neuralNetSettings.FeedOwnVelocity,
+			                             currentParams.neuralNetSettings.HiddenNeurons,
+			                             currentParams.neuralNetSettings.useRotationSymmetry,
+			                             currentParams.neuralNetSettings.useReflectionSymmetry));
 		}
 
 		GameObject[] frogs = GameObject.FindGameObjectsWithTag("Player");
@@ -222,21 +236,36 @@ public class GAFrogController : GAController<NeuralNet> {
 	public override NeuralNet SelectParent() {
 
 		switch (currentParams.parentSelectionMode) {
-		case ParentSelectionMode.Proportional:
-			Debug.Log("Proportional Selected.");
-			return SelectParentProportional();
-		case ParentSelectionMode.Exponential:
-			Debug.Log("Exponential Selected.");
-			return SelectParentExponential();
-		case ParentSelectionMode.Tournament:
-			Debug.Log("Tournament Selected.");
-			return SelectParentTournament(2); // Binary tournament
-		case ParentSelectionMode.RankRoulette:
-			Debug.Log("RankRoulette Selected.");
-			return SelectParentRankRoulette(1.8f); // 2 >= sp >= 1
-		default:
-			Debug.Log("Proportional Selected.");
-			return SelectParentProportional();
+
+			case ParentSelectionMode.Proportional:
+				if (currentParams.verbose) {
+					Debug.Log("Proportional Selected.");
+				}
+				return SelectParentProportional();
+
+			case ParentSelectionMode.Exponential:
+				if (currentParams.verbose) {
+					Debug.Log("Exponential Selected.");
+				}
+				return SelectParentExponential();
+
+			case ParentSelectionMode.Tournament:
+				if (currentParams.verbose) {
+					Debug.Log("Tournament Selected.");
+				}
+				return SelectParentTournament(2); // Binary tournament
+
+			case ParentSelectionMode.RankRoulette:
+				if (currentParams.verbose) {
+					Debug.Log("RankRoulette Selected.");
+				}
+				return SelectParentRankRoulette(1.8f); // 2 >= sp >= 1
+
+			default:
+				if (currentParams.verbose) {
+					Debug.Log("Proportional Selected.");
+				}		
+				return SelectParentProportional();
 		}
 	}
 	
