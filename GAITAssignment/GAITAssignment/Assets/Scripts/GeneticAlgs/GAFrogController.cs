@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 // TO DO:
 // I'm not sure if we really need constructors - Unity likes you to use Awake() / Start() instead
@@ -52,6 +54,7 @@ public class GAFrogController : GAController<NeuralNet> {
 		public bool useReflectionSymmetry = true;
 	}
 
+	public string LoadPath = "";
 	public int FrogsOnScreen = 8;
 	public int CurrentEpoch = 0;
 	public int CurrentBatch = 0;
@@ -62,6 +65,7 @@ public class GAFrogController : GAController<NeuralNet> {
 	private GAParameters currentParams;
 	private float updateTimer = 0.0f;
 	private int currentPopIndex = 0;
+	private string saveDataPath;
 	
 	// Defaults for mutation and crossover rates are as recommended in 
 	// the "AI Techniques for Game Programming" book.
@@ -74,29 +78,106 @@ public class GAFrogController : GAController<NeuralNet> {
 		// Not needed - handled by Awake()
 	}
 
-	public void Awake() {}
+	private void WriteToLog(string logLine) {
+
+		StreamWriter writer = File.AppendText(saveDataPath + "/log.txt");
+		writer.WriteLine(logLine);
+		writer.Close();
+	}
+
+	private void SavePopulation() {
+
+		BinaryFormatter bf = new BinaryFormatter();
+
+		if (CurrentEpoch == 0) {
+			FileStream paramsFile = File.Create(saveDataPath + "/params.bin");
+			bf.Serialize(paramsFile, currentParams);
+			paramsFile.Close();
+		}
+
+		FileStream popFile = File.Create(saveDataPath + "/population" + CurrentEpoch + ".bin");
+		bf.Serialize(popFile, population);
+		popFile.Close();
+	}
+
+	private void LoadPopulation() {
+
+		BinaryFormatter bf = new BinaryFormatter();
+
+		FileStream paramsFile = File.Open("SaveData/" + LoadPath + "/params.bin", FileMode.Open);
+		currentParams = (GAParameters)bf.Deserialize(paramsFile);
+		paramsFile.Close();
+
+		// Find the last epoch that was saved and load it
+		string saveFilename;
+		int fileNum = -1;
+
+		do {
+			fileNum++;
+			saveFilename = "SaveData/" + LoadPath + "/population" + fileNum + ".bin";
+		} while (File.Exists(saveFilename));
+
+		CurrentEpoch = fileNum - 1;
+		saveFilename = "SaveData/" + LoadPath + "/population" + CurrentEpoch + ".bin";
+
+		FileStream popFile = File.Open(saveFilename, FileMode.Open);
+		population = (List<NeuralNet>)bf.Deserialize(popFile);
+		popFile.Close();
+	}
+
+	public void Awake() {
+
+		// Set up directory for saving neural nets, etc
+		saveDataPath = "SaveData/" + System.DateTime.Now.ToString("yyMMddHHmmss");
+		Directory.CreateDirectory(saveDataPath);
+	}
 
 	// Michael: It's CRITICAL that this stuff goes in Start(), not Awake() since the frogs may not
 	// all be initialised before this component. It was causing me nightmares!
 	public void Start() {
 
-		currentParams = parameters[parameterIndexToUse];
+		if (LoadPath != "") {
+
+			LoadPopulation();
+			populationSize = population.Count;
+
+		} else {
+
+			currentParams = parameters[parameterIndexToUse];
+
+			population = new List<NeuralNet>();
+			populationSize = currentParams.NumberOfBatches * FrogsOnScreen;
+
+			for (int i = 0; i < populationSize; i++) {
+
+				population.Add(new NeuralNet(currentParams.neuralNetSettings.NumFlyPositions,
+				                             currentParams.neuralNetSettings.NumSnakePositions,
+				                             currentParams.neuralNetSettings.FeedObstacleInfo,
+				                             currentParams.neuralNetSettings.FeedOwnVelocity,
+				                             currentParams.neuralNetSettings.HiddenNeurons,
+				                             currentParams.neuralNetSettings.useRotationSymmetry,
+				                             currentParams.neuralNetSettings.useReflectionSymmetry));
+			}
+		}
+
+		WriteToLog("GA parameters");
+		WriteToLog("-------------");
+		WriteToLog("");
+		WriteToLog("Batches per epoch: " + currentParams.NumberOfBatches);
+		WriteToLog("Batch time: " + currentParams.batchTime);
+		WriteToLog("Frog obstacle avoidance: " + currentParams.frogObstacleAvoidance);
+		WriteToLog("Parent selection mode: " + currentParams.parentSelectionMode.ToString());
+		WriteToLog("Snakes: " + currentParams.snakesActive);
+		WriteToLog("Flies: " + currentParams.spawnFlies);
+		WriteToLog("Fly movement: " + currentParams.flyMovement);
+		WriteToLog("");
+		WriteToLog("Neural net settings");
+		WriteToLog("-------------------");
+		WriteToLog("Hidden neurons: " + currentParams.neuralNetSettings.HiddenNeurons);
 
 		Time.timeScale = currentParams.timeScale;
 
-		population = new List<NeuralNet>();
-		populationSize = currentParams.NumberOfBatches * FrogsOnScreen;
-
-		for (int i = 0; i < populationSize; i++) {
-
-			population.Add(new NeuralNet(currentParams.neuralNetSettings.NumFlyPositions,
-			                             currentParams.neuralNetSettings.NumSnakePositions,
-			                             currentParams.neuralNetSettings.FeedObstacleInfo,
-			                             currentParams.neuralNetSettings.FeedOwnVelocity,
-			                             currentParams.neuralNetSettings.HiddenNeurons,
-			                             currentParams.neuralNetSettings.useRotationSymmetry,
-			                             currentParams.neuralNetSettings.useReflectionSymmetry));
-		}
+		SavePopulation();
 
 		GameObject[] frogs = GameObject.FindGameObjectsWithTag("Player");
 
@@ -140,7 +221,7 @@ public class GAFrogController : GAController<NeuralNet> {
 	
 	public void Update() {
 
-		currentParams = parameters[parameterIndexToUse];
+		//currentParams = parameters[parameterIndexToUse];
 
 		UpdatePens();
 
@@ -198,13 +279,14 @@ public class GAFrogController : GAController<NeuralNet> {
 				RunEpoch();
 				CurrentEpoch++;
 				CurrentBatch = 0;
+				SavePopulation();
 				penManagers[0].GetComponent<ManagePen>().ResetSpawnPositions(100); // TO DO: Remove magic number
 			}
 
 			for (int i = 0; i < penManagers.Length; i++) {
 
 				// Move the frog back to its start position
-				frogs[i].transform.position = penManagers[i].transform.position;
+				frogs[i].transform.position = penManagers[i].GetComponent<ManagePen>().frogHome.transform.position;
 
 				frogs[i].GetComponent<NeuralNetSteering>().neuralNet = population[currentPopIndex];
 				frogs[i].GetComponent<NeuralNetSteering>().neuralNet.UpdateDisplayWeights();

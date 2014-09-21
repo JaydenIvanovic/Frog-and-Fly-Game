@@ -6,6 +6,7 @@ using System.Collections.Generic;
 public class NeuralNet : System.ICloneable {
 
 	[HideInInspector]
+	[System.NonSerialized]
 	public GameObject ParentFrog;
 
 	[HideInInspector]

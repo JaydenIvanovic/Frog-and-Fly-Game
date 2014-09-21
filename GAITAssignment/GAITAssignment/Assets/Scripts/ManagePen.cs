@@ -7,6 +7,8 @@ public class ManagePen : MonoBehaviour {
 	public GameObject dumbFlyPrefab;
 	public GameObject frog;
 	public GameObject snake;
+	public GameObject frogHome;
+	public GameObject flySpawnPoint;
 
 	public bool spawnFlies = true;
 	public int numFlies;
@@ -88,7 +90,7 @@ public class ManagePen : MonoBehaviour {
 		}
 
 		if (spawnFlies && (flyCount < minFlies)) {
-			CreateFly(transform.position + sharedSpawnPositions[currentSpawnPosition]);
+			CreateFly(flySpawnPoint.transform.position + sharedSpawnPositions[currentSpawnPosition]);
 			currentSpawnPosition++;
 		}
 	}
@@ -106,11 +108,11 @@ public class ManagePen : MonoBehaviour {
 
 		// Make the flies spawn away from the frog
 		do {
-			spawnLocation = new Vector3(0.7f * Random.Range(-transform.localScale.x / 2, transform.localScale.x / 2),
-			                            0.7f * Random.Range(-transform.localScale.y / 2, transform.localScale.y / 2),
+			spawnLocation = new Vector3(Random.Range(-flySpawnPoint.transform.localScale.x, flySpawnPoint.transform.localScale.x),
+			                            Random.Range(-flySpawnPoint.transform.localScale.y, flySpawnPoint.transform.localScale.y),
 			                            10.0f);
 
-		} while (((Vector2)(spawnLocation + transform.position - frog.transform.position)).magnitude < minDistanceFromFrog);
+		} while (((Vector2)(spawnLocation + flySpawnPoint.transform.position - frog.transform.position)).magnitude < minDistanceFromFrog);
 
 		return spawnLocation;
 	}
