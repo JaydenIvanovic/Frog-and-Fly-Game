@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 public class DragSelectFlies : MonoBehaviour 
 {
+	public Color vertexColor;
 	private List<GameObject> flies;
 	private bool drawing;
 	private Vector2 startPos;
@@ -67,12 +68,14 @@ public class DragSelectFlies : MonoBehaviour
 		triangles[4] = 0; // if 1 then it doesn't work, which confuses me.
 		triangles[5] = 3;
 
-		color[0] = new Color(0f, 1f, 0.3f, 0.5f);
-		color[1] = new Color(0f, 1f, 0.3f, 0.5f);
-		color[2] = new Color(0f, 1f, 0.3f, 0.5f);
-		color[3] = new Color(0f, 1f, 0.3f, 0.5f);
+		color[0] = vertexColor;
+		color[1] = vertexColor;
+		color[2] = vertexColor;
+		color[3] = vertexColor;
 
 		mesh.vertices = verts;
+		mesh.uv = new Vector2[]{new Vector2(verts[0].x, verts[0].y), new Vector2(verts[1].x, verts[1].y), new Vector2(verts[2].x, verts[2].y), new Vector2(verts[3].x, verts[3].y)};
+		mesh.normals = new Vector3[]{Vector3.back - verts[0], Vector3.back - verts[1], Vector3.back - verts[2], Vector3.back - verts[3]};
 		mesh.colors32 = color;
 		mesh.triangles = triangles;
 
