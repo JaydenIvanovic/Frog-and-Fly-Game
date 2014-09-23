@@ -1,6 +1,0 @@
-UNITY:
-
-
-WRITE UP:
-- Explain jolty snake rotation
-- Explain why the binary heap made much more difference to A* vanilla than JPS

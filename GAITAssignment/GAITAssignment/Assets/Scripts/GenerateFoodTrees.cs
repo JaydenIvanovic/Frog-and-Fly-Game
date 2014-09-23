@@ -17,12 +17,13 @@ public class GenerateFoodTrees : MonoBehaviour
 	void Start() 
 	{
 		for (int i = 0; i < numAreas; ++i) {
-			Vector3 lastTreePos;
+			Vector3 lastTreePos = Vector3.zero;
+			bool lastTreePosInitialised = false;
 
 			for (int j = 0; j < minGroupSize; ++j) {
 				
 				Vector3 newTreePos;
-				if (!lastTreePos) {
+				if (!lastTreePosInitialised) {
 					// Generate and test approach. Find a random position and see if it meets our requirement.
 					do {
 						newTreePos = new Vector3(Random.Range(minxBoundary, maxxBoundary+1), Random.Range(minyBoundary, maxyBoundary+1), 1);
@@ -43,6 +44,7 @@ public class GenerateFoodTrees : MonoBehaviour
 				}
 
 				lastTreePos = newTreePos;
+				lastTreePosInitialised = true;
 			}
 
 		}
