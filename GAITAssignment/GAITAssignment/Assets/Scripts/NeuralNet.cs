@@ -20,7 +20,7 @@ public class NeuralNet : System.ICloneable {
 	public int outputNeurons;
 	public bool useRotationSymmetry;
 	public bool useReflectionSymmetry;
-
+	
 	// Input settings
 	public int NumFlyPositions = 2;
 	public int NumSnakePositions = 1;
