@@ -6,7 +6,7 @@ public class ManagePen : MonoBehaviour {
 	
 	public GameObject dumbFlyPrefab;
 	public GameObject frog;
-	public GameObject snake;
+	public List<GameObject> snakes;
 	public GameObject frogHome;
 	public GameObject flySpawnPoint;
 
@@ -40,9 +40,6 @@ public class ManagePen : MonoBehaviour {
 
 	public List<GameObject> getFliesSortedByDistance(Vector2 position) {
 
-		GameObject closestFly = null;
-		Vector2 frogMouthPos = (Vector2)(frog.transform.FindChild("Mouth").position);
-		float smallestDistance = float.MaxValue;
 		float currentDistance;
 		float existingDistance;
 
@@ -50,21 +47,24 @@ public class ManagePen : MonoBehaviour {
 
 		for (int i = 0; i < transform.childCount; i++) {
 
-			GameObject currentFly = transform.GetChild(i).gameObject;
-			currentDistance = (frogMouthPos - (Vector2)(currentFly.transform.position)).magnitude;
+			if (transform.GetChild(i).tag == "Fly") {
 
-			for (int j = 0; j < transform.childCount; j++) {
+				GameObject currentFly = transform.GetChild(i).gameObject;
+				currentDistance = (position - (Vector2)(currentFly.transform.position)).magnitude;
 
-				if (j >= sortedFlies.Count) {
-					sortedFlies.Insert(j, currentFly);
-					break;
-				}
+				for (int j = 0; j < transform.childCount; j++) {
 
-				existingDistance = (frogMouthPos - (Vector2)(sortedFlies[j].transform.position)).magnitude;
+					if (j >= sortedFlies.Count) {
+						sortedFlies.Insert(j, currentFly);
+						break;
+					}
 
-				if (currentDistance < existingDistance) {
-					sortedFlies.Insert(j, currentFly);
-					break;
+					existingDistance = (position - (Vector2)(sortedFlies[j].transform.position)).magnitude;
+
+					if (currentDistance < existingDistance) {
+						sortedFlies.Insert(j, currentFly);
+						break;
+					}
 				}
 			}
 		}
@@ -78,6 +78,40 @@ public class ManagePen : MonoBehaviour {
 		*/
 
 		return sortedFlies;
+	}
+
+	public List<GameObject> getSnakesSortedByDistance(Vector2 position) {
+
+		float currentDistance;
+		float existingDistance;
+		
+		List<GameObject> sortedSnakes = new List<GameObject>();
+		
+		for (int i = 0; i < transform.childCount; i++) {
+
+			if (transform.GetChild(i).tag == "Predator") {
+			
+				GameObject currentSnake = transform.GetChild(i).gameObject;
+				currentDistance = (position - (Vector2)(currentSnake.transform.position)).magnitude;
+				
+				for (int j = 0; j < transform.childCount; j++) {
+					
+					if (j >= sortedSnakes.Count) {
+						sortedSnakes.Insert(j, currentSnake);
+						break;
+					}
+					
+					existingDistance = (position - (Vector2)(sortedSnakes[j].transform.position)).magnitude;
+					
+					if (currentDistance < existingDistance) {
+						sortedSnakes.Insert(j, currentSnake);
+						break;
+					}
+				}
+			}
+		}
+		
+		return sortedSnakes;
 	}
 	
 	void Update () {

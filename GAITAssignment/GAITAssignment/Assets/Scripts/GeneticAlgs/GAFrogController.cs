@@ -50,8 +50,6 @@ public class GAFrogController : GAController<NeuralNet> {
 		public bool FeedOwnVelocity = true;
 
 		public int HiddenNeurons = 4;
-		public bool useRotationSymmetry = true;
-		public bool useReflectionSymmetry = true;
 	}
 
 	public string LoadPath = "";
@@ -154,9 +152,7 @@ public class GAFrogController : GAController<NeuralNet> {
 				                             currentParams.neuralNetSettings.NumSnakePositions,
 				                             currentParams.neuralNetSettings.FeedObstacleInfo,
 				                             currentParams.neuralNetSettings.FeedOwnVelocity,
-				                             currentParams.neuralNetSettings.HiddenNeurons,
-				                             currentParams.neuralNetSettings.useRotationSymmetry,
-				                             currentParams.neuralNetSettings.useReflectionSymmetry));
+				                             currentParams.neuralNetSettings.HiddenNeurons));
 			}
 		}
 
@@ -205,7 +201,10 @@ public class GAFrogController : GAController<NeuralNet> {
 			ManagePen manager = penManagers[i].GetComponent<ManagePen>();
 
 			manager.spawnFlies = currentParams.spawnFlies;
-			manager.snake.SetActive(currentParams.snakesActive);
+
+			foreach (GameObject snake in manager.snakes) {
+				snake.SetActive(currentParams.snakesActive);
+			}
 		}
 
 		GameObject[] flies = GameObject.FindGameObjectsWithTag("Fly");
@@ -232,7 +231,9 @@ public class GAFrogController : GAController<NeuralNet> {
 
 		for (int i = 0; i < penManagers.Length; i++) {
 			NeuralNet net = penManagers[i].GetComponent<ManagePen>().frog.GetComponent<NeuralNetSteering>().neuralNet;
-			net.snakeDistScore += Time.deltaTime * Mathf.Min(1.75f, ((Vector2)(penManagers[i].GetComponent<ManagePen>().snake.transform.position) - (Vector2)(penManagers[i].GetComponent<ManagePen>().frog.transform.position)).magnitude);
+			foreach (GameObject snake in penManagers[i].GetComponent<ManagePen>().snakes) {
+				net.snakeDistScore += Time.deltaTime * Mathf.Min(1.75f, ((Vector2)(snake.transform.position) - (Vector2)(penManagers[i].GetComponent<ManagePen>().frog.transform.position)).magnitude);
+			}
 		}
 		
 		if (updateTimer > currentParams.batchTime) {
@@ -294,13 +295,14 @@ public class GAFrogController : GAController<NeuralNet> {
 				population[currentPopIndex].ParentFrog = frogs[i];
 
 				// Ensure that the snakes are targeting the right frogs
-				GameObject snake = penManagers[i].GetComponent<ManagePen>().snake;
-				snake.GetComponent<GameObjectTargeter>().Target = frogs[i];
-				snake.GetComponent<HuntTargeter>().Target = frogs[i];
-				snake.GetComponent<PredatorStateMachine>().Player = frogs[i];
-				snake.transform.position = new Vector3(snake.GetComponent<PredatorStateMachine>().Home.transform.position.x,
-				                                       snake.GetComponent<PredatorStateMachine>().Home.transform.position.y,
-				                                       snake.transform.position.z);
+				foreach (GameObject snake in penManagers[i].GetComponent<ManagePen>().snakes) {
+					snake.GetComponent<GameObjectTargeter>().Target = frogs[i];
+					snake.GetComponent<HuntTargeter>().Target = frogs[i];
+					snake.GetComponent<PredatorStateMachine>().Player = frogs[i];
+					snake.transform.position = new Vector3(snake.GetComponent<PredatorStateMachine>().Home.transform.position.x,
+					                                       snake.GetComponent<PredatorStateMachine>().Home.transform.position.y,
+					                                       snake.transform.position.z);
+				}
 
 				// Find a new fly to select on the next update
 				frogs[i].GetComponent<NeuralNetSteering>().selectedFly = null;

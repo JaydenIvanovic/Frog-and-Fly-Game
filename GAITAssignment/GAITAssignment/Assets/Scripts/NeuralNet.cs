@@ -18,8 +18,6 @@ public class NeuralNet : System.ICloneable {
 	public int inputNeurons;
 	public int hiddenLayerNeurons;
 	public int outputNeurons;
-	public bool useRotationSymmetry;
-	public bool useReflectionSymmetry;
 
 	// Input settings
 	public int NumFlyPositions = 2;
@@ -34,10 +32,12 @@ public class NeuralNet : System.ICloneable {
 	public float[][] weights = new float[2][];
 	
 	public List<float> weightsAsVector; // For viewing in the inspector
-	
+
+	private float previousRotation = 0.0f;
+
 	public System.Object Clone() {
 		
-		NeuralNet clone = new NeuralNet(NumFlyPositions, NumSnakePositions, FeedObstacleInfo, FeedOwnVelocity, hiddenLayerNeurons, useRotationSymmetry, useReflectionSymmetry);
+		NeuralNet clone = new NeuralNet(NumFlyPositions, NumSnakePositions, FeedObstacleInfo, FeedOwnVelocity, hiddenLayerNeurons);
 
 		clone.weights = new float[][]{(float[])(weights[0].Clone()), (float[])(weights[1].Clone())}; // Deep copy!
 		clone.defaultInputExponent = defaultInputExponent;
@@ -85,7 +85,7 @@ public class NeuralNet : System.ICloneable {
 		UpdateDisplayWeights();
 	}
 	
-	public NeuralNet(int NumFlyPositions, int NumSnakePositions, bool FeedObstacleInfo, bool FeedOwnVelocity, int hiddenLayerNeurons, bool useRotationSymmetry, bool useReflectionSymmetry) {
+	public NeuralNet(int NumFlyPositions, int NumSnakePositions, bool FeedObstacleInfo, bool FeedOwnVelocity, int hiddenLayerNeurons) {
 
 		this.NumFlyPositions = NumFlyPositions;
 		this.NumSnakePositions = NumSnakePositions;
@@ -94,8 +94,6 @@ public class NeuralNet : System.ICloneable {
 		this.inputNeurons = (NumFlyPositions + NumSnakePositions) * 2 + (FeedObstacleInfo ? 2 : 0) + (FeedOwnVelocity ? 2 : 0);
 		this.hiddenLayerNeurons = hiddenLayerNeurons;
 		this.outputNeurons = 2;
-		this.useRotationSymmetry = useRotationSymmetry;
-		this.useReflectionSymmetry = useReflectionSymmetry;
 		
 		neuronValues[0] = new float[inputNeurons];
 		neuronValues[1] = new float[hiddenLayerNeurons];
@@ -109,8 +107,6 @@ public class NeuralNet : System.ICloneable {
 		this.inputNeurons = existingNet.inputNeurons;
 		this.hiddenLayerNeurons = existingNet.hiddenLayerNeurons;
 		this.outputNeurons = existingNet.outputNeurons;
-		this.useRotationSymmetry = existingNet.useRotationSymmetry;
-		this.useReflectionSymmetry = existingNet.useReflectionSymmetry;
 		
 		neuronValues[0] = new float[inputNeurons];
 		neuronValues[1] = new float[hiddenLayerNeurons];
@@ -163,9 +159,59 @@ public class NeuralNet : System.ICloneable {
 	
 	public float[] CalculateOutput(float[] inputValues) {
 
+
+		float smoothingCutoff = 2.5f;
+
+		float temp = Mathf.Rad2Deg * Mathf.Atan2(ParentFrog.rigidbody2D.velocity.y, ParentFrog.rigidbody2D.velocity.x);
+		float frogRotation = previousRotation + (temp - previousRotation) * Mathf.Min(smoothingCutoff, ParentFrog.rigidbody2D.velocity.magnitude) / smoothingCutoff;
+		frogRotation = previousRotation + 0.05f * (frogRotation - previousRotation);
+
+		previousRotation = frogRotation;
+
+
+		//float frogRotation = ParentFrog.rigidbody2D.rotation;
+
+
+
+		/*
+		if (ParentFrog.rigidbody2D.velocity.magnitude > 0.0f) {
+			frogRotation = Mathf.Rad2Deg * Mathf.Atan2(ParentFrog.rigidbody2D.velocity.y, ParentFrog.rigidbody2D.velocity.x); //Hack
+			previousRotation = frogRotation;
+		}
+		*/
+
+		//Debug.DrawLine((Vector2)(ParentFrog.transform.position), (Vector2)(ParentFrog.transform.position) + MathsHelper.rotateVector(new Vector2(1.0f, 0.0f), frogRotation), Color.yellow);
+
+		for (int i = 0; i < inputValues.Length; i += 2) {
+			Vector2 unrotatedVec = new Vector2(inputValues[i], inputValues[i + 1]);
+
+			//Debug.DrawLine((Vector2)(ParentFrog.transform.position), (Vector2)(ParentFrog.transform.position) + unrotatedVec, Color.cyan);
+
+			//Vector2 rotatedVec = MathsHelper.rotateVector(unrotatedVec, -frogRotation * Mathf.Rad2Deg);
+			Vector2 rotatedVec = MathsHelper.rotateVector(unrotatedVec, -frogRotation);
+			inputValues[i] = rotatedVec.x;
+			inputValues[i + 1] = rotatedVec.y;
+		}
+
+
+
+
+		bool useRotationSymmetry = false;
+		bool useReflectionSymmetry = false;
+
 		if (!useRotationSymmetry && !useReflectionSymmetry) {
 
-			return CalculateOutputNoSymmetry(inputValues);
+			float[] outputValues = CalculateOutputNoSymmetry(inputValues);
+			
+			for (int i = 0; i < outputValues.Length; i += 2) {
+				Vector2 unrotatedVec = new Vector2(outputValues[i], outputValues[i + 1]);
+				//Vector2 rotatedVec = MathsHelper.rotateVector(unrotatedVec, frogRotation * Mathf.Rad2Deg);
+				Vector2 rotatedVec = MathsHelper.rotateVector(unrotatedVec, frogRotation);
+				outputValues[i] = rotatedVec.x;
+				outputValues[i + 1] = rotatedVec.y;
+			}
+			
+			return outputValues;
 
 		// Since reflections and rotations by 90 degrees shouldn't make any difference to the frog's behaviour, it's
 	    // probably a good idea to enforce this, which is what the following code does. It loops through all 8 symmetries
@@ -199,8 +245,21 @@ public class NeuralNet : System.ICloneable {
 				}
 			}
 
-			return new float[] {output.x, output.y};
+			//return new float[] {output.x, output.y};
+
+			float[] outputValues = new float[] {output.x, output.y};
+			
+			for (int i = 0; i < outputValues.Length; i += 2) {
+				Vector2 unrotatedVec = new Vector2(outputValues[i], outputValues[i + 1]);
+				//Vector2 rotatedVec = MathsHelper.rotateVector(unrotatedVec, frogRotation * Mathf.Rad2Deg);
+				Vector2 rotatedVec = MathsHelper.rotateVector(unrotatedVec, frogRotation);
+				outputValues[i] = rotatedVec.x;
+				outputValues[i + 1] = rotatedVec.y;
+			}
+			
+			return outputValues;
 		}
+
 	}
 	
 	public int GetRandomCrossOverIndex() {

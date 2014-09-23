@@ -42,8 +42,6 @@ public class NeuralNetSteering : SteeringBehaviour {
 
 		updateTimer += Time.deltaTime;
 
-		Vector2 snakeInputVec = Vector2.zero;
-
 		if (updateTimer > updateFrequency) {
 
 			netInput = new List<float>();
@@ -61,6 +59,8 @@ public class NeuralNetSteering : SteeringBehaviour {
 					Vector2 flyInputVec = vecToFly.normalized * flyInputMag;
 					netInput.Add(flyInputVec.x);
 					netInput.Add(flyInputVec.y);
+
+					//Debug.DrawLine((Vector2)(transform.FindChild("Mouth").position), (Vector2)(transform.FindChild("Mouth").position) + vecToFly, Color.cyan);
 
 				// ith closest fly couldn't be found, so just return zero input
 				} else {
@@ -94,20 +94,21 @@ public class NeuralNetSteering : SteeringBehaviour {
 			*/
 
 			// Snake position
-			// TO DO: Make this handle multiple snakes
-			if (neuralNet.NumSnakePositions > 0) {
-
-				GameObject snake = manager.snake;
-
-				if (snake != null && snake.activeSelf) {
-					Vector2 vecToSnake = (Vector2)(manager.snake.transform.position) - (Vector2)(transform.position);
-					float snakeInputMag = Mathf.Exp(-vecToSnake.magnitude / 5.0f);
-					snakeInputVec = vecToSnake.normalized * snakeInputMag;
-
+			List<GameObject> closestSnakes = manager.getSnakesSortedByDistance((Vector2)(transform.position));
+			GameObject snake = null;
+			
+			for (int i = 0; i < neuralNet.NumSnakePositions; i++) {
+				
+				if (closestSnakes.Count > i) {
+					
+					snake = closestSnakes[i];
+					Vector2 vecToSnake = (Vector2)(snake.transform.position) - (Vector2)(transform.position);
+					float snakeInputMag = Mathf.Exp(-vecToSnake.magnitude / 10.0f);
+					Vector2 snakeInputVec = vecToSnake.normalized * snakeInputMag;
 					netInput.Add(snakeInputVec.x);
 					netInput.Add(snakeInputVec.y);
-
-				// ith closest snake couldn't be found, so just return zero input
+					
+					// ith closest snake couldn't be found, so just return zero input
 				} else {
 					netInput.Add(0.0f);
 					netInput.Add(0.0f);
