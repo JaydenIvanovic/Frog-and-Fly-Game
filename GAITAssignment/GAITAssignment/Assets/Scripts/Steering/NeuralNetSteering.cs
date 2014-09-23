@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 public class NeuralNetSteering : SteeringBehaviour {
 	
@@ -14,6 +16,9 @@ public class NeuralNetSteering : SteeringBehaviour {
 	public float obstacleDetectionRange = 5.0f;
 	public float InputFlickerPreventionFactor = 0.2f; // 0.0f means it will always choose the closest fly
 	                                                  // A value of 0.2f means that the chosen fly won't change unless another fly is 20% closer
+	public bool loadFromFile = false; 
+	public string fileName;
+
 	private float updateTimer = 0.0f;
 	public List<float> netInput;
 	public float[] netInputArr;
@@ -31,6 +36,9 @@ public class NeuralNetSteering : SteeringBehaviour {
 				break;
 			}
 		}
+
+		if (loadFromFile)
+			neuralNet = GetNetFromFile();
 	}
 	
 	public void Update() {
@@ -227,5 +235,17 @@ public class NeuralNetSteering : SteeringBehaviour {
 		} else {
 			return Vector2.zero;
 		}
+	}
+
+	// Load the neural net from the file.
+	private NeuralNet GetNetFromFile()
+	{
+		BinaryFormatter bf = new BinaryFormatter();
+		
+		FileStream popFile = File.Open(fileName, FileMode.Open);
+		List<NeuralNet> population = (List<NeuralNet>)bf.Deserialize(popFile);
+		popFile.Close();
+
+		return population[0];
 	}
 }
