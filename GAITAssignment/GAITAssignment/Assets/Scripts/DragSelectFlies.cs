@@ -93,9 +93,11 @@ public class DragSelectFlies : MonoBehaviour
 				if (fly.transform.position.x >= boundsStart.x && fly.transform.position.x <= boundsEnd.x &&
 					fly.transform.position.y >= boundsStart.y && fly.transform.position.y <= boundsEnd.y) {
 					fly.GetComponent<MouseTargeter>().selected = true;
+					fly.transform.Find("FlyGlow").gameObject.SetActive(true);
 				}
 				else {
 					fly.GetComponent<MouseTargeter>().selected = false;
+					fly.transform.Find("FlyGlow").gameObject.SetActive(false);
 				}
 			}
 		}
