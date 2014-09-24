@@ -36,9 +36,9 @@ public class GenerateFoodTrees : GAController<Trees>
 
 	public GenerateFoodTrees() : base(30, 0.001f, 0.7f) {}
 
-	// Run the GA and get a layout of tree positions for us to use.
 	void Awake()
 	{
+		// Run the GA and get a layout of tree positions for us to use.
 		InitPopulation();
 
 		for (int i = 0; i < runs; ++i){
@@ -46,17 +46,15 @@ public class GenerateFoodTrees : GAController<Trees>
 		}
 
 		fitTrees = ReturnFittest();
-	}
 
-
-	// Instantiate the trees in the positions calculated by the GA.
-	void Start() 
-	{
+		// Instantiate the trees in the positions calculated by the GA.
 		for(int i = 0; i < fitTrees.positions.Count; ++i) {
 			if (Random.value < 0.5) {
-				Instantiate(appleTreePrefab, fitTrees.positions[i], Quaternion.identity);
+				GameObject tree = (GameObject)Instantiate(appleTreePrefab, fitTrees.positions[i], Quaternion.identity);
+				tree.transform.parent = transform;
 			} else {
-				Instantiate(flowerTreePrefab, fitTrees.positions[i], Quaternion.identity);
+				GameObject tree = (GameObject)Instantiate(flowerTreePrefab, fitTrees.positions[i], Quaternion.identity);
+				tree.transform.parent = transform;
 			}
 		}
 	}
