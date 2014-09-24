@@ -1,53 +1,191 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
-public class GenerateFoodTrees : MonoBehaviour 
+
+// Tightly coupled to this class.
+public struct Trees
 {
-	public int numAreas;
-	public int minGroupSize;
+	public List<Vector2> positions;
+
+	public Trees Clone()
+	{
+		Trees t = new Trees();
+		t.positions = new List<Vector2>();
+
+		foreach (Vector2 position in positions) {
+			t.positions.Add(new Vector2(position.x, position.y));
+		}
+
+		return t;
+	}
+}
+
+
+public class GenerateFoodTrees : GAController<Trees>
+{
+	public int vectorMutate;
+	public int runs;
+	public int numTrees;
 	public float minxBoundary, maxxBoundary;
 	public float minyBoundary, maxyBoundary;
 	public GameObject appleTreePrefab, flowerTreePrefab;
 	public GameObject home;
 	public float requiredDistanceFromHome, distanceFromNeighbours;
+	private Trees fitTrees;
 
-	// Randomly place the apple and flower trees on the map
-	// so the player doesn't have existing knowledge of there
-	// location.
+	public GenerateFoodTrees() : base(30, 0.001f, 0.7f) {}
+
+	// Run the GA and get a layout of tree positions for us to use.
+	void Awake()
+	{
+		InitPopulation();
+
+		for (int i = 0; i < runs; ++i){
+			RunEpoch();
+		}
+
+		fitTrees = ReturnFittest();
+	}
+
+
+	// Instantiate the trees in the positions calculated by the GA.
 	void Start() 
 	{
-		for (int i = 0; i < numAreas; ++i) {
-			Vector3 lastTreePos = Vector3.zero;
-			bool lastTreePosInitialised = false;
+		for(int i = 0; i < fitTrees.positions.Count; ++i) {
+			if (Random.value < 0.5) {
+				Instantiate(appleTreePrefab, fitTrees.positions[i], Quaternion.identity);
+			} else {
+				Instantiate(flowerTreePrefab, fitTrees.positions[i], Quaternion.identity);
+			}
+		}
+	}
 
-			for (int j = 0; j < minGroupSize; ++j) {
-				
-				Vector3 newTreePos;
-				if (!lastTreePosInitialised) {
-					// Generate and test approach. Find a random position and see if it meets our requirement.
-					do {
-						newTreePos = new Vector3(Random.Range(minxBoundary, maxxBoundary+1), Random.Range(minyBoundary, maxyBoundary+1), 0f);
-					} while (Vector3.Distance(home.transform.position, newTreePos) < requiredDistanceFromHome);
-					Debug.Log(newTreePos);
-				} else {
-					// We want to find a tree close to the last tree.
-					newTreePos = new Vector3(Random.Range(lastTreePos.x - 2, lastTreePos.x - 2), Random.Range(lastTreePos.y - 2, lastTreePos.y - 2), 0f);
-				}
 
-				// Randomly choose between an apple and flower tree.
-				if (Random.value < 0.5) {
-					GameObject tree = (GameObject)Instantiate(appleTreePrefab, newTreePos, Quaternion.identity);
-					tree.transform.parent = transform;
-				} else {
-					GameObject tree = (GameObject)Instantiate(flowerTreePrefab, newTreePos, Quaternion.identity);
-					tree.transform.parent = transform;
-				}
+	// Randomly initalise the population by putting trees anywhere within 
+	// the specified boundaries.
+	public override void InitPopulation()
+	{
+		population = new List<Trees>();
 
-				lastTreePos = newTreePos;
-				lastTreePosInitialised = true;
+		for (int i = 0; i < populationSize; ++i) {
+			
+			Trees t = new Trees();
+			t.positions = new List<Vector2>();
+			population.Insert(i, t);
+			
+			for (int j = 0; j < numTrees; ++j) {
+				population[i].positions.Add(new Vector2(Random.Range(minxBoundary, maxxBoundary), Random.Range(minyBoundary, maxyBoundary))); 
 			}
 
 		}
 	}
+	
 
+	// TO DO: Move the tournament selection to the GAController abstract interface 
+	// so it can be shared between this and the frog.
+	public override Trees SelectParent()
+	{
+		int tournamentSize = 2;
+		// We can just store the index of the competitors.
+		int[] tournamentPopulation = new int[tournamentSize];
+
+		// Create the tournament pool of competitors.
+		for (int i = 0; i < tournamentSize; ++i) {
+			int randIndex = (int)(Random.value * tournamentSize);
+			tournamentPopulation[i] = randIndex;
+		}
+
+		int bestIndex = tournamentPopulation[0];
+		// Find the competitor with the best fitness, they win!
+		foreach (int i in tournamentPopulation) {
+			if (fitness[i] > fitness[bestIndex]) {
+				bestIndex = i;
+			}
+		}
+		
+		return CopyChromosome(population[bestIndex]);
+	}
+	
+
+	// Naive fitness calculation.
+	public override float CalcFitness(Trees chromosome)
+	{
+		float sumDistFromGoal = 0f;
+		float sumDistFromOthers = 0f;
+
+		// We want to loop through each tree position and
+		// compare its distance to every other tree position and goal tree.
+		for (int i = 0; i < chromosome.positions.Count; ++i) {
+			
+			for (int j = 0; j < chromosome.positions.Count; ++j) {
+				
+				// Skip this iteration as we don't want to compare the tree
+				// position to itself.
+				if (i == j)
+					continue;
+
+				sumDistFromOthers += Vector2.Distance(chromosome.positions[j], chromosome.positions[i]);
+			}
+
+			sumDistFromGoal += Vector2.Distance(Vector2.zero, chromosome.positions[i]);
+		}
+
+		return sumDistFromGoal + sumDistFromOthers;
+	}
+	
+
+	// Do a simple crossover where child1 and child2 keep the
+	// first half of their respective parents set of positions, 
+	// but the second half is inherited from the other parent.
+	// i.e. child2 = [half parent 2 | half parent 1]
+	public override Trees[] CrossOver(Trees parent1, Trees parent2)
+	{
+		int midPoint = parent1.positions.Count / 2;
+		
+		Trees[] children = new Trees[2];
+		children[0].positions = new List<Vector2>();
+		children[1].positions = new List<Vector2>();
+
+		for(int i = 0; i < midPoint; ++i) {
+			children[0].positions.Add(parent1.positions[i]);
+			children[1].positions.Add(parent2.positions[i]);
+		}
+
+		for (int i = midPoint; i < parent1.positions.Count; ++i) {
+			children[0].positions.Add(parent2.positions[i]);
+			children[1].positions.Add(parent1.positions[i]);
+		}
+
+		return children;
+	}
+	
+
+	public override void Mutate(Trees chromosome)
+	{
+		// Loop through each position
+		for (int i = 0; i < chromosome.positions.Count; ++i) {
+			
+			float x = chromosome.positions[i].x;
+			float y = chromosome.positions[i].y;
+
+			// Mutate x pos
+			if(Random.value < mutationRate) {
+				x = Random.Range(x - vectorMutate, x + vectorMutate);
+			}
+
+			// Mutate y pos
+			if(Random.value < mutationRate) {
+				y = Random.Range(y - vectorMutate, y + vectorMutate);
+			}
+
+			chromosome.positions[i] = new Vector2(x, y);
+		}
+	}
+
+
+	public override Trees CopyChromosome(Trees chromosome)
+	{
+		return chromosome.Clone();
+	}
 }

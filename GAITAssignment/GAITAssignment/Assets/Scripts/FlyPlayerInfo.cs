@@ -31,7 +31,8 @@ public class FlyPlayerInfo : MonoBehaviour
 		flies = new List<GameObject>();
 		
 		foreach (Transform fly in GetComponentsInChildren<Transform>()) {
-			flies.Add(fly.gameObject);
+			if(fly.tag == "Fly")
+				flies.Add(fly.gameObject);
 		}
 
 		resourceObjects = new List<GameObject>();

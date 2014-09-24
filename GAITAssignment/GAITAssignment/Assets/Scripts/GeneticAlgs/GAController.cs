@@ -68,6 +68,18 @@ public abstract class GAController<T> : MonoBehaviour, GeneticAlgorithm_I<T>
 	// Just to ensure that the old population always gets replaced
 	public abstract T CopyChromosome(T chromosome);
 
+	// Return the member of the population with the highest fitness.
+	public T ReturnFittest()
+	{
+		int fittest = 0;
+		
+		for (int i = 1; i < populationSize; ++i) {
+			if (fitness[i] > fitness[fittest])
+				fittest = i;
+		}
+
+		return population[fittest];
+	}
 
 	// The core Genetic Algorithm
 	// Run one generation of evolution.
