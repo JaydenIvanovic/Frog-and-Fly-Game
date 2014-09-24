@@ -26,12 +26,12 @@ public class GenerateFoodTrees : MonoBehaviour
 				if (!lastTreePosInitialised) {
 					// Generate and test approach. Find a random position and see if it meets our requirement.
 					do {
-						newTreePos = new Vector3(Random.Range(minxBoundary, maxxBoundary+1), Random.Range(minyBoundary, maxyBoundary+1), 1);
+						newTreePos = new Vector3(Random.Range(minxBoundary, maxxBoundary+1), Random.Range(minyBoundary, maxyBoundary+1), 0f);
 					} while (Vector3.Distance(home.transform.position, newTreePos) < requiredDistanceFromHome);
 					Debug.Log(newTreePos);
 				} else {
 					// We want to find a tree close to the last tree.
-					newTreePos = new Vector3(Random.Range(lastTreePos.x - 2, lastTreePos.x + 2), Random.Range(lastTreePos.y - 2, lastTreePos.y + 2), 1);
+					newTreePos = new Vector3(Random.Range(lastTreePos.x - 2, lastTreePos.x - 2), Random.Range(lastTreePos.y - 2, lastTreePos.y - 2), 0f);
 				}
 
 				// Randomly choose between an apple and flower tree.
