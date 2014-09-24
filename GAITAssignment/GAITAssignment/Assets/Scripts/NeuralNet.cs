@@ -182,22 +182,21 @@ public class NeuralNet : System.ICloneable {
 
 		//Debug.DrawLine((Vector2)(ParentFrog.transform.position), (Vector2)(ParentFrog.transform.position) + MathsHelper.rotateVector(new Vector2(1.0f, 0.0f), frogRotation), Color.yellow);
 
-		for (int i = 0; i < inputValues.Length; i += 2) {
-			Vector2 unrotatedVec = new Vector2(inputValues[i], inputValues[i + 1]);
-
-			//Debug.DrawLine((Vector2)(ParentFrog.transform.position), (Vector2)(ParentFrog.transform.position) + unrotatedVec, Color.cyan);
-
-			//Vector2 rotatedVec = MathsHelper.rotateVector(unrotatedVec, -frogRotation * Mathf.Rad2Deg);
-			Vector2 rotatedVec = MathsHelper.rotateVector(unrotatedVec, -frogRotation);
-			inputValues[i] = rotatedVec.x;
-			inputValues[i + 1] = rotatedVec.y;
-		}
-
-
-
-
-		bool useRotationSymmetry = false;
+		bool useRotationSymmetry = true;
 		bool useReflectionSymmetry = false;
+
+		if (!useRotationSymmetry) {
+			for (int i = 0; i < inputValues.Length; i += 2) {
+				Vector2 unrotatedVec = new Vector2(inputValues[i], inputValues[i + 1]);
+
+				//Debug.DrawLine((Vector2)(ParentFrog.transform.position), (Vector2)(ParentFrog.transform.position) + unrotatedVec, Color.cyan);
+
+				//Vector2 rotatedVec = MathsHelper.rotateVector(unrotatedVec, -frogRotation * Mathf.Rad2Deg);
+				Vector2 rotatedVec = MathsHelper.rotateVector(unrotatedVec, -frogRotation);
+				inputValues[i] = rotatedVec.x;
+				inputValues[i + 1] = rotatedVec.y;
+			}
+		}
 
 		if (!useRotationSymmetry && !useReflectionSymmetry) {
 
@@ -248,7 +247,8 @@ public class NeuralNet : System.ICloneable {
 			//return new float[] {output.x, output.y};
 
 			float[] outputValues = new float[] {output.x, output.y};
-			
+
+			/*
 			for (int i = 0; i < outputValues.Length; i += 2) {
 				Vector2 unrotatedVec = new Vector2(outputValues[i], outputValues[i + 1]);
 				//Vector2 rotatedVec = MathsHelper.rotateVector(unrotatedVec, frogRotation * Mathf.Rad2Deg);
@@ -256,6 +256,7 @@ public class NeuralNet : System.ICloneable {
 				outputValues[i] = rotatedVec.x;
 				outputValues[i + 1] = rotatedVec.y;
 			}
+			*/
 			
 			return outputValues;
 		}
