@@ -46,8 +46,11 @@ public class GAFrogController : GAController<NeuralNet> {
 		// Input settings
 		public int NumFlyPositions = 2;
 		public int NumSnakePositions = 1;
+		public int NumObstaclePositions = 2;
 		public bool FeedObstacleInfo = true;
 		public bool FeedOwnVelocity = true;
+		public NeuralNet.InputTransformation inputTransformation = NeuralNet.InputTransformation.RotationSmoothing;
+		public int inputSmoothingSegments = 30;
 
 		public int HiddenNeurons = 4;
 	}
@@ -150,9 +153,12 @@ public class GAFrogController : GAController<NeuralNet> {
 
 				population.Add(new NeuralNet(currentParams.neuralNetSettings.NumFlyPositions,
 				                             currentParams.neuralNetSettings.NumSnakePositions,
+				                             currentParams.neuralNetSettings.NumObstaclePositions,
 				                             currentParams.neuralNetSettings.FeedObstacleInfo,
 				                             currentParams.neuralNetSettings.FeedOwnVelocity,
-				                             currentParams.neuralNetSettings.HiddenNeurons));
+				                             currentParams.neuralNetSettings.HiddenNeurons,
+				                             currentParams.neuralNetSettings.inputTransformation,
+				                             currentParams.neuralNetSettings.inputSmoothingSegments));
 			}
 		}
 

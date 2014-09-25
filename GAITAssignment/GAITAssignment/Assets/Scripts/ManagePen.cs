@@ -9,12 +9,14 @@ public class ManagePen : MonoBehaviour {
 	public List<GameObject> snakes;
 	public GameObject frogHome;
 	public GameObject flySpawnPoint;
+	public Transform obstaclesParent;
 
 	public bool spawnFlies = true;
 	public int numFlies;
 	public int minFlies;
 	public float minDistanceFromFrog;
 
+	private int obstacleLayerNum;
 	private static List<Vector3> sharedSpawnPositions;
 	private static bool initialised = false;
 	public int currentSpawnPosition = 0;
@@ -36,8 +38,29 @@ public class ManagePen : MonoBehaviour {
 			ResetSpawnPositions(100); // TO DO: Remove magic number
 			initialised = true;
 		}
+
+		obstacleLayerNum = LayerMask.NameToLayer("Obstacles");
 	}
 
+	public PriorityQueue<float, GameObject> getObstaclesSortedByDistance(Vector2 position) {
+
+		PriorityQueue<float, GameObject> pq = new PriorityQueue<float, GameObject>();
+
+		for (int i = 0; i < obstaclesParent.childCount; i++) {
+			
+			if (obstaclesParent.GetChild(i).gameObject.layer == obstacleLayerNum) {
+
+				GameObject currentObstacle = obstaclesParent.GetChild(i).gameObject;
+				CircleCollider2D currentCollider = currentObstacle.GetComponent<CircleCollider2D>();
+				float distance = (position - (Vector2)(currentObstacle.transform.position)).magnitude - currentCollider.radius;
+				pq.Add(new KeyValuePair<float, GameObject>(distance, currentObstacle));
+			}
+		}
+		
+		return pq;
+	}
+
+	// TO DO: Make this like the above? Although insertion sort might be ok for small lists
 	public List<GameObject> getFliesSortedByDistance(Vector2 position) {
 
 		float currentDistance;
