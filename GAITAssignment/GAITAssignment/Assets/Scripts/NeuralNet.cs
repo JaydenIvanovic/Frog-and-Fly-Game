@@ -5,6 +5,13 @@ using System.Collections.Generic;
 [System.Serializable]
 public class NeuralNet : System.ICloneable {
 
+	public enum InputTransformation
+	{
+		Normalise = 0,
+		RotationSmoothing = 1,
+		None = 2
+	};
+
 	[HideInInspector]
 	[System.NonSerialized]
 	public GameObject ParentFrog;
@@ -22,8 +29,11 @@ public class NeuralNet : System.ICloneable {
 	// Input settings
 	public int NumFlyPositions = 2;
 	public int NumSnakePositions = 1;
+	public int NumObstaclePositions = 2;
 	public bool FeedObstacleInfo = true;
 	public bool FeedOwnVelocity = true;
+	public InputTransformation inputTransformation;
+	public int inputSmoothingSegments = 30;
 	
 	public float defaultInputExponent = 1.0f;
 	public float defaultOutputExponent = 1.0f;
@@ -37,7 +47,8 @@ public class NeuralNet : System.ICloneable {
 
 	public System.Object Clone() {
 		
-		NeuralNet clone = new NeuralNet(NumFlyPositions, NumSnakePositions, FeedObstacleInfo, FeedOwnVelocity, hiddenLayerNeurons);
+		NeuralNet clone = new NeuralNet(NumFlyPositions, NumSnakePositions, NumObstaclePositions, FeedObstacleInfo, FeedOwnVelocity,
+		                                hiddenLayerNeurons, inputTransformation, inputSmoothingSegments);
 
 		clone.weights = new float[][]{(float[])(weights[0].Clone()), (float[])(weights[1].Clone())}; // Deep copy!
 		clone.defaultInputExponent = defaultInputExponent;
@@ -85,15 +96,19 @@ public class NeuralNet : System.ICloneable {
 		UpdateDisplayWeights();
 	}
 	
-	public NeuralNet(int NumFlyPositions, int NumSnakePositions, bool FeedObstacleInfo, bool FeedOwnVelocity, int hiddenLayerNeurons) {
+	public NeuralNet(int NumFlyPositions, int NumSnakePositions, int NumObstaclePositions, bool FeedObstacleInfo, bool FeedOwnVelocity,
+	                 int hiddenLayerNeurons, InputTransformation inputTransformation, int inputSmoothingSegments) {
 
 		this.NumFlyPositions = NumFlyPositions;
 		this.NumSnakePositions = NumSnakePositions;
+		this.NumObstaclePositions = NumObstaclePositions;
 		this.FeedObstacleInfo = FeedObstacleInfo;
 		this.FeedOwnVelocity = FeedOwnVelocity;
-		this.inputNeurons = (NumFlyPositions + NumSnakePositions) * 2 + (FeedObstacleInfo ? 2 : 0) + (FeedOwnVelocity ? 2 : 0);
+		this.inputNeurons = (NumFlyPositions + NumSnakePositions + NumObstaclePositions) * 2 + (FeedObstacleInfo ? 2 : 0) + (FeedOwnVelocity ? 2 : 0);
 		this.hiddenLayerNeurons = hiddenLayerNeurons;
 		this.outputNeurons = 2;
+		this.inputTransformation = inputTransformation;
+		this.inputSmoothingSegments = inputSmoothingSegments;
 		
 		neuronValues[0] = new float[inputNeurons];
 		neuronValues[1] = new float[hiddenLayerNeurons];
@@ -104,9 +119,16 @@ public class NeuralNet : System.ICloneable {
 
 	public NeuralNet(NeuralNet existingNet) {
 
+		this.NumFlyPositions = existingNet.NumFlyPositions;
+		this.NumSnakePositions = existingNet.NumSnakePositions;
+		this.NumObstaclePositions = existingNet.NumObstaclePositions;
+		this.FeedObstacleInfo = existingNet.FeedObstacleInfo;
+		this.FeedOwnVelocity = existingNet.FeedOwnVelocity;
 		this.inputNeurons = existingNet.inputNeurons;
 		this.hiddenLayerNeurons = existingNet.hiddenLayerNeurons;
 		this.outputNeurons = existingNet.outputNeurons;
+		this.inputTransformation = existingNet.inputTransformation;
+		this.inputSmoothingSegments = existingNet.inputSmoothingSegments;
 		
 		neuronValues[0] = new float[inputNeurons];
 		neuronValues[1] = new float[hiddenLayerNeurons];
@@ -159,7 +181,6 @@ public class NeuralNet : System.ICloneable {
 	
 	public float[] CalculateOutput(float[] inputValues) {
 
-
 		float smoothingCutoff = 2.5f;
 
 		float temp = Mathf.Rad2Deg * Mathf.Atan2(ParentFrog.rigidbody2D.velocity.y, ParentFrog.rigidbody2D.velocity.x);
@@ -168,41 +189,22 @@ public class NeuralNet : System.ICloneable {
 
 		previousRotation = frogRotation;
 
-
-		//float frogRotation = ParentFrog.rigidbody2D.rotation;
-
-
-
-		/*
-		if (ParentFrog.rigidbody2D.velocity.magnitude > 0.0f) {
-			frogRotation = Mathf.Rad2Deg * Mathf.Atan2(ParentFrog.rigidbody2D.velocity.y, ParentFrog.rigidbody2D.velocity.x); //Hack
-			previousRotation = frogRotation;
-		}
-		*/
-
 		//Debug.DrawLine((Vector2)(ParentFrog.transform.position), (Vector2)(ParentFrog.transform.position) + MathsHelper.rotateVector(new Vector2(1.0f, 0.0f), frogRotation), Color.yellow);
 
-		for (int i = 0; i < inputValues.Length; i += 2) {
-			Vector2 unrotatedVec = new Vector2(inputValues[i], inputValues[i + 1]);
+		if (inputTransformation == InputTransformation.Normalise) {
 
-			//Debug.DrawLine((Vector2)(ParentFrog.transform.position), (Vector2)(ParentFrog.transform.position) + unrotatedVec, Color.cyan);
-
-			//Vector2 rotatedVec = MathsHelper.rotateVector(unrotatedVec, -frogRotation * Mathf.Rad2Deg);
-			Vector2 rotatedVec = MathsHelper.rotateVector(unrotatedVec, -frogRotation);
-			inputValues[i] = rotatedVec.x;
-			inputValues[i + 1] = rotatedVec.y;
-		}
-
-
-
-
-		bool useRotationSymmetry = false;
-		bool useReflectionSymmetry = false;
-
-		if (!useRotationSymmetry && !useReflectionSymmetry) {
+			// Rotate the input to the frog's frame of reference
+			for (int i = 0; i < inputValues.Length; i += 2) {
+				Vector2 unrotatedVec = new Vector2(inputValues[i], inputValues[i + 1]);
+				//Debug.DrawLine((Vector2)(ParentFrog.transform.position), (Vector2)(ParentFrog.transform.position) + unrotatedVec, Color.cyan);
+				Vector2 rotatedVec = MathsHelper.rotateVector(unrotatedVec, -frogRotation);
+				inputValues[i] = rotatedVec.x;
+				inputValues[i + 1] = rotatedVec.y;
+			}
 
 			float[] outputValues = CalculateOutputNoSymmetry(inputValues);
-			
+
+			// Rotate the output back to world co-ordinates
 			for (int i = 0; i < outputValues.Length; i += 2) {
 				Vector2 unrotatedVec = new Vector2(outputValues[i], outputValues[i + 1]);
 				//Vector2 rotatedVec = MathsHelper.rotateVector(unrotatedVec, frogRotation * Mathf.Rad2Deg);
@@ -213,53 +215,45 @@ public class NeuralNet : System.ICloneable {
 			
 			return outputValues;
 
-		// Since reflections and rotations by 90 degrees shouldn't make any difference to the frog's behaviour, it's
-	    // probably a good idea to enforce this, which is what the following code does. It loops through all 8 symmetries
-		// of a square, applying the symmetry to the input, calculating the output, then reversing the symmetry on the
-		// output so that we get back to the original co-ordinate system. By summing all 8 outputs, it ensures that the
-		// frog is indifferent to symmetry transforms on the input.
-		// We assume that the input is in the form of a list of 2d vectors and that the output is a single 2d vector.
 		} else {
+
+			// Since rotations shouldn't make any difference to the frog's behaviour, it's probably a good idea to enforce
+		    // this, which is what the following code does. It loops through all 8 symmetries
+			// The code assumes that the input is in the form of a list of 2d vectors and that the output is a single 2d vector.
+
+			// However, this is incompatible with rotating the input to the frog's frame of reference, because that approach
+			// asssumes that the frog's direction is important (here we don't care)
+
+			int numSegments = 1;
+
+			if (inputTransformation == InputTransformation.RotationSmoothing) {
+				numSegments = inputSmoothingSegments;
+			}
 
 			Vector2 output = Vector2.zero;
 
-			for (int coordSys = 1; coordSys >= (useReflectionSymmetry ? -1 : 1); coordSys -= 2) {
+			for (int segment = 0; segment < numSegments; segment++) {
 
-				for (int quadrant = 0; quadrant <= (useRotationSymmetry ? 3 : 0); quadrant++) {
-
-					float[] rotatedInput = new float[inputValues.Length];
-
-					for (int i = 0; i < inputValues.Length; i += 2) {
-
-						Vector2 vec = new Vector2((float)coordSys * inputValues[i], inputValues[i + 1]);
-						vec = MathsHelper.rotateVector(vec, (float)quadrant * 90.0f);
-						rotatedInput[i] = vec.x;
-						rotatedInput[i + 1] = vec.y;
-					}
-
-					float[] rotatedOutput = CalculateOutputNoSymmetry(rotatedInput);
-					Vector2 rotatedOutputVec = new Vector2(rotatedOutput[0], rotatedOutput[1]);
-					Vector2 restoredOutputVec = MathsHelper.rotateVector(rotatedOutputVec, (float)quadrant * -90.0f);
-					restoredOutputVec.x *= (float)coordSys;
-					output += restoredOutputVec;
+				// Rotate the input
+				float[] rotatedInput = new float[inputValues.Length];
+				for (int i = 0; i < inputValues.Length; i += 2) {
+					Vector2 vec = new Vector2(inputValues[i], inputValues[i + 1]);
+					vec = MathsHelper.rotateVector(vec, (float)segment * 360.0f / (float)numSegments);
+					rotatedInput[i] = vec.x;
+					rotatedInput[i + 1] = vec.y;
 				}
-			}
 
-			//return new float[] {output.x, output.y};
+				// Rotate the output back to the original frame of reference
+				float[] rotatedOutput = CalculateOutputNoSymmetry(rotatedInput);
+				Vector2 rotatedOutputVec = new Vector2(rotatedOutput[0], rotatedOutput[1]);
+				Vector2 restoredOutputVec = MathsHelper.rotateVector(rotatedOutputVec, (float)segment * -360.0f / (float)numSegments);
+				output += restoredOutputVec;
+			}
 
 			float[] outputValues = new float[] {output.x, output.y};
 			
-			for (int i = 0; i < outputValues.Length; i += 2) {
-				Vector2 unrotatedVec = new Vector2(outputValues[i], outputValues[i + 1]);
-				//Vector2 rotatedVec = MathsHelper.rotateVector(unrotatedVec, frogRotation * Mathf.Rad2Deg);
-				Vector2 rotatedVec = MathsHelper.rotateVector(unrotatedVec, frogRotation);
-				outputValues[i] = rotatedVec.x;
-				outputValues[i + 1] = rotatedVec.y;
-			}
-			
 			return outputValues;
 		}
-
 	}
 	
 	public int GetRandomCrossOverIndex() {

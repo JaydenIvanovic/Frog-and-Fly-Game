@@ -123,6 +123,28 @@ public class NeuralNetSteering : SteeringBehaviour {
 				}
 			}
 
+			PriorityQueue<float, GameObject> obstaclesPQ = manager.getObstaclesSortedByDistance((Vector2)(transform.position));
+			GameObject obstacle = null;
+			
+			for (int i = 0; i < neuralNet.NumObstaclePositions; i++) {
+				
+				if (obstaclesPQ.Count > i) {
+					
+					obstacle = obstaclesPQ.DequeueValue();
+					Vector2 vecToObstacle = (Vector2)(obstacle.transform.position) - (Vector2)(transform.FindChild("Mouth").position);
+					float obstacleInputMag = Mathf.Exp(-vecToObstacle.magnitude / 10.0f);
+					Vector2 obstacleInputVec = vecToObstacle.normalized * obstacleInputMag;
+					netInput.Add(obstacleInputVec.x);
+					netInput.Add(obstacleInputVec.y);
+					//Debug.DrawLine((Vector2)(transform.position), (Vector2)(transform.position) + vecToObstacle, Color.cyan);
+					
+					// ith closest obstacle couldn't be found, so just return zero input
+				} else {
+					netInput.Add(0.0f);
+					netInput.Add(0.0f);
+				}
+			}
+
 			if (neuralNet.FeedObstacleInfo) {
 
 				obstacleInfo = GetObstacleInfo();
