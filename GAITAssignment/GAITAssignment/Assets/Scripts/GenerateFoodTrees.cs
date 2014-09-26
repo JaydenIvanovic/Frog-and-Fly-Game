@@ -123,7 +123,11 @@ public class GenerateFoodTrees : GAController<Trees>
 				if (i == j)
 					continue;
 
-				sumDistFromOthers += Vector2.Distance(chromosome.positions[j], chromosome.positions[i]);
+				// If these two tree are really close, instead halve the fitness
+				if (Vector2.Distance(chromosome.positions[j], chromosome.positions[i]) < 2)
+					sumDistFromOthers *= 0.5f;
+				else
+					sumDistFromOthers += Vector2.Distance(chromosome.positions[j], chromosome.positions[i]);
 			}
 
 			// If outside boundary return 0 as this is a solution we never want.
