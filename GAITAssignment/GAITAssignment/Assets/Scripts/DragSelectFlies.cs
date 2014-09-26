@@ -141,6 +141,20 @@ public class DragSelectFlies : MonoBehaviour
 		//Debug.Log(numWanted);
 		//Debug.Log(numToRemove);
 
+		// Sort flies in order of furthest from mouse pointer
+		// to closest. This is done so we remove the ones that
+		// are further away before the closer ones.
+		Ray mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+		Vector2 mousePos = new Vector2(mouseRay.origin.x, mouseRay.origin.y);
+		flies.Sort( delegate(Transform fly1, Transform fly2) {
+			if (Vector2.Distance(mousePos, fly1.position) < Vector2.Distance(mousePos, fly2.position)) 
+				return 1;
+			if (Vector2.Distance(mousePos, fly1.position) > Vector2.Distance(mousePos, fly2.position)) 
+				return -1;
+			else
+				return 0;
+		});
+
 		for (int i = 0; i < numToRemove; ++i) {
 			flies[i].GetComponent<MouseTargeter>().selected = false;
 			flies[i].transform.Find("FlyGlow").gameObject.SetActive(false);
