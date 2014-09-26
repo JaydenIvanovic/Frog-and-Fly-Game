@@ -34,7 +34,7 @@ public class GenerateFoodTrees : GAController<Trees>
 	public float requiredDistanceFromHome, distanceFromNeighbours;
 	private Trees fitTrees;
 
-	public GenerateFoodTrees() : base(30, 0.001f, 0.7f) {}
+	public GenerateFoodTrees() : base(50, 0.001f, 0.7f) {}
 
 	void Awake()
 	{
@@ -84,7 +84,7 @@ public class GenerateFoodTrees : GAController<Trees>
 	// so it can be shared between this and the frog.
 	public override Trees SelectParent()
 	{
-		int tournamentSize = 2;
+		int tournamentSize = populationSize / 2;
 		// We can just store the index of the competitors.
 		int[] tournamentPopulation = new int[tournamentSize];
 
@@ -126,7 +126,13 @@ public class GenerateFoodTrees : GAController<Trees>
 				sumDistFromOthers += Vector2.Distance(chromosome.positions[j], chromosome.positions[i]);
 			}
 
-			sumDistFromGoal += Vector2.Distance(Vector2.zero, chromosome.positions[i]);
+			// If outside boundary return 0 as this is a solution we never want.
+			if (chromosome.positions[i].x > maxxBoundary || chromosome.positions[i].x < minxBoundary ||
+				chromosome.positions[i].y > maxyBoundary || chromosome.positions[i].y < minyBoundary) {
+				return 0;
+			} else {
+				sumDistFromGoal += Vector2.Distance(Vector2.zero, chromosome.positions[i]);
+			}
 		}
 
 		return sumDistFromGoal + sumDistFromOthers;
