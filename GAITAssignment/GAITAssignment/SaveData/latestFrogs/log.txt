@@ -1,0 +1,14 @@
+GA parameters
+-------------
+
+Batches per epoch: 6
+Batch time: 40
+Frog obstacle avoidance: True
+Parent selection mode: RankRoulette
+Snakes: True
+Flies: True
+Fly movement: True
+
+Neural net settings
+-------------------
+Hidden neurons: 7

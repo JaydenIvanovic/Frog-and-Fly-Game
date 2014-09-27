@@ -4,6 +4,7 @@ using System.Collections;
 public class ObstacleAvoiderFrog : MonoBehaviour
 {
 	private CircleCollider2D circleCollider;
+	private BoxCollider2D boxCollider;
 	private float lowerTerminal = -1.0f;
 	private float upperTerminal = 1.0f;
 	private SteeringBehaviour[] steeringBehaviours;
@@ -33,12 +34,19 @@ public class ObstacleAvoiderFrog : MonoBehaviour
 	{
 		steeringBehaviours = GetComponents<SteeringBehaviour>();
 
-
-		// Get the physical collider (not the trigger)
+		// Get physical colliders (not triggers)
 		CircleCollider2D[] circleColliders = GetComponents<CircleCollider2D>();
 		foreach (CircleCollider2D cc in circleColliders) {
 			if (!cc.isTrigger) {
 				circleCollider = cc;
+				break;
+			}
+		}
+
+		BoxCollider2D[] boxColliders = GetComponents<BoxCollider2D>();
+		foreach (BoxCollider2D bc in boxColliders) {
+			if (!bc.isTrigger) {
+				boxCollider = bc;
 				break;
 			}
 		}
@@ -96,11 +104,21 @@ public class ObstacleAvoiderFrog : MonoBehaviour
 		
 		// Calculate the four corners of the box collider.
 		Vector2[] boxPoints = new Vector2[4];
-		boxPoints[0] = circleCollider.center + conservativeMultiplier * new Vector2(circleCollider.radius, circleCollider.radius);
-		boxPoints[1] = circleCollider.center + conservativeMultiplier * new Vector2(-circleCollider.radius, -circleCollider.radius);
-		boxPoints[2] = circleCollider.center + conservativeMultiplier * new Vector2(circleCollider.radius, -circleCollider.radius);
-		boxPoints[3] = circleCollider.center + conservativeMultiplier * new Vector2(-circleCollider.radius, circleCollider.radius);
-		
+
+		if (circleCollider != null) {
+			boxPoints[0] = circleCollider.center + conservativeMultiplier * new Vector2(circleCollider.radius, circleCollider.radius);
+			boxPoints[1] = circleCollider.center + conservativeMultiplier * new Vector2(-circleCollider.radius, -circleCollider.radius);
+			boxPoints[2] = circleCollider.center + conservativeMultiplier * new Vector2(circleCollider.radius, -circleCollider.radius);
+			boxPoints[3] = circleCollider.center + conservativeMultiplier * new Vector2(-circleCollider.radius, circleCollider.radius);
+		}
+
+		if (boxCollider != null) {
+			boxPoints[0] = boxCollider.center + conservativeMultiplier * boxCollider.size / 2.0f;
+			boxPoints[1] = boxCollider.center - conservativeMultiplier * boxCollider.size / 2.0f;
+			boxPoints[2] = boxCollider.center + conservativeMultiplier * new Vector2(boxCollider.size.x, -boxCollider.size.y) / 2.0f;
+			boxPoints[3] = boxCollider.center + conservativeMultiplier * new Vector2(-boxCollider.size.x, boxCollider.size.y) / 2.0f;
+		}
+
 		// Try finding a path three times:
 		// - The first time we'll try a conservative approach with a hitbox larger than the actual collider
 		// - Only the second attempt we'll try fitting the actual collider
