@@ -77,7 +77,7 @@ public abstract class GAController<T> : MonoBehaviour, GeneticAlgorithm_I<T>
 			if (fitness[i] > fitness[fittest])
 				fittest = i;
 		}
-
+		Debug.Log(fitness[fittest]);
 		return population[fittest];
 	}
 

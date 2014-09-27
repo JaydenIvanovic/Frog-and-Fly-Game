@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class DragSelectFlies : MonoBehaviour 
 {
 	public Color vertexColor;
-	private List<GameObject> flies;
+	private List<Transform> flies;
 	private bool drawing;
 	private Vector2 startPos;
 
@@ -13,6 +13,7 @@ public class DragSelectFlies : MonoBehaviour
 	void Start () 
 	{
 		drawing = false;
+		flies = new List<Transform>();
 	}
 	
 
@@ -43,6 +44,9 @@ public class DragSelectFlies : MonoBehaviour
 			drawing = false;
 			GetComponent<MeshFilter>().mesh.Clear();
 		}
+		
+		// Check for player key presses for selecting a number of flies from selected group.
+		UpdateNumFlies();
 	}
 
 
@@ -94,12 +98,73 @@ public class DragSelectFlies : MonoBehaviour
 					fly.transform.position.y >= boundsStart.y && fly.transform.position.y <= boundsEnd.y) {
 					fly.GetComponent<MouseTargeter>().selected = true;
 					fly.transform.Find("FlyGlow").gameObject.SetActive(true);
+					
+					// Only add the fly if it isn't currently contained in the list.
+					if(!flies.Contains(fly))
+						flies.Add(fly);
 				}
 				else {
 					fly.GetComponent<MouseTargeter>().selected = false;
 					fly.transform.Find("FlyGlow").gameObject.SetActive(false);
 				}
 			}
+		}
+	}
+
+
+	// Check to see if the user wants a certain number of flies from the
+	// selected group.
+	private void UpdateNumFlies()
+	{	
+		int numWanted = flies.Count;
+
+		if (Input.GetKeyDown(KeyCode.Alpha1)) {
+			numWanted = 1;
+		} else if (Input.GetKeyDown(KeyCode.Alpha2)) {
+			numWanted = 2;
+		} else if (Input.GetKeyDown(KeyCode.Alpha3)) {
+			numWanted = 3;
+		} else if (Input.GetKeyDown(KeyCode.Alpha4)) {
+			numWanted = 4;
+		} else if (Input.GetKeyDown(KeyCode.Alpha5)) {
+			numWanted = 5;
+		}
+
+		// If they want a higher or equal number than the flies selected
+		// do nothing and just keep the current flies selected.
+		if (numWanted >= flies.Count)
+			return;
+
+		int numToRemove = flies.Count - numWanted;
+
+		//Debug.Log(flies.Count);
+		//Debug.Log(numWanted);
+		//Debug.Log(numToRemove);
+
+		// Sort flies in order of furthest from mouse pointer
+		// to closest. This is done so we remove the ones that
+		// are further away before the closer ones.
+		Ray mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+		Vector2 mousePos = new Vector2(mouseRay.origin.x, mouseRay.origin.y);
+		flies.Sort( delegate(Transform fly1, Transform fly2) {
+			if (Vector2.Distance(mousePos, fly1.position) < Vector2.Distance(mousePos, fly2.position)) 
+				return 1;
+			if (Vector2.Distance(mousePos, fly1.position) > Vector2.Distance(mousePos, fly2.position)) 
+				return -1;
+			else
+				return 0;
+		});
+
+		for (int i = 0; i < numToRemove; ++i) {
+			flies[i].GetComponent<MouseTargeter>().selected = false;
+			flies[i].transform.Find("FlyGlow").gameObject.SetActive(false);
+		}
+
+		// Separate for loop to deal with removing elements from the collection.
+		// Once an element is removed the other will be renumbered, so we use
+		// constant r=0 to remove at the 0th index and i to keep track of removal progress.
+		for (int i = 0, r = 0; i < numToRemove; ++i) {
+			flies.RemoveAt(r);
 		}
 	}
 }
