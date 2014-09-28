@@ -59,6 +59,8 @@ public class GAFrogController : GAController<NeuralNet> {
 	public int FrogsOnScreen = 8;
 	public int CurrentEpoch = 0;
 	public int CurrentBatch = 0;
+	public float bestFitnessSoFar = float.MinValue;
+	public NeuralNet bestNetSoFar;
 	public bool letFrogShootBubble = false;
 	public int parameterIndexToUse = 0;
 	public GAParameters[] parameters;
@@ -99,6 +101,12 @@ public class GAFrogController : GAController<NeuralNet> {
 		FileStream popFile = File.Create(saveDataPath + "/population" + CurrentEpoch + ".bin");
 		bf.Serialize(popFile, population);
 		popFile.Close();
+
+		if (bestFitnessSoFar > float.MinValue) {
+			FileStream bestNetFile = File.Create(saveDataPath + "/bestNet" + CurrentEpoch + ".bin");
+			bf.Serialize(bestNetFile, bestNetSoFar);
+			bestNetFile.Close();
+		}
 	}
 
 	private void LoadPopulation() {
@@ -274,6 +282,11 @@ public class GAFrogController : GAController<NeuralNet> {
 				if (net.fitness <= currentParams.discardThreshold) {
 					net.RandomiseWeights();
 					resetCount++;
+				}
+
+				if (net.fitness > bestFitnessSoFar) {
+					bestFitnessSoFar = net.fitness;
+					bestNetSoFar = net;
 				}
 			}
 

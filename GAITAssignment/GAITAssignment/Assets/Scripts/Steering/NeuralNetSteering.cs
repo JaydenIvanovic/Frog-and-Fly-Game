@@ -38,7 +38,7 @@ public class NeuralNetSteering : SteeringBehaviour {
 		}
 
 		if (loadFromFile)
-			neuralNet = GetNetFromFile();
+			LoadNetFromFile();
 	}
 	
 	public void Update() {
@@ -260,14 +260,13 @@ public class NeuralNetSteering : SteeringBehaviour {
 	}
 
 	// Load the neural net from the file.
-	private NeuralNet GetNetFromFile()
+	private void LoadNetFromFile()
 	{
 		BinaryFormatter bf = new BinaryFormatter();
 		
-		FileStream popFile = File.Open(fileName, FileMode.Open);
-		List<NeuralNet> population = (List<NeuralNet>)bf.Deserialize(popFile);
-		popFile.Close();
-
-		return population[0];
+		FileStream netFile = File.Open(fileName, FileMode.Open);
+		neuralNet = (NeuralNet)bf.Deserialize(netFile);
+		neuralNet.ParentFrog = gameObject;
+		netFile.Close();
 	}
 }

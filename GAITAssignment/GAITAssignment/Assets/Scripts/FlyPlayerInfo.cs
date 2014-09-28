@@ -57,11 +57,13 @@ public class FlyPlayerInfo : MonoBehaviour
 	{
 		foreach (GameObject resource in resourceObjects) {
 			foreach(GameObject fly in flies) {
-				if (Vector2.Distance(resource.transform.position, fly.transform.position) < interactionDistance) {
-					if (resource.tag == "FlowerTree")
-						resource1 = Mathf.Clamp(resource1 + Time.deltaTime * resourceIncrement, 0f, maxResource);
-					else if (resource.tag == "AppleTree")
-						resource2 = Mathf.Clamp(resource2 + Time.deltaTime * resourceIncrement, 0f, maxResource);
+				if (fly != null) {
+					if (Vector2.Distance(resource.transform.position, fly.transform.position) < interactionDistance) {
+						if (resource.tag == "FlowerTree")
+							resource1 = Mathf.Clamp(resource1 + Time.deltaTime * resourceIncrement, 0f, maxResource);
+						else if (resource.tag == "AppleTree")
+							resource2 = Mathf.Clamp(resource2 + Time.deltaTime * resourceIncrement, 0f, maxResource);
+					}
 				}
 			}
 		}
@@ -75,9 +77,11 @@ public class FlyPlayerInfo : MonoBehaviour
 
 		// Make sure all flies are home.
 		foreach(GameObject fly in flies) {
-			if (Vector2.Distance(scoringLocation.transform.position, fly.transform.position) > scoringInteractionDistance) {
-				allHome = false;
-				break;
+			if (fly != null) {
+				if (Vector2.Distance(scoringLocation.transform.position, fly.transform.position) > scoringInteractionDistance) {
+					allHome = false;
+					break;
+				}
 			}
 		}
 

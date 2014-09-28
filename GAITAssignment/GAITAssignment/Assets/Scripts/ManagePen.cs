@@ -9,7 +9,8 @@ public class ManagePen : MonoBehaviour {
 	public List<GameObject> snakes;
 	public GameObject frogHome;
 	public GameObject flySpawnPoint;
-	public Transform obstaclesParent;
+	public List<Transform> obstaclesParents;
+	public Transform playerFliesParent;
 
 	public bool spawnFlies = true;
 	public int numFlies;
@@ -46,14 +47,17 @@ public class ManagePen : MonoBehaviour {
 
 		PriorityQueue<float, GameObject> pq = new PriorityQueue<float, GameObject>();
 
-		for (int i = 0; i < obstaclesParent.childCount; i++) {
-			
-			if (obstaclesParent.GetChild(i).gameObject.layer == obstacleLayerNum) {
+		foreach (Transform obstaclesParent in obstaclesParents) {
 
-				GameObject currentObstacle = obstaclesParent.GetChild(i).gameObject;
-				CircleCollider2D currentCollider = currentObstacle.GetComponent<CircleCollider2D>();
-				float distance = (position - (Vector2)(currentObstacle.transform.position)).magnitude - currentCollider.radius;
-				pq.Add(new KeyValuePair<float, GameObject>(distance, currentObstacle));
+			for (int i = 0; i < obstaclesParent.childCount; i++) {
+				
+				if (obstaclesParent.GetChild(i).gameObject.layer == obstacleLayerNum) {
+
+					GameObject currentObstacle = obstaclesParent.GetChild(i).gameObject;
+					CircleCollider2D currentCollider = currentObstacle.GetComponent<CircleCollider2D>();
+					float distance = (position - (Vector2)(currentObstacle.transform.position)).magnitude - currentCollider.radius;
+					pq.Add(new KeyValuePair<float, GameObject>(distance, currentObstacle));
+				}
 			}
 		}
 		
@@ -68,14 +72,20 @@ public class ManagePen : MonoBehaviour {
 
 		List<GameObject> sortedFlies = new List<GameObject>();
 
-		for (int i = 0; i < transform.childCount; i++) {
+		Transform fliesParent = playerFliesParent;
 
-			if (transform.GetChild(i).tag == "Fly") {
+		if (fliesParent == null) {
+			fliesParent = transform;
+		}
 
-				GameObject currentFly = transform.GetChild(i).gameObject;
+		for (int i = 0; i < fliesParent.childCount; i++) {
+
+			if (fliesParent.GetChild(i).tag == "Fly") {
+
+				GameObject currentFly = fliesParent.GetChild(i).gameObject;
 				currentDistance = (position - (Vector2)(currentFly.transform.position)).magnitude;
 
-				for (int j = 0; j < transform.childCount; j++) {
+				for (int j = 0; j < fliesParent.childCount; j++) {
 
 					if (j >= sortedFlies.Count) {
 						sortedFlies.Insert(j, currentFly);
