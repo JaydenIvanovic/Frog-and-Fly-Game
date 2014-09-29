@@ -6,6 +6,7 @@ public class Mouth : MonoBehaviour {
 	
 	private float rotationOffset;
 	private PlayerInfo playerInfo;
+	private Movement movement;
 
 	public bool BubbleEnabled = true;
 	public float BubbleCost = 20.0f;
@@ -13,6 +14,7 @@ public class Mouth : MonoBehaviour {
 	public GameObject waterProjectilePrefab;
 	
 	void Awake () {
+		movement = transform.parent.GetComponent<Movement>();
 		rotationOffset = transform.parent.rotation.eulerAngles.z;
 		playerInfo = transform.parent.gameObject.GetComponent<PlayerInfo>();
 	}
@@ -40,13 +42,15 @@ public class Mouth : MonoBehaviour {
 		}
 	}
 
-	void SprayWater()
+	public bool SprayWater(bool frogIsBot = false, Vector2? target = null)
 	{
-		if (BubbleEnabled && !PlayerInfo.isPaused && Input.GetMouseButtonDown(0) && playerInfo.waterLevel > PlayerInfo.BUBBLE_COST)
+		if (BubbleEnabled && !PlayerInfo.isPaused && (frogIsBot || Input.GetMouseButtonDown(0)) && playerInfo.waterLevel > PlayerInfo.BUBBLE_COST)
 		{
-			Vector2 clickPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+			if (!frogIsBot) {
+				target = (Vector2?)(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+			}
 			
-			Vector2 shotDirection = clickPos - (Vector2)(transform.position);
+			Vector2 shotDirection = (Vector2)target - (Vector2)(transform.position);
 			
 			float angle = Mathf.Atan2(shotDirection.y, shotDirection.x) * Mathf.Rad2Deg;
 
@@ -54,7 +58,6 @@ public class Mouth : MonoBehaviour {
 				transform.parent.GetComponent<Animator>().SetBool("Sitting", false);
 			}
 
-			Movement movement = transform.parent.GetComponent<Movement>();
 			if (movement != null) {
 				movement.OverrideRotation(angle);
 			}
@@ -76,6 +79,11 @@ public class Mouth : MonoBehaviour {
 			            Quaternion.Euler(0.0f, 0.0f, angle - rotationOffset));
 
 			playerInfo.ReduceWaterAfterBubble();
+
+			return true;
+
+		} else {
+			return false;
 		}
 	}
 }

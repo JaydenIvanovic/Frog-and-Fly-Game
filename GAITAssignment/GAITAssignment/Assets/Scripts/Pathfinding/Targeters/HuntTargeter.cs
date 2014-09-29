@@ -25,7 +25,7 @@ public class HuntTargeter : Targeter {
 		}
 
 		// We can't chase the frog if it's underwater
-		if ((Target != null) && (Target.tag == "Player") && PlayerInfo.IsUnderwater()) {
+		if ((Target != null) && (Target.tag == "Player") && Target.GetComponent<PlayerInfo>().IsUnderwater()) {
 			return null;
 		}
 		

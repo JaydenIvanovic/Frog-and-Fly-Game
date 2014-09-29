@@ -10,6 +10,7 @@ public class ManagePen : MonoBehaviour {
 	public GameObject frogHome;
 	public GameObject flySpawnPoint;
 	public List<Transform> obstaclesParents;
+	public List<Transform> lakes;
 	public Transform playerFliesParent;
 
 	public bool spawnFlies = true;
@@ -57,6 +58,26 @@ public class ManagePen : MonoBehaviour {
 					CircleCollider2D currentCollider = currentObstacle.GetComponent<CircleCollider2D>();
 					float distance = (position - (Vector2)(currentObstacle.transform.position)).magnitude - currentCollider.radius;
 					pq.Add(new KeyValuePair<float, GameObject>(distance, currentObstacle));
+				}
+			}
+		}
+		
+		return pq;
+	}
+
+	public PriorityQueue<float, GameObject> getLakeMarkersSortedByDistance(Vector2 position) {
+		
+		PriorityQueue<float, GameObject> pq = new PriorityQueue<float, GameObject>();
+		
+		foreach (Transform lake in lakes) {
+			
+			for (int i = 0; i < lake.childCount; i++) {
+				
+				if (lake.GetChild(i).name == "PondMarker") {
+					
+					GameObject currentLake = lake.GetChild(i).gameObject;
+					float distance = (position - (Vector2)(currentLake.transform.position)).magnitude;
+					pq.Add(new KeyValuePair<float, GameObject>(distance, currentLake));
 				}
 			}
 		}

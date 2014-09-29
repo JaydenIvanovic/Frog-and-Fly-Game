@@ -21,6 +21,9 @@ public class NeuralNet : System.ICloneable {
 
 	[HideInInspector]
 	public float snakeDistScore = 0.0f;
+
+	[HideInInspector]
+	public float waterScore = 0.0f;
 	
 	public int inputNeurons;
 	public int hiddenLayerNeurons;
@@ -32,6 +35,7 @@ public class NeuralNet : System.ICloneable {
 	public int NumObstaclePositions = 2;
 	public bool FeedObstacleInfo = true;
 	public bool FeedOwnVelocity = true;
+	public bool FeedLakePosition = true;
 	public InputTransformation inputTransformation;
 	public int inputSmoothingSegments = 30;
 	
@@ -41,22 +45,41 @@ public class NeuralNet : System.ICloneable {
 	public float[][] neuronValues = new float[3][]; // For storing calculated values
 	public float[][] weights = new float[2][];
 	
-	public List<float> weightsAsVector; // For viewing in the inspector
-
+	public List<float> weightsAsVector; // Useful to have the weights in this format for mutating
+	public List<int> crossOverPoints;
+	
 	private float previousRotation = 0.0f;
-
+	
 	public System.Object Clone() {
 		
 		NeuralNet clone = new NeuralNet(NumFlyPositions, NumSnakePositions, NumObstaclePositions, FeedObstacleInfo, FeedOwnVelocity,
-		                                hiddenLayerNeurons, inputTransformation, inputSmoothingSegments);
+		                                FeedLakePosition, hiddenLayerNeurons, inputTransformation, inputSmoothingSegments);
 
-		clone.weights = new float[][]{(float[])(weights[0].Clone()), (float[])(weights[1].Clone())}; // Deep copy!
 		clone.defaultInputExponent = defaultInputExponent;
 		clone.defaultOutputExponent = defaultOutputExponent;
+		clone.weights = new float[][]{(float[])(weights[0].Clone()), (float[])(weights[1].Clone())}; // Deep copy!
+		clone.UpdateWeightsAsVector();
+		clone.CalculateCrossOverIndices();
+
 		return (System.Object)clone;
 	}
+
+	public void LoadFromWeightsAsVector() {
+
+		int counter = 0;
+
+		for (int i = 0; i < weights[0].Length; i++) {
+			weights[0][i] = weightsAsVector[counter];
+			counter++;
+		}
+
+		for (int i = 0; i < weights[1].Length; i++) {
+			weights[1][i] = weightsAsVector[counter];
+			counter++;
+		}
+	}
 	
-	public void UpdateDisplayWeights() {
+	public void UpdateWeightsAsVector() {
 		
 		weightsAsVector = new List<float>();
 		
@@ -93,48 +116,32 @@ public class NeuralNet : System.ICloneable {
 			}
 		}
 		
-		UpdateDisplayWeights();
+		UpdateWeightsAsVector();
 	}
 	
 	public NeuralNet(int NumFlyPositions, int NumSnakePositions, int NumObstaclePositions, bool FeedObstacleInfo, bool FeedOwnVelocity,
-	                 int hiddenLayerNeurons, InputTransformation inputTransformation, int inputSmoothingSegments) {
+	                 bool FeedLakePosition, int hiddenLayerNeurons, InputTransformation inputTransformation, int inputSmoothingSegments) {
 
 		this.NumFlyPositions = NumFlyPositions;
 		this.NumSnakePositions = NumSnakePositions;
 		this.NumObstaclePositions = NumObstaclePositions;
 		this.FeedObstacleInfo = FeedObstacleInfo;
 		this.FeedOwnVelocity = FeedOwnVelocity;
-		this.inputNeurons = (NumFlyPositions + NumSnakePositions + NumObstaclePositions) * 2 + (FeedObstacleInfo ? 2 : 0) + (FeedOwnVelocity ? 2 : 0);
+		this.FeedLakePosition = FeedLakePosition;
+		this.inputNeurons = (NumFlyPositions + NumSnakePositions + NumObstaclePositions) * 2 + (FeedObstacleInfo ? 2 : 0) + (FeedOwnVelocity ? 2 : 0) + (FeedLakePosition ? 2 : 0);
 		this.hiddenLayerNeurons = hiddenLayerNeurons;
 		this.outputNeurons = 2;
 		this.inputTransformation = inputTransformation;
 		this.inputSmoothingSegments = inputSmoothingSegments;
-		
+
+		neuronValues = new float[3][];
 		neuronValues[0] = new float[inputNeurons];
 		neuronValues[1] = new float[hiddenLayerNeurons];
 		neuronValues[2] = new float[outputNeurons];
 		
 		RandomiseWeights();
-	}
 
-	public NeuralNet(NeuralNet existingNet) {
-
-		this.NumFlyPositions = existingNet.NumFlyPositions;
-		this.NumSnakePositions = existingNet.NumSnakePositions;
-		this.NumObstaclePositions = existingNet.NumObstaclePositions;
-		this.FeedObstacleInfo = existingNet.FeedObstacleInfo;
-		this.FeedOwnVelocity = existingNet.FeedOwnVelocity;
-		this.inputNeurons = existingNet.inputNeurons;
-		this.hiddenLayerNeurons = existingNet.hiddenLayerNeurons;
-		this.outputNeurons = existingNet.outputNeurons;
-		this.inputTransformation = existingNet.inputTransformation;
-		this.inputSmoothingSegments = existingNet.inputSmoothingSegments;
-		
-		neuronValues[0] = new float[inputNeurons];
-		neuronValues[1] = new float[hiddenLayerNeurons];
-		neuronValues[2] = new float[outputNeurons];
-		
-		RandomiseWeights();
+		CalculateCrossOverIndices();
 	}
 
 	public float[] CalculateOutputNoSymmetry(float[] inputValues) {
@@ -255,10 +262,10 @@ public class NeuralNet : System.ICloneable {
 			return outputValues;
 		}
 	}
-	
-	public int GetRandomCrossOverIndex() {
-		
-		List<int> crossOverPoints = new List<int>();
+
+	public void CalculateCrossOverIndices() {
+
+		crossOverPoints = new List<int>();
 		int counter = 0;
 		
 		// Hidden layer
@@ -275,8 +282,12 @@ public class NeuralNet : System.ICloneable {
 		
 		// Don't crossover right at the start because then it's not really a crossover
 		crossOverPoints.Remove(0);
-		
-		return crossOverPoints[Random.Range(0, crossOverPoints.Count)];
+	}
+	
+	public int GetRandomCrossOverIndex() {
+		int returnVal = crossOverPoints[Random.Range(0, crossOverPoints.Count)];
+		//Debug.Log("Crossing over at index = " + returnVal);
+		return returnVal;
 	}
 	
 	private float Squash(float unsquashedValue, float exponent) {

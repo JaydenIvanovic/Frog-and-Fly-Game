@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(AppleTreeTargeter))]
 [RequireComponent(typeof(GameObjectTargeter))]
@@ -22,6 +23,7 @@ public class FlyStateMachine : MonoBehaviour {
 	private bool doneEating;
 	private float fleeSpeed;
 	private static AudioSource SoundSource; // Static so we don't get a weird chorus effect when all flies flee at once
+	private List<GameObject> players;
 
 	public float fleeDistance;
 	public float appleTreeSpeed;
@@ -35,8 +37,7 @@ public class FlyStateMachine : MonoBehaviour {
 		playerTargeter = (GameObjectTargeter)GetComponent<GameObjectTargeter>();
 		seekComponent = (Seek)GetComponent<Seek>();
 		movement = (Movement)GetComponent<Movement>();
-
-		playerTargeter.Target = GameObject.Find("Player");
+		players = new List<GameObject>(GameObject.FindGameObjectsWithTag("Player"));
 
 		ResetEatingVars();
 
@@ -110,13 +111,16 @@ public class FlyStateMachine : MonoBehaviour {
 
 	// Determine the flies current state.
 	private void UpdateState() {
-		float distanceFromPlayer;
-		Vector2? playerPos = playerTargeter.GetTarget();
-		
-		if (playerPos == null) {
-			distanceFromPlayer = float.MaxValue;
-		} else {
-			distanceFromPlayer = ((Vector2)(transform.position) - (Vector2)(playerTargeter.GetTarget())).magnitude;
+
+		float distanceFromPlayer = float.MaxValue;
+		float testDistanceFromPlayer;
+
+		foreach (GameObject player in players) {
+			testDistanceFromPlayer = ((Vector2)(transform.position) - (Vector2)(player.transform.position)).magnitude;
+			if (testDistanceFromPlayer < distanceFromPlayer) {
+				distanceFromPlayer = testDistanceFromPlayer;
+				playerTargeter.Target = player;
+			}
 		}
 
 		float distanceFromAppleTree = Vector2.Distance((Vector2)appleTreeTargeter.GetTarget(), (Vector2)transform.position);
@@ -126,7 +130,7 @@ public class FlyStateMachine : MonoBehaviour {
 		}
 
 		// Only if the player is close and not underwater.
-		if (distanceFromPlayer < fleeDistance && !PlayerInfo.IsUnderwater()) {
+		if (distanceFromPlayer < fleeDistance && !playerTargeter.Target.GetComponent<PlayerInfo>().IsUnderwater()) {
 			if (currentState != State.Fleeing && !SoundSource.isPlaying) { // Don't stop/start the sound every time a new fly flees
 				SoundSource.clip = FleeSound;
 				SoundSource.Play();

@@ -404,7 +404,7 @@ public class PredatorStateMachine : MonoBehaviour
 				      || (((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude < GiveUpDistance)
 				      || (chaseTimeLeft > 0.0f))
 
-				    && !PlayerInfo.IsUnderwater())
+				    && !Player.GetComponent<PlayerInfo>().IsUnderwater())
 				{
 					currentState = State.Chasing;	
 				} 

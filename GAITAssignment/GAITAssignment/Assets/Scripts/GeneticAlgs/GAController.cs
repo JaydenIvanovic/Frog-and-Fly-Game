@@ -111,9 +111,9 @@ public abstract class GAController<T> : MonoBehaviour, GeneticAlgorithm_I<T>
 				child[1] = CopyChromosome(parent2);
 			}
 
-			if (child[0].Equals(child[1])) {
-				Debug.Log("Children are equal!");
-			}
+			//if (child[0].Equals(child[1])) {
+			//	Debug.Log("Children are equal!");
+			//}
 
 			// Mutation step.
 			Mutate(child[0]);

@@ -19,15 +19,26 @@ public class NeuralNetSteering : SteeringBehaviour {
 	public bool loadFromFile = false; 
 	public string fileName;
 
+	public float ShotReloadTime = 1.0f;
+	public float ShotSpinTime = 0.3f;
+	private float shotTimer = 999.0f;
+
 	private float updateTimer = 0.0f;
 	public List<float> netInput;
 	public float[] netInputArr;
 	private float[] obstacleInfo;
 	private CircleCollider2D circleCollider;
+	private Movement movement;
+	private Transform mouth;
+	private Mouth mouthScript;
 	//private float conservativeMultiplier = 1.5f;
 
 	void Awake()
 	{
+		movement = GetComponent<Movement>();
+		mouthScript = GetComponentInChildren<Mouth>();
+		mouth = mouthScript.transform;
+
 		// Get the physical collider (not the trigger)
 		CircleCollider2D[] circleColliders = GetComponents<CircleCollider2D>();
 		foreach (CircleCollider2D cc in circleColliders) {
@@ -43,6 +54,12 @@ public class NeuralNetSteering : SteeringBehaviour {
 	
 	public void Update() {
 
+		shotTimer += Time.deltaTime;
+
+		if (shotTimer > ShotSpinTime) {
+			movement.StopOverrideRotation();
+		}
+
 		if (obstacleInfo != null) {
 			Debug.DrawLine((Vector2)(transform.position), (Vector2)(transform.position) + new Vector2(obstacleInfo[0], 0.0f), Color.yellow);
 			Debug.DrawLine((Vector2)(transform.position), (Vector2)(transform.position) + new Vector2(0.0f, obstacleInfo[1]), Color.yellow);
@@ -54,6 +71,30 @@ public class NeuralNetSteering : SteeringBehaviour {
 
 			netInput = new List<float>();
 
+			// Nearest lake
+			if (neuralNet.FeedLakePosition) {
+				
+				PriorityQueue<float, GameObject> lakesPQ = manager.getLakeMarkersSortedByDistance((Vector2)(transform.position));
+				
+				if (lakesPQ.Count > 0) {
+					
+					GameObject lake = lakesPQ.DequeueValue();
+					
+					Vector2 vecToLake = (Vector2)(lake.transform.position) - (Vector2)(transform.position);
+					float lakeInputMag = Mathf.Exp(-vecToLake.magnitude / 10.0f); // TO DO: Fix these magic numbers throughout
+					Vector2 lakeInputVec = vecToLake.normalized * lakeInputMag;
+					netInput.Add(lakeInputVec.x);
+					netInput.Add(lakeInputVec.y);
+					//Debug.DrawLine((Vector2)(transform.position), (Vector2)(transform.position) + vecToLake, Color.cyan);
+					
+				} else {
+					
+					netInput.Add(0.0f);
+					netInput.Add(0.0f);
+				}
+			}
+
+			// Flies
 			List<GameObject> closestFlies = manager.getFliesSortedByDistance((Vector2)(transform.FindChild("Mouth").position));
 			GameObject fly = null;
 
@@ -77,31 +118,7 @@ public class NeuralNetSteering : SteeringBehaviour {
 				}
 			}
 
-			/*
-			// Nearest fly position
-			if (tempFly != null) {
-
-				// If there was no previous fly selected then take the one we just found
-				if (selectedFly == null) {
-					selectedFly = tempFly;
-				}
-
-				Vector2 vecToTempFly = (Vector2)(tempFly.transform.position) - (Vector2)(transform.FindChild("Mouth").position);
-				Vector2 vecToSelectedFly = (Vector2)(selectedFly.transform.position) - (Vector2)(transform.FindChild("Mouth").position);
-
-				if ((vecToTempFly.magnitude * (1.0f + InputFlickerPreventionFactor)) < vecToSelectedFly.magnitude) {
-					selectedFly = tempFly;
-					vecToSelectedFly = vecToTempFly;
-				}
-
-				// Make it so that closer flies send a stronger signal, but the signal is always between 0 and 1
-				// TO DO: Could we make the frog evolve the factor in the exponent?
-				float flyInputMag = Mathf.Exp(-vecToSelectedFly.magnitude / 10.0f);
-				flyInputVec = vecToSelectedFly.normalized * flyInputMag;
-			}
-			*/
-
-			// Snake position
+			// Snakes
 			List<GameObject> closestSnakes = manager.getSnakesSortedByDistance((Vector2)(transform.position));
 			GameObject snake = null;
 			
@@ -115,6 +132,14 @@ public class NeuralNetSteering : SteeringBehaviour {
 					Vector2 snakeInputVec = vecToSnake.normalized * snakeInputMag;
 					netInput.Add(snakeInputVec.x);
 					netInput.Add(snakeInputVec.y);
+
+					// Fire a bubble if the closest snake is within range
+					Vector2 vecToSnakeFromMouth = (Vector2)(snake.transform.position) - (Vector2)(mouth.position);
+					if (i == 0 && (shotTimer > ShotReloadTime) && (vecToSnakeFromMouth.magnitude < 5.0f)) {
+						if (mouthScript.SprayWater(true, (Vector2?)(snake.transform.position))) {
+							shotTimer = 0.0f;
+						}
+					}
 					
 					// ith closest snake couldn't be found, so just return zero input
 				} else {
@@ -123,6 +148,8 @@ public class NeuralNetSteering : SteeringBehaviour {
 				}
 			}
 
+
+			// Obstacles
 			PriorityQueue<float, GameObject> obstaclesPQ = manager.getObstaclesSortedByDistance((Vector2)(transform.position));
 			GameObject obstacle = null;
 			
@@ -145,6 +172,7 @@ public class NeuralNetSteering : SteeringBehaviour {
 				}
 			}
 
+			// Another obstacle input method (TO DO: Maybe get rid of this or make it better?)
 			if (neuralNet.FeedObstacleInfo) {
 
 				obstacleInfo = GetObstacleInfo();
@@ -154,9 +182,8 @@ public class NeuralNetSteering : SteeringBehaviour {
 			}
 
 			if (neuralNet.FeedOwnVelocity) {
-				// Squash between -1 and 1
-				netInput.Add(2.0f / (1.0f + Mathf.Exp(-rigidbody2D.velocity.x)) - 1.0f);
-				netInput.Add(2.0f / (1.0f + Mathf.Exp(-rigidbody2D.velocity.y)) - 1.0f);
+				netInput.Add(rigidbody2D.velocity.x);
+				netInput.Add(rigidbody2D.velocity.y);
 			}
 
 			netInputArr = netInput.ToArray();
@@ -246,6 +273,10 @@ public class NeuralNetSteering : SteeringBehaviour {
 
 	public override Vector2 GetSteering()
 	{
+		if (shotTimer < ShotSpinTime) {
+			return Vector2.zero;
+		}
+
 		if ((netInputArr != null) && (netInputArr.Length != 0)) {
 			float[] netOutput = neuralNet.CalculateOutput(netInputArr);
 			Vector2 steering = new Vector2(netOutput[0], netOutput[1]);
