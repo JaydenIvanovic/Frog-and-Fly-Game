@@ -34,7 +34,7 @@ public class PlayerInfo : MonoBehaviour {
 	private int health;
 	private static int requiredFlies;
 	private float invulnerableTime;
-	private static bool _isUnderwater;
+	private bool isUnderwater;
 
 	private AStarTargeter targeter;
 	private static AudioSource SoundSource;
@@ -129,7 +129,7 @@ public class PlayerInfo : MonoBehaviour {
 		snakesDrowned = 0;
 		invulnerableTime = 0.0f;
 		waterLevel = 100f;
-		_isUnderwater = false;
+		isUnderwater = false;
 	}
 
 	public int GetHealth() {
@@ -184,14 +184,14 @@ public class PlayerInfo : MonoBehaviour {
 		waterLevel -= BUBBLE_COST;
 	}
 
-	public static void SetUnderwater(bool isUnderwater) {
+	public void SetUnderwater(bool isUnderwater) {
 
-		if (_isUnderwater!= isUnderwater) {
+		if (isUnderwater!= this.isUnderwater) {
 			SoundSource.clip = _SplashSound;
 			SoundSource.Play();
 		}
 
-		_isUnderwater = isUnderwater;
+		this.isUnderwater = isUnderwater;
 	}
 
 	private static PlayerInfo getMainFrogInfo() {
@@ -252,8 +252,8 @@ public class PlayerInfo : MonoBehaviour {
 		invulnerableTime = InvulnerableTimeWhenHit;
 	}
 
-	public static bool IsUnderwater() {
-		return _isUnderwater;
+	public bool IsUnderwater() {
+		return isUnderwater;
 	}
 
 	public void OnTriggerStay2D(Collider2D other) 
@@ -284,7 +284,7 @@ public class PlayerInfo : MonoBehaviour {
 		}
 
 		// Hide tongue if underwater
-		if (_isUnderwater) {
+		if (isUnderwater) {
 			tongueSpriteRenderer.enabled = false;
 			animator.SetBool("Underwater", true);
 		} else {
@@ -312,7 +312,7 @@ public class PlayerInfo : MonoBehaviour {
 		// If currently invulnerable, decrease invulnerable time left
 		invulnerableTime = Mathf.Max(invulnerableTime - Time.deltaTime, 0.0f);
 
-		if (_isUnderwater) {
+		if (isUnderwater) {
 			waterLevel = Mathf.Min(waterLevel + Time.deltaTime * WaterRefillRate, 100.0f);
 		} else {
 			waterLevel = Mathf.Max(waterLevel - Time.deltaTime * WaterLossRate, 0.0f);

@@ -33,7 +33,10 @@ public class PredatorStateMachine : MonoBehaviour
 	private float parentingTimer;
 	public State currentState; // Made public just for debugging purposes
 	private AudioSource SoundSource;
-	private float bubbleTimeLeft = 0.0f;
+
+	[HideInInspector]
+	public float bubbleTimeLeft = 0.0f;
+
 	private float bubbleFlickerTime = 1.0f;
 	private float bubbleFlickerFrequency = 8.0f;
 	private float chaseTimeLeft = 0.0f;
@@ -99,7 +102,7 @@ public class PredatorStateMachine : MonoBehaviour
 		timeSinceWentHome = GoHomeTimeout;
 		
 		// Ensure that the snake has someone to target and a home.
-		if (Home == null || Player == null)
+		if (!TrainingMode && (Home == null || Player == null))
 		{
 			// Place in predator hierarchy.
 			transform.parent = GameObject.Find("Predators").transform;
@@ -300,11 +303,6 @@ public class PredatorStateMachine : MonoBehaviour
 	
 	private void UpdateState()
 	{
-		if (TrainingMode) {
-			currentState = State.Chasing;
-			return;
-		}
-
 		// Transition between water and land
 		if ((((Vector2)transform.position) - lastWaterTransitionPos).magnitude > WATER_TRANSITION_DISTANCE) {
 
@@ -404,7 +402,7 @@ public class PredatorStateMachine : MonoBehaviour
 				      || (((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude < GiveUpDistance)
 				      || (chaseTimeLeft > 0.0f))
 
-				    && !PlayerInfo.IsUnderwater())
+				    && !Player.GetComponent<PlayerInfo>().IsUnderwater())
 				{
 					currentState = State.Chasing;	
 				} 

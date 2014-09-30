@@ -6,10 +6,15 @@ public class ManagePen : MonoBehaviour {
 	
 	public GameObject dumbFlyPrefab;
 	public GameObject frog;
+
+	[HideInInspector]
 	public List<GameObject> snakes;
+
 	public GameObject frogHome;
 	public GameObject flySpawnPoint;
-	public Transform obstaclesParent;
+	public List<Transform> obstaclesParents;
+	public List<Transform> lakes;
+	public Transform playerFliesParent;
 
 	public bool spawnFlies = true;
 	public int numFlies;
@@ -46,14 +51,37 @@ public class ManagePen : MonoBehaviour {
 
 		PriorityQueue<float, GameObject> pq = new PriorityQueue<float, GameObject>();
 
-		for (int i = 0; i < obstaclesParent.childCount; i++) {
-			
-			if (obstaclesParent.GetChild(i).gameObject.layer == obstacleLayerNum) {
+		foreach (Transform obstaclesParent in obstaclesParents) {
 
-				GameObject currentObstacle = obstaclesParent.GetChild(i).gameObject;
-				CircleCollider2D currentCollider = currentObstacle.GetComponent<CircleCollider2D>();
-				float distance = (position - (Vector2)(currentObstacle.transform.position)).magnitude - currentCollider.radius;
-				pq.Add(new KeyValuePair<float, GameObject>(distance, currentObstacle));
+			for (int i = 0; i < obstaclesParent.childCount; i++) {
+				
+				if (obstaclesParent.GetChild(i).gameObject.layer == obstacleLayerNum) {
+
+					GameObject currentObstacle = obstaclesParent.GetChild(i).gameObject;
+					CircleCollider2D currentCollider = currentObstacle.GetComponent<CircleCollider2D>();
+					float distance = (position - (Vector2)(currentObstacle.transform.position)).magnitude - currentCollider.radius;
+					pq.Add(new KeyValuePair<float, GameObject>(distance, currentObstacle));
+				}
+			}
+		}
+		
+		return pq;
+	}
+
+	public PriorityQueue<float, GameObject> getLakeMarkersSortedByDistance(Vector2 position) {
+		
+		PriorityQueue<float, GameObject> pq = new PriorityQueue<float, GameObject>();
+		
+		foreach (Transform lake in lakes) {
+			
+			for (int i = 0; i < lake.childCount; i++) {
+				
+				if (lake.GetChild(i).name == "PondMarker") {
+					
+					GameObject currentLake = lake.GetChild(i).gameObject;
+					float distance = (position - (Vector2)(currentLake.transform.position)).magnitude;
+					pq.Add(new KeyValuePair<float, GameObject>(distance, currentLake));
+				}
 			}
 		}
 		
@@ -68,14 +96,20 @@ public class ManagePen : MonoBehaviour {
 
 		List<GameObject> sortedFlies = new List<GameObject>();
 
-		for (int i = 0; i < transform.childCount; i++) {
+		Transform fliesParent = playerFliesParent;
 
-			if (transform.GetChild(i).tag == "Fly") {
+		if (fliesParent == null) {
+			fliesParent = transform;
+		}
 
-				GameObject currentFly = transform.GetChild(i).gameObject;
+		for (int i = 0; i < fliesParent.childCount; i++) {
+
+			if (fliesParent.GetChild(i).tag == "Fly") {
+
+				GameObject currentFly = fliesParent.GetChild(i).gameObject;
 				currentDistance = (position - (Vector2)(currentFly.transform.position)).magnitude;
 
-				for (int j = 0; j < transform.childCount; j++) {
+				for (int j = 0; j < fliesParent.childCount; j++) {
 
 					if (j >= sortedFlies.Count) {
 						sortedFlies.Insert(j, currentFly);
@@ -103,38 +137,22 @@ public class ManagePen : MonoBehaviour {
 		return sortedFlies;
 	}
 
-	public List<GameObject> getSnakesSortedByDistance(Vector2 position) {
+	public PriorityQueue<float, GameObject> getSnakesSortedByDistance(Vector2 position) {
 
-		float currentDistance;
-		float existingDistance;
-		
-		List<GameObject> sortedSnakes = new List<GameObject>();
+		PriorityQueue<float, GameObject> pq = new PriorityQueue<float, GameObject>();
 		
 		for (int i = 0; i < transform.childCount; i++) {
 
 			if (transform.GetChild(i).tag == "Predator") {
-			
 				GameObject currentSnake = transform.GetChild(i).gameObject;
-				currentDistance = (position - (Vector2)(currentSnake.transform.position)).magnitude;
-				
-				for (int j = 0; j < transform.childCount; j++) {
-					
-					if (j >= sortedSnakes.Count) {
-						sortedSnakes.Insert(j, currentSnake);
-						break;
-					}
-					
-					existingDistance = (position - (Vector2)(sortedSnakes[j].transform.position)).magnitude;
-					
-					if (currentDistance < existingDistance) {
-						sortedSnakes.Insert(j, currentSnake);
-						break;
-					}
-				}
+				float bubbleTimeLeft = Mathf.Max(0.0f, currentSnake.GetComponent<PredatorStateMachine>().bubbleTimeLeft);
+				float bubbleAdjustment = bubbleTimeLeft * frog.GetComponent<Movement>().speed;
+				float currentDistance = (position - (Vector2)(currentSnake.transform.position)).magnitude + bubbleAdjustment;
+				pq.Add(new KeyValuePair<float, GameObject>(currentDistance, currentSnake));
 			}
 		}
 		
-		return sortedSnakes;
+		return pq;
 	}
 	
 	void Update () {

@@ -92,11 +92,22 @@ public class FlyPlayerInfo : MonoBehaviour
 	private void UpdateResources()
 	{
 		foreach (GameObject resource in resourceObjects) {
+<<<<<<< HEAD
 				if (Vector2.Distance(resource.transform.position, transform.position) < interactionDistance) {
 					if (resource.tag == "FlowerTree")
 						resource1 = Mathf.Clamp(resource1 + Time.deltaTime * resourceIncrement, 0f, maxResource);
 					else if (resource.tag == "AppleTree")
 						resource2 = Mathf.Clamp(resource2 + Time.deltaTime * resourceIncrement, 0f, maxResource);
+=======
+			foreach(GameObject fly in flies) {
+				if (fly != null) {
+					if (Vector2.Distance(resource.transform.position, fly.transform.position) < interactionDistance) {
+						if (resource.tag == "FlowerTree")
+							resource1 = Mathf.Clamp(resource1 + Time.deltaTime * resourceIncrement, 0f, maxResource);
+						else if (resource.tag == "AppleTree")
+							resource2 = Mathf.Clamp(resource2 + Time.deltaTime * resourceIncrement, 0f, maxResource);
+					}
+>>>>>>> 8e388515b6408c7dfe8b408940d18a7c4e42b551
 				}
 		}
 	}
@@ -105,6 +116,21 @@ public class FlyPlayerInfo : MonoBehaviour
 	// the main tree to start updating the score from resources.
 	private void UpdateScore()
 	{
+<<<<<<< HEAD
+=======
+		bool allHome = true;
+
+		// Make sure all flies are home.
+		foreach(GameObject fly in flies) {
+			if (fly != null) {
+				if (Vector2.Distance(scoringLocation.transform.position, fly.transform.position) > scoringInteractionDistance) {
+					allHome = false;
+					break;
+				}
+			}
+		}
+
+>>>>>>> 8e388515b6408c7dfe8b408940d18a7c4e42b551
 		// Start scoring from the resources earned.
 		if (Vector2.Distance(scoringLocation.transform.position, transform.position) < scoringInteractionDistance) {
 			float oldResource1 = resource1; 
