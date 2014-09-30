@@ -119,15 +119,16 @@ public class NeuralNetSteering : SteeringBehaviour {
 			}
 
 			// Snakes
-			List<GameObject> closestSnakes = manager.getSnakesSortedByDistance((Vector2)(transform.position));
-			GameObject snake = null;
+			PriorityQueue<float, GameObject> snakesPQ = manager.getSnakesSortedByDistance((Vector2)(transform.position));
 			
 			for (int i = 0; i < neuralNet.NumSnakePositions; i++) {
 				
-				if (closestSnakes.Count > i) {
-					
-					snake = closestSnakes[i];
-					Vector2 vecToSnake = (Vector2)(snake.transform.position) - (Vector2)(transform.position);
+				if (snakesPQ.Count > i) {
+
+					KeyValuePair<float, GameObject> snakeDistancePair = snakesPQ.Dequeue();
+
+					GameObject snake = snakeDistancePair.Value;
+					Vector2 vecToSnake = ((Vector2)(snake.transform.position) - (Vector2)(transform.position)).normalized * snakeDistancePair.Key;
 					float snakeInputMag = Mathf.Exp(-vecToSnake.magnitude / 10.0f);
 					Vector2 snakeInputVec = vecToSnake.normalized * snakeInputMag;
 					netInput.Add(snakeInputVec.x);
@@ -135,7 +136,7 @@ public class NeuralNetSteering : SteeringBehaviour {
 
 					// Fire a bubble if the closest snake is within range
 					Vector2 vecToSnakeFromMouth = (Vector2)(snake.transform.position) - (Vector2)(mouth.position);
-					if (i == 0 && (shotTimer > ShotReloadTime) && (vecToSnakeFromMouth.magnitude < 5.0f)) {
+					if (i == 0 && (shotTimer > ShotReloadTime) && (snakeDistancePair.Key < neuralNet.getShotDistance())) {
 						if (mouthScript.SprayWater(true, (Vector2?)(snake.transform.position))) {
 							shotTimer = 0.0f;
 						}
@@ -184,6 +185,11 @@ public class NeuralNetSteering : SteeringBehaviour {
 			if (neuralNet.FeedOwnVelocity) {
 				netInput.Add(rigidbody2D.velocity.x);
 				netInput.Add(rigidbody2D.velocity.y);
+			}
+
+			if (neuralNet.FeedWaterLevel) {
+				// Rescale to [0, 1] so it doesn't dominate other inputs
+				netInput.Add(GetComponent<PlayerInfo>().waterLevel / 100.0f);
 			}
 
 			netInputArr = netInput.ToArray();

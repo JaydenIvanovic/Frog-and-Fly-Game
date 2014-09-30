@@ -24,7 +24,7 @@ public class GAFrogController : GAController<NeuralNet> {
 		public float timeScale = 3.0f;
 		public bool spawnFlies = true;
 		public bool flyMovement = false;
-		public bool snakesActive = false;
+		public bool spawnSnakes = false;
 		public bool frogObstacleAvoidance = true;
 		public float discardThreshold = 2.9f;
 		public ParentSelectionMode parentSelectionMode = ParentSelectionMode.Proportional;
@@ -50,12 +50,14 @@ public class GAFrogController : GAController<NeuralNet> {
 		public bool FeedObstacleInfo = true;
 		public bool FeedOwnVelocity = true;
 		public bool FeedLakePosition = true;
+		public bool FeedWaterLevel = true;
 		public NeuralNet.InputTransformation inputTransformation = NeuralNet.InputTransformation.RotationSmoothing;
 		public int inputSmoothingSegments = 30;
 
 		public int HiddenNeurons = 4;
 	}
 
+	public GameObject trainingSnakePrefab;
 	public string LoadPath = "";
 	public int FrogsOnScreen = 8;
 	public int CurrentEpoch = 0;
@@ -176,6 +178,7 @@ public class GAFrogController : GAController<NeuralNet> {
 				                             currentParams.neuralNetSettings.FeedObstacleInfo,
 				                             currentParams.neuralNetSettings.FeedOwnVelocity,
 				                             currentParams.neuralNetSettings.FeedLakePosition,
+				                             currentParams.neuralNetSettings.FeedWaterLevel,
 				                             currentParams.neuralNetSettings.HiddenNeurons,
 				                             currentParams.neuralNetSettings.inputTransformation,
 				                             currentParams.neuralNetSettings.inputSmoothingSegments));
@@ -189,7 +192,7 @@ public class GAFrogController : GAController<NeuralNet> {
 		WriteToLog("Batch time: " + currentParams.batchTime);
 		WriteToLog("Frog obstacle avoidance: " + currentParams.frogObstacleAvoidance);
 		WriteToLog("Parent selection mode: " + currentParams.parentSelectionMode.ToString());
-		WriteToLog("Snakes: " + currentParams.snakesActive);
+		WriteToLog("Snakes: " + currentParams.spawnSnakes);
 		WriteToLog("Flies: " + currentParams.spawnFlies);
 		WriteToLog("Fly movement: " + currentParams.flyMovement);
 		WriteToLog("");
@@ -209,6 +212,8 @@ public class GAFrogController : GAController<NeuralNet> {
 			IncrementPopulationIndex();
 		}
 
+		ResetSnakes();
+
 		UpdatePens();
 	}
 
@@ -216,6 +221,7 @@ public class GAFrogController : GAController<NeuralNet> {
 		currentPopIndex = (currentPopIndex + 1) % populationSize;
 	}
 
+	// TO DO: It's probably pretty dumb to have this called every frame - fix
 	private void UpdatePens() {
 		
 		for (int i = 0; i < penManagers.Count; i++) {
@@ -223,14 +229,8 @@ public class GAFrogController : GAController<NeuralNet> {
 			ManagePen manager = penManagers[i].GetComponent<ManagePen>();
 
 			manager.spawnFlies = currentParams.spawnFlies;
-
-			foreach (GameObject snake in manager.snakes) {
-				if (snake != null) {
-					snake.SetActive(currentParams.snakesActive);
-				}
-			}
 		}
-
+	
 		GameObject[] flies = GameObject.FindGameObjectsWithTag("Fly");
 
 		foreach (GameObject fly in flies) {
@@ -242,6 +242,47 @@ public class GAFrogController : GAController<NeuralNet> {
 				}
 			}
 		} 
+	}
+
+	public void ResetSnakes() {
+
+		// Respawn snakes if necessary
+		if (currentParams.spawnSnakes) {
+
+			for (int i = 0; i < penManagers.Count; i++) {
+				
+				List<GameObject> childSnakes = new List<GameObject>();
+				Hashtable snakeHomes = new Hashtable();
+				
+				foreach (Transform child in penManagers[i].transform) {
+					if (child.tag == "Predator") {
+						childSnakes.Add(child.gameObject);
+					} else if (child.name.Contains("SnakeHome")) {
+						snakeHomes.Add(child.gameObject, false);
+					}
+				}
+
+				penManagers[i].GetComponent<ManagePen>().snakes = new List<GameObject>(childSnakes);
+				
+				foreach (GameObject snake in childSnakes) {
+					GameObject snakeHome = snake.GetComponent<PredatorStateMachine>().Home;
+					if (snakeHomes.Contains(snakeHome)) {
+						snakeHomes[snakeHome] = true;
+					}
+				}
+				
+				foreach (object o in snakeHomes.Keys) {
+					GameObject snakeHome = (GameObject)o;
+					if ((bool)snakeHomes[o] == false) {
+						GameObject snake = Instantiate(trainingSnakePrefab, snakeHome.transform.position, Quaternion.identity) as GameObject;
+						snake.transform.parent = penManagers[i].transform;
+						snake.GetComponent<PredatorStateMachine>().Home = snakeHome;
+						snake.GetComponent<PredatorStateMachine>().Player = penManagers[i].GetComponent<ManagePen>().frog;
+						penManagers[i].GetComponent<ManagePen>().snakes.Add(snake);
+					}
+				}
+			}
+		}
 	}
 	
 	public void Update() {
@@ -262,7 +303,9 @@ public class GAFrogController : GAController<NeuralNet> {
 			// Snake distance score
 			try {
 				foreach (GameObject snake in penManagers[i].GetComponent<ManagePen>().snakes) {
-					net.snakeDistScore += Time.deltaTime * Mathf.Min(1.75f, ((Vector2)(snake.transform.position) - (Vector2)(penManagers[i].GetComponent<ManagePen>().frog.transform.position)).magnitude);
+					if (snake != null) {
+						net.snakeDistScore += Time.deltaTime * Mathf.Min(1.75f, ((Vector2)(snake.transform.position) - (Vector2)(penManagers[i].GetComponent<ManagePen>().frog.transform.position)).magnitude);
+					}
 				}
 			} catch (MissingReferenceException) {
 				// Don't do anything - I was getting a really annoying null reference error that wouldn't go away even when I checked for nulls!
@@ -272,6 +315,8 @@ public class GAFrogController : GAController<NeuralNet> {
 		if (updateTimer > currentParams.batchTime) {
 
 			CurrentBatch++;
+
+			ResetSnakes();
 
 			for (int i = 0; i < penManagers.Count; i++) {
 				penManagers[i].GetComponent<ManagePen>().currentSpawnPosition = 0;
@@ -291,27 +336,32 @@ public class GAFrogController : GAController<NeuralNet> {
 
 			for (int i = 1; i <= frogs.Count; i++) {
 
-				int popIndex = (currentPopIndex - i + populationSize) % populationSize; // We have to count backwards from currentPopIndex using modular arithmetic to find the neural nets just used
-				NeuralNet net = population[popIndex];
-				PlayerInfo frogInfo = net.ParentFrog.GetComponent<PlayerInfo>();
+				//try {
+					int popIndex = (currentPopIndex - i + populationSize) % populationSize; // We have to count backwards from currentPopIndex using modular arithmetic to find the neural nets just used
+					NeuralNet net = population[popIndex];
+					PlayerInfo frogInfo = net.ParentFrog.GetComponent<PlayerInfo>();
 
-				//net.fitness = 1.0f * (float)(frogInfo.score) + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken)) + 0.25f * net.snakeDistScore;
-				net.fitness = 1.0f * (float)(frogInfo.score) + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken)) + 0.002f * net.waterScore;
+					//net.fitness = 1.0f * (float)(frogInfo.score) + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken)) + 0.25f * net.snakeDistScore;
+					net.fitness = 1.0f * (float)(frogInfo.score) + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken)) + 0.004f * net.waterScore;
 
-				//Debug.Log("Fitness is " + net.fitness + ", water score is " + 0.002f * net.waterScore);
+					//Debug.Log("Fitness is " + net.fitness + ", water score is " + (0.004f * net.waterScore) + ", health score is " + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken)));
 
-				net.waterScore = 0.0f;
-				net.snakeDistScore = 0.0f;
+					net.waterScore = 0.0f;
+					net.snakeDistScore = 0.0f;
 
-				if (net.fitness <= currentParams.discardThreshold) {
-					net.RandomiseWeights();
-					resetCount++;
-				}
+					if (net.fitness <= currentParams.discardThreshold) {
+						net.RandomiseWeights();
+						resetCount++;
+					}
 
-				if (net.fitness > bestFitnessSoFar) {
-					bestFitnessSoFar = net.fitness;
-					bestNetSoFar = net;
-				}
+					if (net.fitness > bestFitnessSoFar) {
+						bestFitnessSoFar = net.fitness;
+						bestNetSoFar = net;
+					}
+				//} catch (MissingReferenceException) {
+					// Ugh, dunno what is causing the very occasional error here
+					// TO DO: Fix!
+				//}
 			}
 
 			if (currentParams.verbose) {
@@ -339,12 +389,14 @@ public class GAFrogController : GAController<NeuralNet> {
 
 				// Ensure that the snakes are targeting the right frogs
 				foreach (GameObject snake in penManagers[i].GetComponent<ManagePen>().snakes) {
-					snake.GetComponent<GameObjectTargeter>().Target = frogs[i];
-					snake.GetComponent<HuntTargeter>().Target = frogs[i];
-					snake.GetComponent<PredatorStateMachine>().Player = frogs[i];
-					snake.transform.position = new Vector3(snake.GetComponent<PredatorStateMachine>().Home.transform.position.x,
-					                                       snake.GetComponent<PredatorStateMachine>().Home.transform.position.y,
-					                                       snake.transform.position.z);
+					if (snake != null) {
+						snake.GetComponent<GameObjectTargeter>().Target = frogs[i];
+						snake.GetComponent<HuntTargeter>().Target = frogs[i];
+						snake.GetComponent<PredatorStateMachine>().Player = frogs[i];
+						snake.transform.position = new Vector3(snake.GetComponent<PredatorStateMachine>().Home.transform.position.x,
+						                                       snake.GetComponent<PredatorStateMachine>().Home.transform.position.y,
+						                                       snake.transform.position.z);
+					}
 				}
 
 				// Find a new fly to select on the next update

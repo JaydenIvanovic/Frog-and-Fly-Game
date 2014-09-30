@@ -36,6 +36,7 @@ public class NeuralNet : System.ICloneable {
 	public bool FeedObstacleInfo = true;
 	public bool FeedOwnVelocity = true;
 	public bool FeedLakePosition = true;
+	public bool FeedWaterLevel = true;
 	public InputTransformation inputTransformation;
 	public int inputSmoothingSegments = 30;
 	
@@ -44,20 +45,31 @@ public class NeuralNet : System.ICloneable {
 	
 	public float[][] neuronValues = new float[3][]; // For storing calculated values
 	public float[][] weights = new float[2][];
+
+	//[HideInInspector]
+	public float shotDistanceGene;
+
+	public float shotDistanceMultiplier = 3.0f;
 	
 	public List<float> weightsAsVector; // Useful to have the weights in this format for mutating
 	public List<int> crossOverPoints;
 	
 	private float previousRotation = 0.0f;
+
+	public float getShotDistance() {
+		return shotDistanceGene * shotDistanceMultiplier;
+	}
 	
 	public System.Object Clone() {
 		
 		NeuralNet clone = new NeuralNet(NumFlyPositions, NumSnakePositions, NumObstaclePositions, FeedObstacleInfo, FeedOwnVelocity,
-		                                FeedLakePosition, hiddenLayerNeurons, inputTransformation, inputSmoothingSegments);
+		                                FeedLakePosition, FeedWaterLevel, hiddenLayerNeurons, inputTransformation, inputSmoothingSegments);
 
+		clone.ParentFrog = ParentFrog;
 		clone.defaultInputExponent = defaultInputExponent;
 		clone.defaultOutputExponent = defaultOutputExponent;
 		clone.weights = new float[][]{(float[])(weights[0].Clone()), (float[])(weights[1].Clone())}; // Deep copy!
+		clone.shotDistanceGene = shotDistanceGene;
 		clone.UpdateWeightsAsVector();
 		clone.CalculateCrossOverIndices();
 
@@ -77,6 +89,9 @@ public class NeuralNet : System.ICloneable {
 			weights[1][i] = weightsAsVector[counter];
 			counter++;
 		}
+
+		shotDistanceGene = weightsAsVector[counter];
+		counter++;
 	}
 	
 	public void UpdateWeightsAsVector() {
@@ -89,6 +104,8 @@ public class NeuralNet : System.ICloneable {
 		for (int i = 0; i < weights[1].Length; i++) {
 			weightsAsVector.Add(weights[1][i]);
 		}
+
+		weightsAsVector.Add(shotDistanceGene);
 	}
 	
 	public void RandomiseWeights() {
@@ -115,12 +132,15 @@ public class NeuralNet : System.ICloneable {
 				weights[1][i * (hiddenLayerNeurons + 1) + j + 1] = Random.value - 0.5f;
 			}
 		}
+
+		// Start with a value between 0.5 and 1.5
+		shotDistanceGene = 0.5f + Random.value;
 		
 		UpdateWeightsAsVector();
 	}
 	
 	public NeuralNet(int NumFlyPositions, int NumSnakePositions, int NumObstaclePositions, bool FeedObstacleInfo, bool FeedOwnVelocity,
-	                 bool FeedLakePosition, int hiddenLayerNeurons, InputTransformation inputTransformation, int inputSmoothingSegments) {
+	                 bool FeedLakePosition, bool FeedWaterLevel, int hiddenLayerNeurons, InputTransformation inputTransformation, int inputSmoothingSegments) {
 
 		this.NumFlyPositions = NumFlyPositions;
 		this.NumSnakePositions = NumSnakePositions;
@@ -128,7 +148,8 @@ public class NeuralNet : System.ICloneable {
 		this.FeedObstacleInfo = FeedObstacleInfo;
 		this.FeedOwnVelocity = FeedOwnVelocity;
 		this.FeedLakePosition = FeedLakePosition;
-		this.inputNeurons = (NumFlyPositions + NumSnakePositions + NumObstaclePositions) * 2 + (FeedObstacleInfo ? 2 : 0) + (FeedOwnVelocity ? 2 : 0) + (FeedLakePosition ? 2 : 0);
+		this.FeedWaterLevel = FeedWaterLevel;
+		this.inputNeurons = (NumFlyPositions + NumSnakePositions + NumObstaclePositions) * 2 + (FeedObstacleInfo ? 2 : 0) + (FeedOwnVelocity ? 2 : 0) + (FeedLakePosition ? 2 : 0) + (FeedWaterLevel ? 1 : 0);
 		this.hiddenLayerNeurons = hiddenLayerNeurons;
 		this.outputNeurons = 2;
 		this.inputTransformation = inputTransformation;
@@ -145,7 +166,7 @@ public class NeuralNet : System.ICloneable {
 	}
 
 	public float[] CalculateOutputNoSymmetry(float[] inputValues) {
-		
+	
 		float[] result = new float[outputNeurons];
 		
 		if (inputValues.Length != inputNeurons) {
@@ -201,7 +222,8 @@ public class NeuralNet : System.ICloneable {
 		if (inputTransformation == InputTransformation.Normalise) {
 
 			// Rotate the input to the frog's frame of reference
-			for (int i = 0; i < inputValues.Length; i += 2) {
+			// Don't rotate the water level since it's a scalar!
+			for (int i = 0; i < (inputValues.Length - (FeedWaterLevel ? 1 : 0)); i += 2) {
 				Vector2 unrotatedVec = new Vector2(inputValues[i], inputValues[i + 1]);
 				//Debug.DrawLine((Vector2)(ParentFrog.transform.position), (Vector2)(ParentFrog.transform.position) + unrotatedVec, Color.cyan);
 				Vector2 rotatedVec = MathsHelper.rotateVector(unrotatedVec, -frogRotation);
@@ -242,12 +264,18 @@ public class NeuralNet : System.ICloneable {
 			for (int segment = 0; segment < numSegments; segment++) {
 
 				// Rotate the input
+				// Don't rotate the water level since it's a scalar!
 				float[] rotatedInput = new float[inputValues.Length];
-				for (int i = 0; i < inputValues.Length; i += 2) {
+				for (int i = 0; i < (inputValues.Length - (FeedWaterLevel ? 1 : 0)); i += 2) {
 					Vector2 vec = new Vector2(inputValues[i], inputValues[i + 1]);
 					vec = MathsHelper.rotateVector(vec, (float)segment * 360.0f / (float)numSegments);
 					rotatedInput[i] = vec.x;
 					rotatedInput[i + 1] = vec.y;
+				}
+
+				// Set the water level
+				if (FeedWaterLevel) {
+					rotatedInput[rotatedInput.Length - 1] = inputValues[inputValues.Length - 1];
 				}
 
 				// Rotate the output back to the original frame of reference
