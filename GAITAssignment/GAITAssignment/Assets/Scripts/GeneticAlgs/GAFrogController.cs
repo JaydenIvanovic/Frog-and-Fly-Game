@@ -4,9 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
-// TO DO:
-// I'm not sure if we really need constructors - Unity likes you to use Awake() / Start() instead
-
 public class GAFrogController : GAController<NeuralNet> {
 
 	public enum ParentSelectionMode
@@ -74,6 +71,7 @@ public class GAFrogController : GAController<NeuralNet> {
 	private string saveDataPath;
 
 	private List<GameObject> penManagers;
+	private List<ManagePen> penManagerScripts;
 	private List<GameObject> frogs;
 	
 	// Defaults for mutation and crossover rates are as recommended in 
@@ -143,9 +141,11 @@ public class GAFrogController : GAController<NeuralNet> {
 	public void Awake() {
 
 		penManagers = new List<GameObject>(GameObject.FindGameObjectsWithTag("PenManager"));
-
+		penManagerScripts = new List<ManagePen>();
 		frogs = new List<GameObject>();
+
 		for (int i = 0; i < penManagers.Count; i++) {
+			penManagerScripts.Add(penManagers[i].GetComponent<ManagePen>());
 			frogs.Add(penManagers[i].GetComponent<ManagePen>().frog);
 		}
 
@@ -213,35 +213,18 @@ public class GAFrogController : GAController<NeuralNet> {
 		}
 
 		ResetSnakes();
-
-		UpdatePens();
+		ResetPens();
 	}
 
 	public void IncrementPopulationIndex() {
 		currentPopIndex = (currentPopIndex + 1) % populationSize;
 	}
-
-	// TO DO: It's probably pretty dumb to have this called every frame - fix
-	private void UpdatePens() {
-		
-		for (int i = 0; i < penManagers.Count; i++) {
-			
-			ManagePen manager = penManagers[i].GetComponent<ManagePen>();
-
-			manager.spawnFlies = currentParams.spawnFlies;
-		}
 	
-		GameObject[] flies = GameObject.FindGameObjectsWithTag("Fly");
-
-		foreach (GameObject fly in flies) {
-			if (fly != null) {
-				if (!currentParams.spawnFlies) {
-					Destroy(fly);
-				} else {
-					fly.GetComponent<Movement>().speed = (currentParams.flyMovement ? 3.0f : 0.0f);
-				}
-			}
-		} 
+	private void ResetPens() {
+		for (int i = 0; i < penManagerScripts.Count; i++) {
+			penManagerScripts[i].spawnFlies = currentParams.spawnFlies;
+			penManagerScripts[i].flyMovement = currentParams.flyMovement;
+		}
 	}
 
 	public void ResetSnakes() {
@@ -262,7 +245,7 @@ public class GAFrogController : GAController<NeuralNet> {
 					}
 				}
 
-				penManagers[i].GetComponent<ManagePen>().snakes = new List<GameObject>(childSnakes);
+				penManagerScripts[i].snakes = new List<GameObject>(childSnakes);
 				
 				foreach (GameObject snake in childSnakes) {
 					GameObject snakeHome = snake.GetComponent<PredatorStateMachine>().Home;
@@ -277,8 +260,8 @@ public class GAFrogController : GAController<NeuralNet> {
 						GameObject snake = Instantiate(trainingSnakePrefab, snakeHome.transform.position, Quaternion.identity) as GameObject;
 						snake.transform.parent = penManagers[i].transform;
 						snake.GetComponent<PredatorStateMachine>().Home = snakeHome;
-						snake.GetComponent<PredatorStateMachine>().Player = penManagers[i].GetComponent<ManagePen>().frog;
-						penManagers[i].GetComponent<ManagePen>().snakes.Add(snake);
+						snake.GetComponent<PredatorStateMachine>().Player = penManagerScripts[i].frog;
+						penManagerScripts[i].snakes.Add(snake);
 					}
 				}
 			}
@@ -286,10 +269,6 @@ public class GAFrogController : GAController<NeuralNet> {
 	}
 	
 	public void Update() {
-
-		//currentParams = parameters[parameterIndexToUse];
-
-		UpdatePens();
 
 		updateTimer += Time.deltaTime;
 
@@ -301,14 +280,10 @@ public class GAFrogController : GAController<NeuralNet> {
 			net.waterScore += Time.deltaTime * frogs[i].GetComponent<PlayerInfo>().waterLevel;
 
 			// Snake distance score
-			try {
-				foreach (GameObject snake in penManagers[i].GetComponent<ManagePen>().snakes) {
-					if (snake != null) {
-						net.snakeDistScore += Time.deltaTime * Mathf.Min(1.75f, ((Vector2)(snake.transform.position) - (Vector2)(penManagers[i].GetComponent<ManagePen>().frog.transform.position)).magnitude);
-					}
+			foreach (GameObject snake in penManagerScripts[i].snakes) {
+				if (snake != null) {
+					net.snakeDistScore += Time.deltaTime * Mathf.Min(1.75f, ((Vector2)(snake.transform.position) - (Vector2)(penManagers[i].GetComponent<ManagePen>().frog.transform.position)).magnitude);
 				}
-			} catch (MissingReferenceException) {
-				// Don't do anything - I was getting a really annoying null reference error that wouldn't go away even when I checked for nulls!
 			}
 		}
 		
@@ -318,8 +293,8 @@ public class GAFrogController : GAController<NeuralNet> {
 
 			ResetSnakes();
 
-			for (int i = 0; i < penManagers.Count; i++) {
-				penManagers[i].GetComponent<ManagePen>().currentSpawnPosition = 0;
+			for (int i = 0; i < penManagerScripts.Count; i++) {
+				penManagerScripts[i].currentSpawnPosition = 0;
 			}
 
 			// Reset the flies each time the frogs are reset so that we don't just end up
@@ -336,32 +311,28 @@ public class GAFrogController : GAController<NeuralNet> {
 
 			for (int i = 1; i <= frogs.Count; i++) {
 
-				//try {
-					int popIndex = (currentPopIndex - i + populationSize) % populationSize; // We have to count backwards from currentPopIndex using modular arithmetic to find the neural nets just used
-					NeuralNet net = population[popIndex];
-					PlayerInfo frogInfo = net.ParentFrog.GetComponent<PlayerInfo>();
+				int popIndex = (currentPopIndex - i + populationSize) % populationSize; // We have to count backwards from currentPopIndex using modular arithmetic to find the neural nets just used
+				NeuralNet net = population[popIndex];
+				PlayerInfo frogInfo = net.ParentFrog.GetComponent<PlayerInfo>();
 
-					//net.fitness = 1.0f * (float)(frogInfo.score) + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken)) + 0.25f * net.snakeDistScore;
-					net.fitness = 1.0f * (float)(frogInfo.score) + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken)) + 0.004f * net.waterScore;
+				//net.fitness = 1.0f * (float)(frogInfo.score) + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken)) + 0.25f * net.snakeDistScore;
+				//net.fitness = 1.0f * (float)(frogInfo.score) + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken)) + 0.002f * net.waterScore;
+				net.fitness = 1.0f * (float)(frogInfo.score) + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken));
 
-					//Debug.Log("Fitness is " + net.fitness + ", water score is " + (0.004f * net.waterScore) + ", health score is " + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken)));
+				//Debug.Log("Fitness is " + net.fitness + ", water score is " + (0.004f * net.waterScore) + ", health score is " + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken)));
 
-					net.waterScore = 0.0f;
-					net.snakeDistScore = 0.0f;
+				net.waterScore = 0.0f;
+				net.snakeDistScore = 0.0f;
 
-					if (net.fitness <= currentParams.discardThreshold) {
-						net.RandomiseWeights();
-						resetCount++;
-					}
+				if (net.fitness <= currentParams.discardThreshold) {
+					net.RandomiseWeights();
+					resetCount++;
+				}
 
-					if (net.fitness > bestFitnessSoFar) {
-						bestFitnessSoFar = net.fitness;
-						bestNetSoFar = net;
-					}
-				//} catch (MissingReferenceException) {
-					// Ugh, dunno what is causing the very occasional error here
-					// TO DO: Fix!
-				//}
+				if (net.fitness > bestFitnessSoFar) {
+					bestFitnessSoFar = net.fitness;
+					bestNetSoFar = net;
+				}
 			}
 
 			if (currentParams.verbose) {
@@ -374,21 +345,21 @@ public class GAFrogController : GAController<NeuralNet> {
 				CurrentEpoch++;
 				CurrentBatch = 0;
 				SavePopulation();
-				penManagers[0].GetComponent<ManagePen>().ResetSpawnPositions(100); // TO DO: Remove magic number
+				penManagerScripts[0].ResetSpawnPositions(100); // TO DO: Remove magic number
 			}
 
 			for (int i = 0; i < penManagers.Count; i++) {
 
 				// Move the frog back to its start position
-				frogs[i].transform.position = penManagers[i].GetComponent<ManagePen>().frogHome.transform.position;
+				frogs[i].transform.position = penManagerScripts[i].frogHome.transform.position;
 
 				frogs[i].GetComponent<NeuralNetSteering>().neuralNet = population[currentPopIndex];
 				frogs[i].GetComponent<NeuralNetSteering>().neuralNet.UpdateWeightsAsVector();
-				frogs[i].GetComponent<NeuralNetSteering>().manager = penManagers[i].GetComponent<ManagePen>();
+				frogs[i].GetComponent<NeuralNetSteering>().manager = penManagerScripts[i];
 				population[currentPopIndex].ParentFrog = frogs[i];
 
 				// Ensure that the snakes are targeting the right frogs
-				foreach (GameObject snake in penManagers[i].GetComponent<ManagePen>().snakes) {
+				foreach (GameObject snake in penManagerScripts[i].snakes) {
 					if (snake != null) {
 						snake.GetComponent<GameObjectTargeter>().Target = frogs[i];
 						snake.GetComponent<HuntTargeter>().Target = frogs[i];
@@ -617,20 +588,6 @@ public class GAFrogController : GAController<NeuralNet> {
 			}
 		}
 
-		/*
-		for (int p = 0; p < populationSize; ++p) {
-			bestIndex = 0;
-			for (int i = 1; i < copyFitness.Count; ++i) {
-				if (copyFitness[bestIndex] < copyFitness[i]) {
-					bestIndex = i;
-				}
-			}
-			sortedPop[p] = bestIndex;
-			Debug.Log(p + ", " + fitness[sortedPop[p]]);
-			copyFitness.RemoveAt(bestIndex);
-		}
-		*/
-
 		// Scale the rank according to the selective pressure parameter (2 >= SP >= 1).
 		for (int i = 0; i < populationSize; ++i) {
 			// From the paper: Genetic Algorithm Performance with Different Selection Strategies in Solving TSP
@@ -689,22 +646,6 @@ public class GAFrogController : GAController<NeuralNet> {
 		child1.LoadFromWeightsAsVector();
 		child2.LoadFromWeightsAsVector();
 
-		/*
-		for (int i = 0; i < child1.weights.Length; i++) {
-
-			for (int j = 0; j < child1.weights[i].Length; j++) {
-
-				if (counter >= crossOverPoint) {
-					tempWeight = child1.weights[i][j];
-					child1.weights[i][j] = child2.weights[i][j];
-					child2.weights[i][j] = tempWeight;
-				}
-
-				counter++;
-			}
-		}
-		*/
-
 		return new NeuralNet[]{child1, child2};
 	}
 	
@@ -726,23 +667,6 @@ public class GAFrogController : GAController<NeuralNet> {
 
 		// Apply the changes to the actual neural net
 		chromosome.LoadFromWeightsAsVector();
-
-		/*
-		for (int i = 0; i < chromosome.weights.Length; i++) {
-			
-			for (int j = 0; j < chromosome.weights[i].Length; j++) {
-				
-				if (Random.Range(0.0f, 1.0f) <= mutationRate) {
-
-					chromosome.weights[i][j] += Random.Range(-1.0f, 1.0f) * perturbationAmount;
-
-					if (currentParams.verbose) {
-						Debug.Log("Mutated " + i + ", " + j + " to " + chromosome.weights[i][j]);
-					}
-				}
-			}
-		}
-		*/
 	}
 
 	public override NeuralNet CopyChromosome(NeuralNet chromosome) {

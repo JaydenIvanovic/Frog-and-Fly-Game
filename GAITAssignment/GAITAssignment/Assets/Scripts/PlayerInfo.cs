@@ -128,7 +128,13 @@ public class PlayerInfo : MonoBehaviour {
 		eggsDestroyed = 0;
 		snakesDrowned = 0;
 		invulnerableTime = 0.0f;
-		waterLevel = 100f;
+
+		if (TrainingMode) {
+			waterLevel = 50;
+		} else {
+			waterLevel = 100f;
+		}
+
 		isUnderwater = false;
 	}
 
@@ -152,8 +158,10 @@ public class PlayerInfo : MonoBehaviour {
 
 		DamageTaken++;
 
-		SoundSource.clip = _HurtSound;
-		SoundSource.Play();
+		if (!TrainingMode) {
+			SoundSource.clip = _HurtSound;
+			SoundSource.Play();
+		}
 
 		if(health == 0) {
 			Application.LoadLevel (deathScreen);
@@ -164,8 +172,10 @@ public class PlayerInfo : MonoBehaviour {
 
 		score++;
 		tongueAnimator.SetTrigger("Eating");
-		SoundSource.clip = _EatSound;
-		SoundSource.Play();
+		if (!TrainingMode) {
+			SoundSource.clip = _EatSound;
+			SoundSource.Play();
+		}
 
 		if (IsMainFrog && (score >= requiredFlies)) {
 			Application.LoadLevel (winScreen);
@@ -186,7 +196,7 @@ public class PlayerInfo : MonoBehaviour {
 
 	public void SetUnderwater(bool isUnderwater) {
 
-		if (isUnderwater!= this.isUnderwater) {
+		if (!TrainingMode && (isUnderwater!= this.isUnderwater)) {
 			SoundSource.clip = _SplashSound;
 			SoundSource.Play();
 		}

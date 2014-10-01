@@ -232,8 +232,10 @@ public class PredatorStateMachine : MonoBehaviour
 				if (!soundPlaying) {
 					soundPlaying = true;
 					soundWasPlaying = true;
-					SoundSource.clip = AttackSound;
-					SoundSource.Play();
+					if (!TrainingMode) {
+						SoundSource.clip = AttackSound;
+						SoundSource.Play();
+					}
 				}
 				chaseTimeLeft = MinChaseTime;
 			}
@@ -313,8 +315,10 @@ public class PredatorStateMachine : MonoBehaviour
 				if (!soundPlaying) {
 					soundPlaying = true;
 					soundWasPlaying = true;
-					SoundSource.clip = SplashSound;
-					SoundSource.Play();
+					if (!TrainingMode) {
+						SoundSource.clip = SplashSound;
+						SoundSource.Play();
+					}
 				}
 			}
 
@@ -326,8 +330,10 @@ public class PredatorStateMachine : MonoBehaviour
 				if (!soundPlaying) {
 					soundPlaying = true;
 					soundWasPlaying = true;
-					SoundSource.clip = SplashSound;
-					SoundSource.Play();
+					if (!TrainingMode) {
+						SoundSource.clip = SplashSound;
+						SoundSource.Play();
+					}
 				}
 			}
 		}
@@ -381,15 +387,19 @@ public class PredatorStateMachine : MonoBehaviour
 				return;
 			}
 		}
+
+		float distanceFromHome = ((Vector2)(transform.position) - (Vector2)(Home.transform.position)).magnitude;
+		float distanceFromPlayer = ((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude;
+		float playerDistanceFromHome = ((Vector2)(Player.transform.position) - (Vector2)(Home.transform.position)).magnitude;
 		
-		if ((((Vector2)(transform.position) - (Vector2)(Home.transform.position)).magnitude > LeashLength)
-		    && (((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude > GiveUpDistance)
-		    && (chaseTimeLeft <= 0.0f))
-		{
+		if ((distanceFromHome > LeashLength) && (distanceFromPlayer > GiveUpDistance) && (chaseTimeLeft <= 0.0f)) {
+
 			currentState = State.HeadingHome;
-		} 
-		else if (timeSinceWentHome > GoHomeTimeout) 
-		{	
+
+		} else if (timeSinceWentHome > GoHomeTimeout) {	
+
+			currentState = State.Wandering;
+
 			// Try targeting the player directly to see if they're reachable
 			homeTargeter.Target = Player;
 			aStarTargeter.underlyingTargeter = homeTargeter;
@@ -398,18 +408,11 @@ public class PredatorStateMachine : MonoBehaviour
 			if (target != null) 
 			{	
 				// Check if we're gonna chase.
-				if (((((Vector2)(Player.transform.position) - (Vector2)(Home.transform.position)).magnitude < LeashLength)
-				      || (((Vector2)(transform.position) - (Vector2)(Player.transform.position)).magnitude < GiveUpDistance)
-				      || (chaseTimeLeft > 0.0f))
+				if (((playerDistanceFromHome < LeashLength) || (distanceFromPlayer < GiveUpDistance) || (chaseTimeLeft > 0.0f))
+				    && !Player.GetComponent<PlayerInfo>().IsUnderwater()) {
 
-				    && !Player.GetComponent<PlayerInfo>().IsUnderwater())
-				{
 					currentState = State.Chasing;	
 				} 
-				else 
-				{
-					currentState = State.Wandering;
-				}
 			}
 		}
 	}

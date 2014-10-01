@@ -17,6 +17,7 @@ public class ManagePen : MonoBehaviour {
 	public Transform playerFliesParent;
 
 	public bool spawnFlies = true;
+	public bool flyMovement = true;
 	public int numFlies;
 	public int minFlies;
 	public float minDistanceFromFrog;
@@ -175,6 +176,7 @@ public class ManagePen : MonoBehaviour {
 		GameObject fly = Instantiate (dumbFlyPrefab, position, Quaternion.identity) as GameObject;
 		fly.transform.parent = gameObject.transform;
 		fly.tag = "Fly";
+		fly.GetComponent<Movement>().speed = flyMovement ? 3.0f : 0.0f;
 	}
 	
 	private Vector3 GetSpawnPosition() {
