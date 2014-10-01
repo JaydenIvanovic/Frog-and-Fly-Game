@@ -25,7 +25,6 @@ public class DrawGUIFlyGame : MonoBehaviour
 		eggTex = SpriteToTexture(Egg);
 		snakeTex = SpriteToTexture(Snake);
 		scoreTex = SpriteToTexture(ScoreS);
-		playerInfo = player.GetComponent<FlyPlayerInfo>();
 	}
 
 
@@ -49,10 +48,10 @@ public class DrawGUIFlyGame : MonoBehaviour
 		GUI.DrawTexture(new Rect(20, 70, heartSize, heartSize), snakeTex, ScaleMode.ScaleToFit, true, 0.0f);
 		GUI.DrawTexture(new Rect(20, 95, heartSize, heartSize), scoreTex, ScaleMode.ScaleToFit, true, 0.0f);
 
-		GUI.Label (new Rect (40, 20, 120, 20), ": " + playerInfo.GetNumFlies());
-		GUI.Label (new Rect (40, 45, 120, 20), ": " + playerInfo.Resource1);
-		GUI.Label (new Rect (40, 70, 120, 20), ": " + playerInfo.Resource2);
-		GUI.Label (new Rect (40, 95, 120, 20), ": " + playerInfo.PlayerScore);
+		GUI.Label (new Rect (40, 20, 120, 20), ": " + FlyPlayerInfo.NumFlies);
+		GUI.Label (new Rect (40, 45, 120, 20), ": " + FlyPlayerInfo.SelectedFliesResource1);
+		GUI.Label (new Rect (40, 70, 120, 20), ": " + FlyPlayerInfo.SelectedFliesResource2);
+		GUI.Label (new Rect (40, 95, 120, 20), ": " + FlyPlayerInfo.PlayerScore);
 
 		// Draw the pause menu
 		if (isPaused) {
