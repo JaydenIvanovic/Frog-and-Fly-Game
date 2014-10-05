@@ -279,6 +279,11 @@ public class GAFrogController : GAController<NeuralNet> {
 			// Water score
 			net.waterScore += Time.deltaTime * frogs[i].GetComponent<PlayerInfo>().waterLevel;
 
+			// Water camping score
+			if (frogs[i].GetComponent<PlayerInfo>().IsUnderwater() && frogs[i].GetComponent<PlayerInfo>().waterLevel >= 100.0f) {
+				net.waterCampingScore += Time.deltaTime;
+			}
+
 			// Snake distance score
 			foreach (GameObject snake in penManagerScripts[i].snakes) {
 				if (snake != null) {
@@ -317,11 +322,14 @@ public class GAFrogController : GAController<NeuralNet> {
 
 				//net.fitness = 1.0f * (float)(frogInfo.score) + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken)) + 0.25f * net.snakeDistScore;
 				//net.fitness = 1.0f * (float)(frogInfo.score) + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken)) + 0.002f * net.waterScore;
-				net.fitness = 1.0f * (float)(frogInfo.score) + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken));
+				//net.fitness = 1.0f * (float)(frogInfo.score) + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken));
+				net.fitness = 1.0f * (float)(frogInfo.score) + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken)) + Mathf.Min(0.0f, 0.5f * (5.0f - net.waterCampingScore));
 
 				//Debug.Log("Fitness is " + net.fitness + ", water score is " + (0.004f * net.waterScore) + ", health score is " + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken)));
+				//Debug.Log("Fitness is " + net.fitness + ", water camping score is " + (- 0.5f * net.waterCampingScore));
 
 				net.waterScore = 0.0f;
+				net.waterCampingScore = 0.0f;
 				net.snakeDistScore = 0.0f;
 
 				if (net.fitness <= currentParams.discardThreshold) {

@@ -130,7 +130,7 @@ public class PlayerInfo : MonoBehaviour {
 		invulnerableTime = 0.0f;
 
 		if (TrainingMode) {
-			waterLevel = 50;
+			waterLevel = 0;
 		} else {
 			waterLevel = 100f;
 		}

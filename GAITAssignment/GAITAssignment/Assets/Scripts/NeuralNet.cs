@@ -24,6 +24,9 @@ public class NeuralNet : System.ICloneable {
 
 	[HideInInspector]
 	public float waterScore = 0.0f;
+
+	[HideInInspector]
+	public float waterCampingScore = 0.0f;
 	
 	public int inputNeurons;
 	public int hiddenLayerNeurons;
