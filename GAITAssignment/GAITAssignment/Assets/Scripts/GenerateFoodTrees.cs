@@ -168,7 +168,6 @@ public class GenerateFoodTrees : GAController<Trees>
 			float distToOtherFlowers = 0f; 
 			// Now compute the flower fitness value
 			for (int j = 0; j < chromosome.flowerPositions.Count; ++j) {
-				distToOtherFlowers = 0f;
 
 				// If outside boundary return 0 as this is a solution we never want.
 				if (chromosome.flowerPositions[j].x > maxxBoundary || chromosome.flowerPositions[j].x < minxBoundary ||
@@ -177,8 +176,10 @@ public class GenerateFoodTrees : GAController<Trees>
 				}
 				
 				float distToTree = Vector2.Distance(chromosome.positions[i], chromosome.flowerPositions[j]);
-				if (distToTree < 3f && distToTree> 1.5f)
+				if (distToTree < 3f && distToTree > 1.5f)
 					flowerScore += 100f; // Just an arbitary constant for now.
+				else
+					flowerScore -= 100f; // Punishment...
 
 				for (int flowerPos = 0; flowerPos < chromosome.flowerPositions.Count; ++flowerPos) {
 					if(Vector2.Distance(chromosome.flowerPositions[flowerPos], chromosome.flowerPositions[j]) < 1) {
