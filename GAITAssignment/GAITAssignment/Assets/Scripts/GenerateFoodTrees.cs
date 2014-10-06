@@ -184,8 +184,10 @@ public class GenerateFoodTrees : GAController<Trees>
 					if(Vector2.Distance(chromosome.flowerPositions[flowerPos], chromosome.flowerPositions[j]) < 1) {
 						break; // This is going to result in a lower fitness value in the long run.
 					}
-					else
+					else {
 						distToOtherFlowers += Vector2.Distance(chromosome.flowerPositions[flowerPos], chromosome.flowerPositions[j]);
+						distToOtherFlowers += Vector2.Distance(Vector2.zero, chromosome.flowerPositions[flowerPos]); // dist from middle should be maximised
+					}
 				}
 			}
 
