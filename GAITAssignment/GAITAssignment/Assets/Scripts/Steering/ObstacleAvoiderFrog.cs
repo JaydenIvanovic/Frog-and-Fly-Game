@@ -20,7 +20,7 @@ public class ObstacleAvoiderFrog : MonoBehaviour
 	private float confirmStuckTime = 0.5f;
 	private Vector2 testPosition = Vector2.zero;
 	private float stuckRadius = 0.1f;
-	private float kickForce = 50.0f;
+	public float kickForce = 50.0f;
 	private Collider2D lastColliderTouched = null;
 	private float conservativeMultiplier = 1.5f;
 	
