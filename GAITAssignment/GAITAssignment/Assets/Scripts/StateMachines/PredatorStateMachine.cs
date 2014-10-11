@@ -108,12 +108,14 @@ public class PredatorStateMachine : MonoBehaviour
 			transform.parent = GameObject.Find("Predators").transform;
 			
 			// Set the player for the predator to chase and this predators home base.
-			var predStateMac = GetComponent<PredatorStateMachine>();
-			predStateMac.Player = GameObject.FindGameObjectWithTag("Player");
+			if (Player == null) {
+				Player = GameObject.FindGameObjectWithTag("Player");
+			}
+
 			if (Random.Range(0, 2) == 0)
-				predStateMac.Home = GameObject.Find ("SnakeHomeLeft");
+				Home = GameObject.Find ("SnakeHomeLeft");
 			else
-				predStateMac.Home = GameObject.Find ("SnakeHomeRight");
+				Home = GameObject.Find ("SnakeHomeRight");
 		}
 		
 		huntTargeter.Target = Player;

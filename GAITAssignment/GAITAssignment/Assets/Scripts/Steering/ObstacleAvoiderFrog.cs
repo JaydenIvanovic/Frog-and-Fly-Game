@@ -22,7 +22,7 @@ public class ObstacleAvoiderFrog : MonoBehaviour
 	private float stuckRadius = 0.1f;
 	public float kickForce = 50.0f;
 	private Collider2D lastColliderTouched = null;
-	private float conservativeMultiplier = 1.5f;
+	private float conservativeMultiplier = 1.1f;
 	
 	public float detectionDist = 2.0f;
 	public float anglePrecision = 10.0f;

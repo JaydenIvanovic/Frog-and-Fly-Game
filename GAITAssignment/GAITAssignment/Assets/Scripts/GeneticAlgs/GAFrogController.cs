@@ -73,6 +73,8 @@ public class GAFrogController : GAController<NeuralNet> {
 	private List<GameObject> penManagers;
 	private List<ManagePen> penManagerScripts;
 	private List<GameObject> frogs;
+	private List<PlayerInfo> frogPlayerInfo;
+	private List<NeuralNetSteering> neuralNetSteering;
 	
 	// Defaults for mutation and crossover rates are as recommended in 
 	// the "AI Techniques for Game Programming" book.
@@ -140,13 +142,22 @@ public class GAFrogController : GAController<NeuralNet> {
 
 	public void Awake() {
 
+		// Do all the GetComponent calls upfront - Justin said it's much more efficient!
 		penManagers = new List<GameObject>(GameObject.FindGameObjectsWithTag("PenManager"));
 		penManagerScripts = new List<ManagePen>();
 		frogs = new List<GameObject>();
+		frogPlayerInfo = new List<PlayerInfo>();
+		neuralNetSteering = new List<NeuralNetSteering>();
 
 		for (int i = 0; i < penManagers.Count; i++) {
+
 			penManagerScripts.Add(penManagers[i].GetComponent<ManagePen>());
-			frogs.Add(penManagers[i].GetComponent<ManagePen>().frog);
+
+			GameObject frog = penManagers[i].GetComponent<ManagePen>().frog;
+
+			frogs.Add(frog);
+			frogPlayerInfo.Add(frog.GetComponent<PlayerInfo>());
+			neuralNetSteering.Add(frog.GetComponent<NeuralNetSteering>());
 		}
 
 		// Set up directory for saving neural nets, etc
@@ -196,9 +207,14 @@ public class GAFrogController : GAController<NeuralNet> {
 		WriteToLog("Flies: " + currentParams.spawnFlies);
 		WriteToLog("Fly movement: " + currentParams.flyMovement);
 		WriteToLog("");
+		WriteToLog("");
 		WriteToLog("Neural net settings");
 		WriteToLog("-------------------");
 		WriteToLog("Hidden neurons: " + currentParams.neuralNetSettings.HiddenNeurons);
+		WriteToLog("");
+		WriteToLog("");
+		WriteToLog("Training Log");
+		WriteToLog("------------");
 
 		Time.timeScale = currentParams.timeScale;
 
@@ -274,20 +290,20 @@ public class GAFrogController : GAController<NeuralNet> {
 
 		for (int i = 0; i < penManagers.Count; i++) {
 
-			NeuralNet net = frogs[i].GetComponent<NeuralNetSteering>().neuralNet;
+			NeuralNet net = neuralNetSteering[i].neuralNet;
 
 			// Water score
-			net.waterScore += Time.deltaTime * frogs[i].GetComponent<PlayerInfo>().waterLevel;
+			net.waterScore += Time.deltaTime * frogPlayerInfo[i].waterLevel;
 
 			// Water camping score
-			if (frogs[i].GetComponent<PlayerInfo>().IsUnderwater() && frogs[i].GetComponent<PlayerInfo>().waterLevel >= 100.0f) {
+			if (frogPlayerInfo[i].IsUnderwater() && frogPlayerInfo[i].waterLevel >= 100.0f) {
 				net.waterCampingScore += Time.deltaTime;
 			}
 
 			// Snake distance score
 			foreach (GameObject snake in penManagerScripts[i].snakes) {
 				if (snake != null) {
-					net.snakeDistScore += Time.deltaTime * Mathf.Min(1.75f, ((Vector2)(snake.transform.position) - (Vector2)(penManagers[i].GetComponent<ManagePen>().frog.transform.position)).magnitude);
+					net.snakeDistScore += Time.deltaTime * Mathf.Min(1.75f, ((Vector2)(snake.transform.position) - (Vector2)(penManagerScripts[i].frog.transform.position)).magnitude);
 				}
 			}
 		}
@@ -316,10 +332,12 @@ public class GAFrogController : GAController<NeuralNet> {
 
 			for (int i = 1; i <= frogs.Count; i++) {
 
-				int popIndex = (currentPopIndex - i + populationSize) % populationSize; // We have to count backwards from currentPopIndex using modular arithmetic to find the neural nets just used
+				// We have to count backwards from currentPopIndex using modular arithmetic to find the neural nets just used
+				int popIndex = (currentPopIndex - i + populationSize) % populationSize;
 				NeuralNet net = population[popIndex];
-				PlayerInfo frogInfo = net.ParentFrog.GetComponent<PlayerInfo>();
+				PlayerInfo frogInfo = net.ParentFrog.GetComponent<PlayerInfo>(); // This is rarely called (certainly not every frame) so the GetComponent is OK
 
+				// There was a lot of experimenting with the fitness functions!
 				//net.fitness = 1.0f * (float)(frogInfo.score) + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken)) + 0.25f * net.snakeDistScore;
 				//net.fitness = 1.0f * (float)(frogInfo.score) + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken)) + 0.002f * net.waterScore;
 				//net.fitness = 1.0f * (float)(frogInfo.score) + (currentParams.batchTime - 7.5f * (float)(frogInfo.DamageTaken));
@@ -349,6 +367,14 @@ public class GAFrogController : GAController<NeuralNet> {
 
 			// If we've completed a batch then run the genetic algorithm thingy
 			if (currentPopIndex == 0) {
+
+				// Write the total population fitness, etc to the log file
+				float totalPopFitness = 0.0f;
+				for (int i = 0; i < fitness.Count; i++) {
+					totalPopFitness += fitness[i];
+				}
+				WriteToLog("Epoch: " + CurrentEpoch + ", population fitness: " + totalPopFitness + ", best fitness so far: " + bestFitnessSoFar);
+
 				RunEpoch();
 				CurrentEpoch++;
 				CurrentBatch = 0;
@@ -382,7 +408,7 @@ public class GAFrogController : GAController<NeuralNet> {
 				frogs[i].GetComponent<NeuralNetSteering>().selectedFly = null;
 
 				// Reset the frog's score
-				frogs[i].GetComponent<PlayerInfo>().Reset();
+				frogPlayerInfo[i].Reset();
 
 				IncrementPopulationIndex();
 			}

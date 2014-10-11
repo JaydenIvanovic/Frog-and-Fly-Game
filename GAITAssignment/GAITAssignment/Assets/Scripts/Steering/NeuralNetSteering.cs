@@ -136,6 +136,7 @@ public class NeuralNetSteering : SteeringBehaviour {
 
 					// Fire a bubble if the closest snake is within range
 					Vector2 vecToSnakeFromMouth = (Vector2)(snake.transform.position) - (Vector2)(mouth.position);
+					//Debug.Log("i = " + i + ", shotTimer = " + shotTimer + ", ShotReloadTime = " + ShotReloadTime + ", shot dist = " + neuralNet.getShotDistance() + ", actualDist = " + snakeDistancePair.Key);
 					if (i == 0 && (shotTimer > ShotReloadTime) && (snakeDistancePair.Key < neuralNet.getShotDistance())) {
 						if (mouthScript.SprayWater(true, (Vector2?)(snake.transform.position))) {
 							shotTimer = 0.0f;

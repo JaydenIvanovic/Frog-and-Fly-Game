@@ -56,10 +56,10 @@ public class GenerateFoodTrees : GAController<Trees>
 		// Instantiate the trees in the positions calculated by the GA.
 		for(int i = 0; i < fitTrees.positions.Count; ++i) {
 			if (Random.value < 0.5) {
-				GameObject tree = (GameObject)Instantiate(appleTreePrefab, fitTrees.positions[i], Quaternion.identity);
+				GameObject tree = (GameObject)Instantiate(appleTreePrefab, new Vector3(fitTrees.positions[i].x, fitTrees.positions[i].y, transform.position.z), Quaternion.identity);
 				tree.transform.parent = transform;
 			} else {
-				GameObject tree = (GameObject)Instantiate(flowerTreePrefab, fitTrees.positions[i], Quaternion.identity);
+				GameObject tree = (GameObject)Instantiate(flowerTreePrefab, new Vector3(fitTrees.positions[i].x, fitTrees.positions[i].y, transform.position.z), Quaternion.identity);
 				tree.transform.parent = transform;
 			}
 		}
@@ -68,13 +68,13 @@ public class GenerateFoodTrees : GAController<Trees>
 		for(int i = 0; i < fitTrees.flowerPositions.Count; ++i) {
 			float rand = Random.value;
 			if (rand < 0.3) {
-				GameObject tree = (GameObject)Instantiate(flower1Prefab, fitTrees.flowerPositions[i], Quaternion.identity);
+				GameObject tree = (GameObject)Instantiate(flower1Prefab, new Vector3(fitTrees.flowerPositions[i].x, fitTrees.flowerPositions[i].y, flowerParent.transform.position.z), Quaternion.identity);
 				tree.transform.parent = flowerParent.transform;
 			} else if (rand < 0.6) {
-				GameObject tree = (GameObject)Instantiate(flower2Prefab, fitTrees.flowerPositions[i], Quaternion.identity);
+				GameObject tree = (GameObject)Instantiate(flower2Prefab, new Vector3(fitTrees.flowerPositions[i].x, fitTrees.flowerPositions[i].y, flowerParent.transform.position.z), Quaternion.identity);
 				tree.transform.parent = flowerParent.transform;
 			} else {
-				GameObject tree = (GameObject)Instantiate(flower3Prefab, fitTrees.flowerPositions[i], Quaternion.identity);
+				GameObject tree = (GameObject)Instantiate(flower3Prefab, new Vector3(fitTrees.flowerPositions[i].x, fitTrees.flowerPositions[i].y, flowerParent.transform.position.z), Quaternion.identity);
 				tree.transform.parent = flowerParent.transform;
 			}
 		}
