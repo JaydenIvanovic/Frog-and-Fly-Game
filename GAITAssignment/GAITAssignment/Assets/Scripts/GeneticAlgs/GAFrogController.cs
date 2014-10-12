@@ -6,32 +6,51 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 public class GAFrogController : GAController<NeuralNet> {
 
+	// Parent selection is used at the end of an epoch to determine
+	// which neural nets to create the children from
 	public enum ParentSelectionMode
 	{
-		Proportional = 0,
-		Exponential = 1,
+		Proportional = 0, // Not actually used in any of our serious training. Was terrible.
+		Exponential = 1,  // Also terrible.
 		Tournament = 2,
 		RankRoulette = 3
 	};
 
 	[System.Serializable]
 	public class GAParameters {
+
+		// NumberOfBatches controls how many sets of 8 frogs constitute an epoch
+		// i.e. Population size = NumberOfBatches * 8
 		public int NumberOfBatches = 1;
+
+		// The amount of time given to each batch
 		public float batchTime = 10.0f;
+
+		// The speed up factor
 		public float timeScale = 3.0f;
+
 		public bool spawnFlies = true;
 		public bool flyMovement = false;
 		public bool spawnSnakes = false;
+
+		// We hacked the fly obstacle avoidance from the last assignment to work for the frog.
+		// A* and neural nets don't really go together...
 		public bool frogObstacleAvoidance = true;
+
+		// Originally I thought it might be a good idea to discard frogs (i.e. randomise their
+		// neural net weights again) if they performed badly enough. Turned out this wasn't too
+		// effective, so we just set this parameter to -9999f in the end.
 		public float discardThreshold = 2.9f;
+
 		public ParentSelectionMode parentSelectionMode = ParentSelectionMode.Proportional;
 
-		// These "accentuation" variables make it so that the best performers get a bigger slice of the pie
-		// when it comes to parent selection. I didn't get this out of the book but it just seems like a 
-		// natural thing to try.
+		// These "accentuation" variables make it so that the best performers get a bigger slice
+		// of the pie when in the "Proportional" and "Exponential" parent selection methods.
+		// Neither of these were really used in the end.
 		public float propSelectionAccentuation = 0.5f; // Should be between 0 and 1
 		public float expSelectionAccentuation = 0.5f;
 
+		// Turning this on causes a bunch of stuff to be printed to the console
 		public bool verbose = false;
 
 		public NeuralNetSettings neuralNetSettings;
@@ -44,10 +63,19 @@ public class GAFrogController : GAController<NeuralNet> {
 		public int NumFlyPositions = 2;
 		public int NumSnakePositions = 1;
 		public int NumObstaclePositions = 2;
+
 		public bool FeedObstacleInfo = true;
+
+		// We thought it might be good for the frog to know its own velocity (so that it could
+		// take momentum into account), but this was only effective when we used a miniature
+		// training pen.
 		public bool FeedOwnVelocity = true;
+
 		public bool FeedLakePosition = true;
 		public bool FeedWaterLevel = true;
+
+		// This controls whether the nets use "input normalisation" (the textbook way of doing things)
+		// or my weird method of feeding the input in multiple times with different rotations.
 		public NeuralNet.InputTransformation inputTransformation = NeuralNet.InputTransformation.RotationSmoothing;
 		public int inputSmoothingSegments = 30;
 
@@ -70,30 +98,30 @@ public class GAFrogController : GAController<NeuralNet> {
 	private int currentPopIndex = 0;
 	private string saveDataPath;
 
+	// These are all used to avoid excessive GetComponent calls in the Update method
 	private List<GameObject> penManagers;
 	private List<ManagePen> penManagerScripts;
 	private List<GameObject> frogs;
 	private List<PlayerInfo> frogPlayerInfo;
 	private List<NeuralNetSteering> neuralNetSteering;
 	
-	// Defaults for mutation and crossover rates are as recommended in 
-	// the "AI Techniques for Game Programming" book.
+	// Defaults for mutation and crossover rates are as recommended in the "AI Techniques for Game Programming" book.
 	public GAFrogController(float mutationRate = 0.001f, float crossoverRate = 0.7f) : base(0, mutationRate, crossoverRate) {}
 
 	public GAFrogController() : base(0, 0.001f, 0.7f) {}
-	
-	public override void InitPopulation()
-	{
-		// Not needed - handled by Awake()
-	}
 
+	// Here because it's specified by the base class, but not actually needed. Initialisation is handled by Awake.
+	public override void InitPopulation() {}
+
+	// The log file is written to the SaveData directory
 	private void WriteToLog(string logLine) {
-
 		StreamWriter writer = File.AppendText(saveDataPath + "/log.txt");
 		writer.WriteLine(logLine);
 		writer.Close();
 	}
 
+	// We serialise the entire population at the start of each epoch so that we can
+	// stop Unity and resume later. (Training can take a long time for the frogs!)
 	private void SavePopulation() {
 
 		BinaryFormatter bf = new BinaryFormatter();
@@ -115,6 +143,7 @@ public class GAFrogController : GAController<NeuralNet> {
 		}
 	}
 
+	// Load the entire population from a binary file
 	private void LoadPopulation() {
 
 		BinaryFormatter bf = new BinaryFormatter();
@@ -127,6 +156,7 @@ public class GAFrogController : GAController<NeuralNet> {
 		string saveFilename;
 		int fileNum = -1;
 
+		// Determine the latest epoch in the directory specified
 		do {
 			fileNum++;
 			saveFilename = "SaveData/" + LoadPath + "/population" + fileNum + ".bin";
@@ -149,12 +179,10 @@ public class GAFrogController : GAController<NeuralNet> {
 		frogPlayerInfo = new List<PlayerInfo>();
 		neuralNetSteering = new List<NeuralNetSteering>();
 
+		// Get references to the frogs and some of their components
 		for (int i = 0; i < penManagers.Count; i++) {
-
 			penManagerScripts.Add(penManagers[i].GetComponent<ManagePen>());
-
 			GameObject frog = penManagers[i].GetComponent<ManagePen>().frog;
-
 			frogs.Add(frog);
 			frogPlayerInfo.Add(frog.GetComponent<PlayerInfo>());
 			neuralNetSteering.Add(frog.GetComponent<NeuralNetSteering>());
@@ -163,26 +191,22 @@ public class GAFrogController : GAController<NeuralNet> {
 		// Set up directory for saving neural nets, etc
 		saveDataPath = "SaveData/" + System.DateTime.Now.ToString("yyMMddHHmmss");
 		Directory.CreateDirectory(saveDataPath);
-	}
-
-	// Michael: It's CRITICAL that this stuff goes in Start(), not Awake() since the frogs may not
-	// all be initialised before this component. It was causing me nightmares!
-	public void Start() {
 
 		if (LoadPath != "") {
 
+			// Load the population from a saved file
 			LoadPopulation();
 			populationSize = population.Count;
 
 		} else {
 
+			// Create a new population from scratch
 			currentParams = parameters[parameterIndexToUse];
-
 			population = new List<NeuralNet>();
 			populationSize = currentParams.NumberOfBatches * FrogsOnScreen;
 
 			for (int i = 0; i < populationSize; i++) {
-
+				
 				population.Add(new NeuralNet(currentParams.neuralNetSettings.NumFlyPositions,
 				                             currentParams.neuralNetSettings.NumSnakePositions,
 				                             currentParams.neuralNetSettings.NumObstaclePositions,
@@ -195,6 +219,12 @@ public class GAFrogController : GAController<NeuralNet> {
 				                             currentParams.neuralNetSettings.inputSmoothingSegments));
 			}
 		}
+
+		// Create snakes if need be
+		ResetSnakes();
+	}
+
+	public void Start() {
 
 		WriteToLog("GA parameters");
 		WriteToLog("-------------");
@@ -220,6 +250,8 @@ public class GAFrogController : GAController<NeuralNet> {
 
 		SavePopulation();
 
+		// It's CRITICAL that this stuff goes in Start(), not Awake() since the frogs may not
+		// all be initialised before this component. It was causing me nightmares!
 		foreach (GameObject frog in frogs) {
 			frog.GetComponent<NeuralNetSteering>().neuralNet = population[currentPopIndex];
 			frog.GetComponent<NeuralNetSteering>().neuralNet.ParentFrog = frog;
@@ -228,19 +260,17 @@ public class GAFrogController : GAController<NeuralNet> {
 			IncrementPopulationIndex();
 		}
 
-		ResetSnakes();
-		ResetPens();
-	}
-
-	public void IncrementPopulationIndex() {
-		currentPopIndex = (currentPopIndex + 1) % populationSize;
-	}
-	
-	private void ResetPens() {
+		// Initialise fly spawning stuff
 		for (int i = 0; i < penManagerScripts.Count; i++) {
 			penManagerScripts[i].spawnFlies = currentParams.spawnFlies;
 			penManagerScripts[i].flyMovement = currentParams.flyMovement;
 		}
+	}
+
+	// currentPopIndex stores the index of the last neural net that was used for a frog.
+	// It increments over batches but gets reset to zero at the start of an epoch.
+	public void IncrementPopulationIndex() {
+		currentPopIndex = (currentPopIndex + 1) % populationSize;
 	}
 
 	public void ResetSnakes() {
@@ -277,6 +307,8 @@ public class GAFrogController : GAController<NeuralNet> {
 						snake.transform.parent = penManagers[i].transform;
 						snake.GetComponent<PredatorStateMachine>().Home = snakeHome;
 						snake.GetComponent<PredatorStateMachine>().Player = penManagerScripts[i].frog;
+						snake.GetComponent<GameObjectTargeter>().Target = penManagerScripts[i].frog;
+						snake.GetComponent<HuntTargeter>().Target = penManagerScripts[i].frog;
 						penManagerScripts[i].snakes.Add(snake);
 					}
 				}
@@ -307,11 +339,13 @@ public class GAFrogController : GAController<NeuralNet> {
 				}
 			}
 		}
-		
+
+		// Move to the next batch if it's time to do so
 		if (updateTimer > currentParams.batchTime) {
 
 			CurrentBatch++;
 
+			// Move the snakes back to their starting positions
 			ResetSnakes();
 
 			for (int i = 0; i < penManagerScripts.Count; i++) {
@@ -379,7 +413,12 @@ public class GAFrogController : GAController<NeuralNet> {
 				CurrentEpoch++;
 				CurrentBatch = 0;
 				SavePopulation();
-				penManagerScripts[0].ResetSpawnPositions(100); // TO DO: Remove magic number
+
+				// TO DO: Should probably replace these magic numbers
+				// 100 means that there are 100 random fly positions created by default,
+				// which are shared across pens so no frog gets an unfair advantage.
+				// Any penManagerScript could be used for this call since the function is static.
+				penManagerScripts[0].ResetSpawnPositions(100);
 			}
 
 			for (int i = 0; i < penManagers.Count; i++) {
