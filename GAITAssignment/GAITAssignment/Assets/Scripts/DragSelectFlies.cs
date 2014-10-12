@@ -116,6 +116,12 @@ public class DragSelectFlies : MonoBehaviour
 	// selected group.
 	private void UpdateNumFlies()
 	{	
+		// First remove any flies that may have been eaten.
+		for(int i = 0; i < flies.Count; ++i) {
+			if(flies[i] == null)
+				flies.RemoveAt(i);
+		}
+
 		int numWanted = flies.Count;
 
 		if (Input.GetKeyDown(KeyCode.Alpha1)) {
