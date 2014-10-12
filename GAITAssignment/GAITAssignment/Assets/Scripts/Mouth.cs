@@ -8,6 +8,7 @@ public class Mouth : MonoBehaviour {
 	private PlayerInfo playerInfo;
 	private Movement movement;
 
+	public bool survivalMode = false;
 	public bool BubbleEnabled = true;
 	public float BubbleCost = 20.0f;
 	public float BubbleLaunchDistance = 0.3f;
@@ -39,6 +40,9 @@ public class Mouth : MonoBehaviour {
 			Destroy (other.gameObject);
 
 			transform.parent.gameObject.GetComponent<PlayerInfo>().IncrementScore();
+
+			if (survivalMode)
+				FlyPlayerInfo.DecrementFlyCount();
 		}
 	}
 

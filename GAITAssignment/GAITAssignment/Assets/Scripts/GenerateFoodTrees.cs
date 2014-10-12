@@ -30,6 +30,7 @@ public struct Trees
 
 public class GenerateFoodTrees : GAController<Trees>
 {
+	public GameObject lake1, lake2;
 	public float vectorMutate;
 	public int runs;
 	public int numTrees, numFlowers;
@@ -132,7 +133,7 @@ public class GenerateFoodTrees : GAController<Trees>
 	}
 	
 
-	// Naive fitness calculation.
+	// Fitness calculation.
 	public override float CalcFitness(Trees chromosome)
 	{
 		float sumDistFromGoal = 0f;
@@ -161,6 +162,10 @@ public class GenerateFoodTrees : GAController<Trees>
 			if (chromosome.positions[i].x > maxxBoundary || chromosome.positions[i].x < minxBoundary ||
 				chromosome.positions[i].y > maxyBoundary || chromosome.positions[i].y < minyBoundary) {
 					return 0;
+			// If inside a lake we dont want it either.
+			} else if ( (Vector2.Distance(lake1.transform.position, chromosome.positions[i]) < 1f) || 
+				        (Vector2.Distance(lake2.transform.position, chromosome.positions[i]) < 1f) ) {
+					return 0;
 			} else {
 				sumDistFromGoal += Vector2.Distance(Vector2.zero, chromosome.positions[i]);
 			}
@@ -173,7 +178,11 @@ public class GenerateFoodTrees : GAController<Trees>
 				if (chromosome.flowerPositions[j].x > maxxBoundary || chromosome.flowerPositions[j].x < minxBoundary ||
 					chromosome.flowerPositions[j].y > maxyBoundary || chromosome.flowerPositions[j].y < minyBoundary) {
 					return 0;
-				}
+				// If inside a lake we dont want it either.
+				} else if ( (Vector2.Distance(lake1.transform.position, chromosome.flowerPositions[j]) < 1f) || 
+				        	(Vector2.Distance(lake2.transform.position, chromosome.flowerPositions[j]) < 1f) ) {
+					return 0;
+				} 
 				
 				float distToTree = Vector2.Distance(chromosome.positions[i], chromosome.flowerPositions[j]);
 				if (distToTree < 3f && distToTree > 1.5f)
@@ -184,8 +193,7 @@ public class GenerateFoodTrees : GAController<Trees>
 				for (int flowerPos = 0; flowerPos < chromosome.flowerPositions.Count; ++flowerPos) {
 					if(Vector2.Distance(chromosome.flowerPositions[flowerPos], chromosome.flowerPositions[j]) < 1) {
 						break; // This is going to result in a lower fitness value in the long run.
-					}
-					else {
+					} else {
 						distToOtherFlowers += Vector2.Distance(chromosome.flowerPositions[flowerPos], chromosome.flowerPositions[j]);
 						distToOtherFlowers += Vector2.Distance(Vector2.zero, chromosome.flowerPositions[flowerPos]); // dist from middle should be maximised
 					}

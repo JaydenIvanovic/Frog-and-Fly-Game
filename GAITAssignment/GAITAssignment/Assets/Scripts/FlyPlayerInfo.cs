@@ -31,6 +31,8 @@ public class FlyPlayerInfo : MonoBehaviour
 
 			for (int i = 0; i < flies_mousetarget.Count; ++i) {
 				MouseTargeter m = flies_mousetarget[i];
+				if(m == null)
+					continue;
 				if(m.selected) {
 					r += flies_info[i].Resource1;
 				}
@@ -47,13 +49,20 @@ public class FlyPlayerInfo : MonoBehaviour
 			
 			for (int i = 0; i < flies_mousetarget.Count; ++i) {
 				MouseTargeter m = flies_mousetarget[i];
-				if(m.selected) {
+				if(m == null)
+					continue;
+				if(m.selected && m.gameObject != null) {
 					r += flies_info[i].Resource2;
 				}
 			}
 			
 			return (int)r;
 		}
+	}
+
+	public static void DecrementFlyCount()
+	{
+		numFlies -= 1;
 	}
 
 	void Start()
