@@ -1,0 +1,21 @@
+GA parameters
+-------------
+
+Batches per epoch: 6
+Batch time: 60
+Frog obstacle avoidance: True
+Parent selection mode: RankRoulette
+Snakes: True
+Flies: True
+Fly movement: False
+
+
+Neural net settings
+-------------------
+Hidden neurons: 7
+
+
+Training Log
+------------
+Epoch: 0, population fitness: 0, best fitness so far: 88
+Epoch: 1, population fitness: 2969.861, best fitness so far: 88

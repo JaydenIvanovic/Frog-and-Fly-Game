@@ -11,23 +11,17 @@ Platform assembly: D:\RMIT\GAIT_Team3\GAITAssignment\GAITAssignment\Assignment2_
 Loading D:\RMIT\GAIT_Team3\GAITAssignment\GAITAssignment\Assignment2_Data\Managed\UnityEngine.dll into Unity Child Domain
 Platform assembly: D:\RMIT\GAIT_Team3\GAITAssignment\GAITAssignment\Assignment2_Data\Managed\Assembly-CSharp.dll (this message is harmless)
 Loading D:\RMIT\GAIT_Team3\GAITAssignment\GAITAssignment\Assignment2_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
-- Completed reload, in  0.031 seconds
+- Completed reload, in  0.033 seconds
 desktop: 1920x1080 60Hz; virtual: 3840x1080 at 0,0
 <RI> Initializing input.
 <RI> Input initialized.
-UnloadTime: 0.514700 ms
-11678.44
+UnloadTime: 0.442720 ms
+11146.59
  
 (Filename: C:/BuildAgent/work/d63dfc6385190b60/artifacts/StandalonePlayerGenerated/UnityEngineDebug.cpp Line: 49)
 
 Unloading 5 Unused Serialized files (Serialized files now loaded: 0 / Dirty serialized files: 0)
 
-Unloading 13 unused Assets to reduce memory usage. Loaded Objects now: 1770.
-Total: 0.593606 ms (FindLiveObjects: 0.052704 ms CreateObjectMapping: 0.011745 ms MarkObjects: 0.220155 ms  DeleteObjects: 0.035236 ms)
-
-UnloadTime: 2.621989 ms
-Unloading 2 Unused Serialized files (Serialized files now loaded: 0 / Dirty serialized files: 0)
-
-Unloading 405 unused Assets to reduce memory usage. Loaded Objects now: 311.
-Total: 6.774826 ms (FindLiveObjects: 0.040959 ms CreateObjectMapping: 0.063245 ms MarkObjects: 0.190640 ms  DeleteObjects: 5.793915 ms)
+Unloading 13 unused Assets to reduce memory usage. Loaded Objects now: 1711.
+Total: 0.627337 ms (FindLiveObjects: 0.078304 ms CreateObjectMapping: 0.011444 ms MarkObjects: 0.206301 ms  DeleteObjects: 0.034634 ms)
 
