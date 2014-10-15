@@ -1,0 +1,475 @@
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9) (preloaded format=pdflatex 2014.7.21)  15 OCT 2014 11:05
+entering extended mode
+**C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/main.tex
+(C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/main.tex
+LaTeX2e <2011/06/27>
+Babel <v3.8m> and hyphenation patterns for english, afrikaans, ancientgreek, ar
+abic, armenian, assamese, basque, bengali, bokmal, bulgarian, catalan, coptic, 
+croatian, czech, danish, dutch, esperanto, estonian, farsi, finnish, french, ga
+lician, german, german-x-2013-05-26, greek, gujarati, hindi, hungarian, iceland
+ic, indonesian, interlingua, irish, italian, kannada, kurmanji, latin, latvian,
+ lithuanian, malayalam, marathi, mongolian, mongolianlmc, monogreek, ngerman, n
+german-x-2013-05-26, nynorsk, oriya, panjabi, pinyin, polish, portuguese, roman
+ian, russian, sanskrit, serbian, slovak, slovenian, spanish, swedish, swissgerm
+an, tamil, telugu, turkish, turkmen, ukenglish, ukrainian, uppersorbian, usengl
+ishmax, welsh, loaded.
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\base\article.cls"
+Document Class: article 2007/10/19 v1.4h Standard LaTeX document class
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\base\size11.clo"
+File: size11.clo 2007/10/19 v1.4h Standard LaTeX file (size option)
+)
+\c@part=\count79
+\c@section=\count80
+\c@subsection=\count81
+\c@subsubsection=\count82
+\c@paragraph=\count83
+\c@subparagraph=\count84
+\c@figure=\count85
+\c@table=\count86
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen102
+)
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\graphics\graphicx.sty"
+Package: graphicx 1999/02/16 v1.0f Enhanced LaTeX Graphics (DPC,SPQR)
+
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\graphics\keyval.sty"
+Package: keyval 1999/03/16 v1.13 key=value parser (DPC)
+\KV@toks@=\toks14
+)
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\graphics\graphics.sty"
+Package: graphics 2009/02/05 v1.0o Standard LaTeX Graphics (DPC,SPQR)
+
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\graphics\trig.sty"
+Package: trig 1999/03/16 v1.09 sin cos tan (DPC)
+)
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\00miktex\graphics.cfg"
+File: graphics.cfg 2007/01/18 v1.5 graphics configuration of teTeX/TeXLive
+)
+Package graphics Info: Driver file: pdftex.def on input line 91.
+
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\pdftex-def\pdftex.def"
+File: pdftex.def 2011/05/27 v0.06d Graphics/color for pdfTeX
+
+("C:\Program Files (x86)\MiKTeX 2.9\tex\generic\oberdiek\infwarerr.sty"
+Package: infwarerr 2010/04/08 v1.3 Providing info/warning/error messages (HO)
+)
+("C:\Program Files (x86)\MiKTeX 2.9\tex\generic\oberdiek\ltxcmds.sty"
+Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
+)
+\Gread@gobject=\count87
+))
+\Gin@req@height=\dimen103
+\Gin@req@width=\dimen104
+)
+(C:\Users\mchld_000\AppData\Roaming\MiKTeX\2.9\tex\latex\caption\caption.sty
+Package: caption 2013/05/02 v3.3-89 Customizing captions (AR)
+
+(C:\Users\mchld_000\AppData\Roaming\MiKTeX\2.9\tex\latex\caption\caption3.sty
+Package: caption3 2013/05/02 v1.6-88 caption3 kernel (AR)
+Package caption3 Info: TeX engine: e-TeX on input line 57.
+\captionmargin=\dimen105
+\captionmargin@=\dimen106
+\captionwidth=\dimen107
+\caption@tempdima=\dimen108
+\caption@indent=\dimen109
+\caption@parindent=\dimen110
+\caption@hangindent=\dimen111
+)
+\c@ContinuedFloat=\count88
+)
+(C:\Users\mchld_000\AppData\Roaming\MiKTeX\2.9\tex\latex\caption\subcaption.sty
+Package: subcaption 2013/02/03 v1.1-62 Sub-captions (AR)
+\c@subfigure=\count89
+\c@subtable=\count90
+) ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\geometry\geometry.sty"
+Package: geometry 2010/09/12 v5.6 Page Geometry
+
+("C:\Program Files (x86)\MiKTeX 2.9\tex\generic\oberdiek\ifpdf.sty"
+Package: ifpdf 2011/01/30 v2.3 Provides the ifpdf switch (HO)
+Package ifpdf Info: pdfTeX in PDF mode is detected.
+)
+("C:\Program Files (x86)\MiKTeX 2.9\tex\generic\oberdiek\ifvtex.sty"
+Package: ifvtex 2010/03/01 v1.5 Detect VTeX and its facilities (HO)
+Package ifvtex Info: VTeX not detected.
+)
+("C:\Program Files (x86)\MiKTeX 2.9\tex\generic\ifxetex\ifxetex.sty"
+Package: ifxetex 2010/09/12 v0.6 Provides ifxetex conditional
+)
+\Gm@cnth=\count91
+\Gm@cntv=\count92
+\c@Gm@tempcnt=\count93
+\Gm@bindingoffset=\dimen112
+\Gm@wd@mp=\dimen113
+\Gm@odd@mp=\dimen114
+\Gm@even@mp=\dimen115
+\Gm@layoutwidth=\dimen116
+\Gm@layoutheight=\dimen117
+\Gm@layouthoffset=\dimen118
+\Gm@layoutvoffset=\dimen119
+\Gm@dimlist=\toks15
+
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\geometry\geometry.cfg"))
+(C:\Users\mchld_000\AppData\Roaming\MiKTeX\2.9\tex\latex\algorithmicx\algpseudo
+code.sty
+Package: algpseudocode 
+ ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\base\ifthen.sty"
+Package: ifthen 2001/05/26 v1.1c Standard LaTeX ifthen package (DPC)
+)
+(C:\Users\mchld_000\AppData\Roaming\MiKTeX\2.9\tex\latex\algorithmicx\algorithm
+icx.sty
+Package: algorithmicx 2005/04/27 v1.2 Algorithmicx
+
+Document Style algorithmicx 1.2 - a greatly improved `algorithmic' style
+\c@ALG@line=\count94
+\c@ALG@rem=\count95
+\c@ALG@nested=\count96
+\ALG@tlm=\skip43
+\ALG@thistlm=\skip44
+\c@ALG@Lnr=\count97
+\c@ALG@blocknr=\count98
+\c@ALG@storecount=\count99
+\c@ALG@tmpcounter=\count100
+\ALG@tmplength=\skip45
+)
+Document Style - pseudocode environments for use with the `algorithmicx' style
+)
+(C:\Users\mchld_000\AppData\Roaming\MiKTeX\2.9\tex\latex\algorithms\algorithm.s
+ty
+Package: algorithm 2009/08/24 v0.1 Document Style `algorithm' - floating enviro
+nment
+ ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\float\float.sty"
+Package: float 2001/11/08 v1.3d Float enhancements (AL)
+\c@float@type=\count101
+\float@exts=\toks16
+\float@box=\box26
+\@float@everytoks=\toks17
+\@floatcapt=\box27
+)
+\@float@every@algorithm=\toks18
+\c@algorithm=\count102
+)
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsmath\amsmath.sty"
+Package: amsmath 2013/01/14 v2.14 AMS math features
+\@mathmargin=\skip46
+
+For additional information on amsmath, use the `?' option.
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsmath\amstext.sty"
+Package: amstext 2000/06/29 v2.01
+
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsmath\amsgen.sty"
+File: amsgen.sty 1999/11/30 v2.0
+\@emptytoks=\toks19
+\ex@=\dimen120
+))
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsmath\amsbsy.sty"
+Package: amsbsy 1999/11/29 v1.2d
+\pmbraise@=\dimen121
+)
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsmath\amsopn.sty"
+Package: amsopn 1999/12/14 v2.01 operator names
+)
+\inf@bad=\count103
+LaTeX Info: Redefining \frac on input line 210.
+\uproot@=\count104
+\leftroot@=\count105
+LaTeX Info: Redefining \overline on input line 306.
+\classnum@=\count106
+\DOTSCASE@=\count107
+LaTeX Info: Redefining \ldots on input line 378.
+LaTeX Info: Redefining \dots on input line 381.
+LaTeX Info: Redefining \cdots on input line 466.
+\Mathstrutbox@=\box28
+\strutbox@=\box29
+\big@size=\dimen122
+LaTeX Font Info:    Redeclaring font encoding OML on input line 566.
+LaTeX Font Info:    Redeclaring font encoding OMS on input line 567.
+\macc@depth=\count108
+\c@MaxMatrixCols=\count109
+\dotsspace@=\muskip10
+\c@parentequation=\count110
+\dspbrk@lvl=\count111
+\tag@help=\toks20
+\row@=\count112
+\column@=\count113
+\maxfields@=\count114
+\andhelp@=\toks21
+\eqnshift@=\dimen123
+\alignsep@=\dimen124
+\tagshift@=\dimen125
+\tagwidth@=\dimen126
+\totwidth@=\dimen127
+\lineht@=\dimen128
+\@envbody=\toks22
+\multlinegap=\skip47
+\multlinetaggap=\skip48
+\mathdisplay@stack=\toks23
+LaTeX Info: Redefining \[ on input line 2665.
+LaTeX Info: Redefining \] on input line 2666.
+)
+(C:\Users\mchld_000\Documents\gait_team3\GAITAssignment\GAIT_GA\main.aux)
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+
+(C:\Users\mchld_000\AppData\Roaming\MiKTeX\2.9\tex\context\base\supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count115
+\scratchdimen=\dimen129
+\scratchbox=\box30
+\nofMPsegments=\count116
+\nofMParguments=\count117
+\everyMPshowfont=\toks24
+\MPscratchCnt=\count118
+\MPscratchDim=\dimen130
+\MPnumerator=\count119
+\makeMPintoPDFobject=\count120
+\everyMPtoPDFconversion=\toks25
+)
+Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: float package is loaded.
+Package caption Info: End \AtBeginDocument code.
+
+*geometry* driver: auto-detecting
+*geometry* detected driver: pdftex
+*geometry* verbose mode - [ preamble ] result:
+* driver: pdftex
+* paper: a4paper
+* layout: <same size as paper>
+* layoutoffset:(h,v)=(0.0pt,0.0pt)
+* modes: twoside 
+* h-part:(L,W,R)=(36.135pt, 525.23788pt, 36.135pt)
+* v-part:(T,H,B)=(36.135pt, 772.77686pt, 36.135pt)
+* \paperwidth=597.50787pt
+* \paperheight=845.04684pt
+* \textwidth=525.23788pt
+* \textheight=772.77686pt
+* \oddsidemargin=-36.135pt
+* \evensidemargin=-36.135pt
+* \topmargin=-73.135pt
+* \headheight=12.0pt
+* \headsep=25.0pt
+* \topskip=11.0pt
+* \footskip=30.0pt
+* \marginparwidth=103.0pt
+* \marginparsep=10.0pt
+* \columnsep=10.0pt
+* \skip\footins=10.0pt plus 4.0pt minus 2.0pt
+* \hoffset=0.0pt
+* \voffset=0.0pt
+* \mag=1000
+* \@twocolumnfalse
+* \@twosidetrue
+* \@mparswitchtrue
+* \@reversemarginfalse
+* (1in=72.27pt=25.4mm, 1cm=28.453pt)
+
+<./splash.png, id=1, 746.03719pt x 411.78844pt>
+File: ./splash.png Graphic file (type png)
+ <use ./splash.png>
+Package pdftex.def Info: ./splash.png used on input line 21.
+(pdftex.def)             Requested size: 315.14594pt x 173.949pt.
+
+(C:\Users\mchld_000\Documents\gait_team3\GAITAssignment\GAIT_GA\genetic_algs_ga
+itA2_overview.tex <./no_lightning.png, id=2, 831.85782pt x 506.6428pt>
+File: ./no_lightning.png Graphic file (type png)
+
+<use ./no_lightning.png>
+Package pdftex.def Info: ./no_lightning.png used on input line 14.
+(pdftex.def)             Requested size: 258.41934pt x 157.39006pt.
+ <./lightning.png, id=3, 831.85782pt x 508.14844pt>
+File: ./lightning.png Graphic file (type png)
+
+<use ./lightning.png>
+Package pdftex.def Info: ./lightning.png used on input line 19.
+(pdftex.def)             Requested size: 257.36945pt x 157.21423pt.
+)
+(C:\Users\mchld_000\Documents\gait_team3\GAITAssignment\GAIT_GA\genetic_algs_ga
+itA2.tex [1
+
+{C:/Users/mchld_000/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map} <C:/User
+s/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/splash.png> <C:/Users/m
+chld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/no_lightning.png> <C:/User
+s/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/lightning.png>]
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 45.
+ ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\base\omscmr.fd"
+File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10.95> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 45.
+
+<./ga_n1.png, id=12, 419.31656pt x 227.34938pt>
+File: ./ga_n1.png Graphic file (type png)
+ <use ./ga_n1.png>
+Package pdftex.def Info: ./ga_n1.png used on input line 67.
+(pdftex.def)             Requested size: 253.16183pt x 137.26059pt.
+
+<./ga_n2.png, id=14, 540.51938pt x 288.3272pt>
+File: ./ga_n2.png Graphic file (type png)
+ <use ./ga_n2.png>
+Package pdftex.def Info: ./ga_n2.png used on input line 72.
+(pdftex.def)             Requested size: 257.36945pt x 137.2912pt.
+
+<./ga_n3.png, id=15, 593.21625pt x 326.72063pt>
+File: ./ga_n3.png Graphic file (type png)
+ <use ./ga_n3.png>
+Package pdftex.def Info: ./ga_n3.png used on input line 77.
+(pdftex.def)             Requested size: 262.61894pt x 144.6449pt.
+
+<./ga_final.png, id=16, 584.1825pt x 328.22626pt>
+File: ./ga_final.png Graphic file (type png)
+ <use ./ga_final.png>
+Package pdftex.def Info: ./ga_final.png used on input line 82.
+(pdftex.def)             Requested size: 257.36945pt x 144.6103pt.
+ [2]
+
+LaTeX Warning: Reference `sec:neural' on page 3 undefined on input line 102.
+
+[3 <C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/ga_n1.png> <
+C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/ga_n2.png> <C:/U
+sers/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/ga_n3.png> <C:/Users
+/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/ga_final.png>]
+<./timeFitness.png, id=30, 602.25pt x 372.39125pt>
+File: ./timeFitness.png Graphic file (type png)
+ <use ./timeFitness.png>
+Package pdftex.def Info: ./timeFitness.png used on input line 159.
+(pdftex.def)             Requested size: 367.6649pt x 227.34584pt.
+
+<./ga_outcome_1.png, id=31, 793.46437pt x 435.12563pt>
+File: ./ga_outcome_1.png Graphic file (type png)
+
+<use ./ga_outcome_1.png>
+Package pdftex.def Info: ./ga_outcome_1.png used on input line 167.
+(pdftex.def)             Requested size: 252.11194pt x 138.25375pt.
+
+<./ga_outcome_2.png, id=32, 793.46437pt x 435.87843pt>
+File: ./ga_outcome_2.png Graphic file (type png)
+
+<use ./ga_outcome_2.png>
+Package pdftex.def Info: ./ga_outcome_2.png used on input line 172.
+(pdftex.def)             Requested size: 252.11194pt x 138.49295pt.
+
+<./ga_outcome_3.png, id=33, 795.72281pt x 434.37282pt>
+File: ./ga_outcome_3.png Graphic file (type png)
+
+<use ./ga_outcome_3.png>
+Package pdftex.def Info: ./ga_outcome_3.png used on input line 177.
+(pdftex.def)             Requested size: 252.11194pt x 137.62352pt.
+
+<./ga_outcome_4.png, id=34, 784.43062pt x 436.63126pt>
+File: ./ga_outcome_4.png Graphic file (type png)
+
+<use ./ga_outcome_4.png>
+Package pdftex.def Info: ./ga_outcome_4.png used on input line 182.
+(pdftex.def)             Requested size: 252.11194pt x 140.33113pt.
+ <./ga_outcome_5.png, id=35, 791.20593pt x 433.62pt>
+File: ./ga_outcome_5.png Graphic file (type png)
+
+<use ./ga_outcome_5.png>
+Package pdftex.def Info: ./ga_outcome_5.png used on input line 187.
+(pdftex.def)             Requested size: 252.11194pt x 138.16574pt.
+
+<./ga_outcome_6.png, id=36, 784.43062pt x 435.87843pt>
+File: ./ga_outcome_6.png Graphic file (type png)
+
+<use ./ga_outcome_6.png>
+Package pdftex.def Info: ./ga_outcome_6.png used on input line 192.
+(pdftex.def)             Requested size: 252.11194pt x 140.08917pt.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+) (C:\Users\mchld_000\Documents\gait_team3\GAITAssignment\GAIT_GA\michael.tex
+[4 <C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/timeFitness.
+png>] [5 <C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/ga_out
+come_1.png> <C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/ga_
+outcome_2.png> <C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/
+ga_outcome_3.png> <C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_
+GA/ga_outcome_4.png> <C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GA
+IT_GA/ga_outcome_5.png> <C:/Users/mchld_000/Documents/gait_team3/GAITAssignment
+/GAIT_GA/ga_outcome_6.png>]
+<Figs/Crossover.png, id=44, 857.2025pt x 604.2575pt>
+File: Figs/Crossover.png Graphic file (type png)
+ <use Figs/Crossover.png>
+Package pdftex.def Info: Figs/Crossover.png used on input line 12.
+(pdftex.def)             Requested size: 514.32547pt x 362.5573pt.
+
+[6
+
+ <C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/Figs/Crossover
+.png>] <Figs/NormalisationProblem.png, id=49, 503.8825pt x 154.5775pt>
+File: Figs/NormalisationProblem.png Graphic file (type png)
+
+<use Figs/NormalisationProblem.png>
+Package pdftex.def Info: Figs/NormalisationProblem.png used on input line 29.
+(pdftex.def)             Requested size: 302.33183pt x 92.7472pt.
+
+Underfull \hbox (badness 10000) in paragraph at lines 58--59
+
+ []
+
+[7 <C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/Figs/Normali
+sationProblem.png>]
+Underfull \hbox (badness 2521) in paragraph at lines 66--67
+[]\OT1/cmr/m/n/10.95 Making the flies sta-tion-ary dur-ing
+ []
+
+<Figs/TrainingPens.png, id=59, 1462.46375pt x 698.61pt>
+File: Figs/TrainingPens.png Graphic file (type png)
+
+<use Figs/TrainingPens.png>
+Package pdftex.def Info: Figs/TrainingPens.png used on input line 79.
+(pdftex.def)             Requested size: 438.74251pt x 209.58461pt.
+ [8]
+Underfull \hbox (badness 10000) in paragraph at lines 95--96
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 97--98
+
+ []
+
+) [9 <C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/Figs/Train
+ingPens.png>]
+(C:\Users\mchld_000\Documents\gait_team3\GAITAssignment\GAIT_GA\main.aux)
+
+LaTeX Warning: There were undefined references.
+
+ ) 
+Here is how much of TeX's memory you used:
+ 4109 strings out of 493921
+ 61770 string characters out of 3144864
+ 126200 words of memory out of 3000000
+ 7347 multiletter control sequences out of 15000+200000
+ 12120 words of font info for 43 fonts, out of 3000000 for 9000
+ 841 hyphenation exceptions out of 8191
+ 36i,10n,38p,1212b,477s stack positions out of 5000i,500n,10000p,200000b,50000s
+<C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx10.pfb>
+<C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C
+:/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/
+Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Pro
+gram Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Progra
+m Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Program F
+iles (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Program File
+s (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Program Files (x
+86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Program Files (x86)/
+MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr9.pfb><C:/Program Files (x86)/MiKT
+eX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Program Files (x86)/MiKTeX
+ 2.9/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Program Files (x86)/MiKTeX 2.
+9/fonts/type1/public/amsfonts/cm/cmti10.pfb>
+Output written on main.pdf (9 pages, 3421442 bytes).
+PDF statistics:
+ 107 PDF objects out of 1000 (max. 8388607)
+ 0 named destinations out of 1000 (max. 500000)
+ 86 words of extra memory for PDF output out of 10000 (max. 10000000)
+
