@@ -67,7 +67,7 @@ public class DrawGUIFlyGame : MonoBehaviour
 			if(GUI.Button(new Rect (100, 70, 100, 30), "Main Menu")) {
 				UnPause();
 				AStarTargeter.ClearGrids();
-				Application.LoadLevel("Menu");
+				Application.LoadLevel("MenuA2");
 			}
 			if(GUI.Button(new Rect (100, 110, 100, 30), "Resume")) {
 				UnPause();

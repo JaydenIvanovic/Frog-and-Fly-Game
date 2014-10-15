@@ -63,6 +63,8 @@ public class FlyPlayerInfo : MonoBehaviour
 	public static void DecrementFlyCount()
 	{
 		numFlies -= 1;
+		if (numFlies == 0)
+			Application.LoadLevel("DeathSplashA2");
 	}
 
 	void Start()
