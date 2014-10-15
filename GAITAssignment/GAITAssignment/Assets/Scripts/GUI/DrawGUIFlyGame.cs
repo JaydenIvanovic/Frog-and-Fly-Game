@@ -4,7 +4,7 @@ using System.Collections;
 public class DrawGUIFlyGame : MonoBehaviour 
 {
 	private int heartSize = 20;
-	private int heartSeparation = 10;
+	//private int heartSeparation = 10;
 
 	public Sprite Fly;
 	public Sprite Egg;
@@ -40,7 +40,7 @@ public class DrawGUIFlyGame : MonoBehaviour
 
 		GUI.Box (new Rect (10, 10, 100, 120), "");
 
-		int health = PlayerInfo.GetMainFrogHealth();
+		//int health = PlayerInfo.GetMainFrogHealth();
 
 		// This could probably be made better by using GUI groups. 
 		GUI.DrawTexture(new Rect(20, 20, heartSize, heartSize), flyTex, ScaleMode.ScaleToFit, true, 0.0f);

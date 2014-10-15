@@ -29,15 +29,15 @@ public class NeuralNetSteering : SteeringBehaviour {
 	private float[] obstacleInfo;
 	private CircleCollider2D circleCollider;
 	private Movement movement;
-	private Transform mouth;
 	private Mouth mouthScript;
+	private PlayerInfo playerInfo;
 	//private float conservativeMultiplier = 1.5f;
 
 	void Awake()
 	{
 		movement = GetComponent<Movement>();
 		mouthScript = GetComponentInChildren<Mouth>();
-		mouth = mouthScript.transform;
+		playerInfo = GetComponent<PlayerInfo>();
 
 		// Get the physical collider (not the trigger)
 		CircleCollider2D[] circleColliders = GetComponents<CircleCollider2D>();
@@ -135,7 +135,6 @@ public class NeuralNetSteering : SteeringBehaviour {
 					netInput.Add(snakeInputVec.y);
 
 					// Fire a bubble if the closest snake is within range
-					Vector2 vecToSnakeFromMouth = (Vector2)(snake.transform.position) - (Vector2)(mouth.position);
 					//Debug.Log("i = " + i + ", shotTimer = " + shotTimer + ", ShotReloadTime = " + ShotReloadTime + ", shot dist = " + neuralNet.getShotDistance() + ", actualDist = " + snakeDistancePair.Key);
 					if (i == 0 && (shotTimer > ShotReloadTime) && (snakeDistancePair.Key < neuralNet.getShotDistance())) {
 						if (mouthScript.SprayWater(true, (Vector2?)(snake.transform.position))) {
@@ -190,7 +189,7 @@ public class NeuralNetSteering : SteeringBehaviour {
 
 			if (neuralNet.FeedWaterLevel) {
 				// Rescale to [0, 1] so it doesn't dominate other inputs
-				netInput.Add(GetComponent<PlayerInfo>().waterLevel / 100.0f);
+				netInput.Add(playerInfo.waterLevel / 100.0f);
 			}
 
 			netInputArr = netInput.ToArray();

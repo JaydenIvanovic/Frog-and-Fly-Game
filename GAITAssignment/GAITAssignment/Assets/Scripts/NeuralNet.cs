@@ -79,6 +79,8 @@ public class NeuralNet : System.ICloneable {
 		return (System.Object)clone;
 	}
 
+	// The "weightsAsVector" is what actually gets mutated / crossed over.
+	// This method loads the weights back into the actual neural net.
 	public void LoadFromWeightsAsVector() {
 
 		int counter = 0;
@@ -96,7 +98,8 @@ public class NeuralNet : System.ICloneable {
 		shotDistanceGene = weightsAsVector[counter];
 		counter++;
 	}
-	
+
+	// This method updates the vector of weights from the actual neural net
 	public void UpdateWeightsAsVector() {
 		
 		weightsAsVector = new List<float>();
@@ -168,6 +171,8 @@ public class NeuralNet : System.ICloneable {
 		CalculateCrossOverIndices();
 	}
 
+	// This method calculates the basic output from the neural net, given
+	// an array of input values. It doesn't make use of any of the game world's symmetries.
 	public float[] CalculateOutputNoSymmetry(float[] inputValues) {
 	
 		float[] result = new float[outputNeurons];
@@ -209,7 +214,9 @@ public class NeuralNet : System.ICloneable {
 		
 		return neuronValues[2];
 	}
-	
+
+	// This method is the one actually called by the neural net steering behaviour.
+	// It does make use of rotational symmetries.
 	public float[] CalculateOutput(float[] inputValues) {
 
 		float smoothingCutoff = 2.5f;
@@ -249,12 +256,11 @@ public class NeuralNet : System.ICloneable {
 
 		} else {
 
-			// Since rotations shouldn't make any difference to the frog's behaviour, it's probably a good idea to enforce
-		    // this, which is what the following code does. It loops through all 8 symmetries
-			// The code assumes that the input is in the form of a list of 2d vectors and that the output is a single 2d vector.
-
-			// However, this is incompatible with rotating the input to the frog's frame of reference, because that approach
-			// asssumes that the frog's direction is important (here we don't care)
+			// Since rotations shouldn't make any difference to the frog's behaviour, it's probably
+			// a good idea to enforce this, which is what the following code does. The code assumes
+			// that the input is in the form of a list of 2d vectors and that the output is a single
+			// 2d vector. We found that normalising angles to the frog's frame of reference wasn't
+			// as helpful (see our report).
 
 			int numSegments = 1;
 
@@ -294,6 +300,8 @@ public class NeuralNet : System.ICloneable {
 		}
 	}
 
+	// Calculate the points where we can actually crossover the network.
+	// (Don't just split anywhere and risk messing up a neuron's weights.)
 	public void CalculateCrossOverIndices() {
 
 		crossOverPoints = new List<int>();

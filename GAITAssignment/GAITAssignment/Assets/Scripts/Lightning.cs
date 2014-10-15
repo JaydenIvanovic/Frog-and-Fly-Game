@@ -3,8 +3,8 @@ using System.Collections;
 
 public class Lightning : MonoBehaviour 
 {
-	private Light light;
-	private AudioSource audio;
+	new private Light light;
+	new private AudioSource audio;
 	public float min, max; // The minimum and maximum time between lightning strikes.
 	public float lightningLength; // How long the lightning should last.
 	private bool play, iscalled;
