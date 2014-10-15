@@ -6,23 +6,28 @@ public class FlyPlayerInfo : MonoBehaviour
 {
 	private float resource1;
 	private float resource2;
+	private static bool newGame = false;
+	private static float flySpawnTracker;
 	private static float score;
 	private static int numFlies;
 	private static List<FlyPlayerInfo> flies_info;
 	private static List<MouseTargeter> flies_mousetarget;
 	private static List<GameObject> resourceObjects;
 	public GameObject resource;
+	public GameObject flyPlayer;
 	public float interactionDistance;
 	public float scoringInteractionDistance;
 	public int resourceIncrement;
 	public int scoringIncrementModifier;
 	public int maxResource;
 	public GameObject scoringLocation;
+	public float flySpawnRate;
 
 	public int Resource1 {get{return (int)resource1;} }
 	public int Resource2 {get{return (int)resource2;} }
 	public static int PlayerScore { get{return (int)score;} }
 	public static int NumFlies { get{return (int)numFlies;}}
+
 
 	public static int SelectedFliesResource1 
 	{ 
@@ -63,17 +68,26 @@ public class FlyPlayerInfo : MonoBehaviour
 	public static void DecrementFlyCount()
 	{
 		numFlies -= 1;
-		if (numFlies == 0)
+		if (numFlies == 0) {
+			newGame = true;
 			Application.LoadLevel("DeathSplashA2");
+		}
 	}
 
 	void Awake()
 	{
-		resourceObjects = null;
-		flies_info = null;
-		flies_mousetarget = null;
-		score = 0;
-		numFlies = 0;
+		// we need this bool as we dont want
+		// new flys that are spawned to destroy the 
+		// static member variables.
+		if (newGame) {
+			resourceObjects = null;
+			flies_info = null;
+			flies_mousetarget = null;
+			score = 0;
+			numFlies = 0;
+			flySpawnTracker = 0;
+			newGame = false;
+		}
 	}
 
 	void Start()
@@ -106,6 +120,7 @@ public class FlyPlayerInfo : MonoBehaviour
 	{
 		UpdateResources();
 		UpdateScore();
+		SpawnNewFly();
 	}
 
 	// Just check if a fly is next to a resource and if so increment the appropriate one.
@@ -134,6 +149,19 @@ public class FlyPlayerInfo : MonoBehaviour
 			resource2 = Mathf.Max(0, resource2 - (Time.deltaTime * resourceIncrement * scoringIncrementModifier));
 
 			score += (oldResource1 - resource1) + (oldResource2 - resource2);
+			// We also add this score to a seperate variable for the SpawnNewFly methods use.
+			flySpawnTracker += (oldResource1 - resource1) + (oldResource2 - resource2); 
+		}
+	}
+
+	private void SpawnNewFly()
+	{
+		if(flySpawnTracker >= flySpawnRate) {
+			GameObject newFly = (GameObject) Instantiate(flyPlayer, Vector3.zero, Quaternion.identity);
+			newFly.transform.parent = transform.parent;
+			// flySpawnRate is the score intervals at which a fly should be spawned. e.g. every 100, 200
+			// or 300 points. This can conceptually be thought of as spending points earnt to spawn a fly.
+			flySpawnTracker -= flySpawnRate;
 		}
 	}
 }
