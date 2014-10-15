@@ -5,14 +5,17 @@ public class SceneLoader : MonoBehaviour
 {
 	public string sceneName;
 	public int difficultyIncrement = 0;
+	public bool ignoreGameMaster = false;
 
 	private GameMaster gameMaster;
 
 	// Use this for initialization
 	void Start () {
-		GameObject gameMasterGameObj = GameObject.Find("GameMaster");
-		if (gameMasterGameObj != null) {
-			gameMaster = gameMasterGameObj.GetComponent<GameMaster>();
+		if(!ignoreGameMaster) {
+			GameObject gameMasterGameObj = GameObject.Find("GameMaster");
+			if (gameMasterGameObj != null) {
+				gameMaster = gameMasterGameObj.GetComponent<GameMaster>();
+			}
 		}
 	}
 	
@@ -23,6 +26,11 @@ public class SceneLoader : MonoBehaviour
 
 	void OnMouseDown()
 	{
+		if (ignoreGameMaster) {
+			Application.LoadLevel(sceneName);
+			return;
+		}
+			
 		// Increase the difficulty if required
 		GameObject gameMasterGameObj = GameObject.Find("GameMaster");
 		if (gameMasterGameObj != null) {

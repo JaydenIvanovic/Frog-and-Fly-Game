@@ -8,12 +8,18 @@ public class DragSelectFlies : MonoBehaviour
 	private List<Transform> flies;
 	private bool drawing;
 	private Vector2 startPos;
+	public GameObject mouseEffects;
+	private GameObject mouseEffects_I;
+	private ParticleSystem mouseEffectsParticles;
 
 	// Use this for initialization
 	void Start () 
 	{
+		Time.timeScale = 1f;
 		drawing = false;
 		flies = new List<Transform>();
+		mouseEffects_I = (GameObject)Instantiate(mouseEffects);
+		mouseEffectsParticles = mouseEffects_I.GetComponent<ParticleSystem>();
 	}
 	
 
@@ -25,6 +31,14 @@ public class DragSelectFlies : MonoBehaviour
 				drawing = true;
 				startPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);			
 			}
+		}
+		
+		if(Input.GetMouseButtonDown(1)) {
+			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+			Debug.Log(ray.origin);
+			mouseEffectsParticles.transform.position = ray.GetPoint(Camera.main.transform.position.z * -1);
+			mouseEffectsParticles.time = 0f;
+			mouseEffectsParticles.Play();
 		}
 
 		if(drawing) {
@@ -92,7 +106,7 @@ public class DragSelectFlies : MonoBehaviour
 	private void UpdateSelectedFlies(Vector2 boundsStart, Vector2 boundsEnd)
 	{
 		foreach (Transform fly in GetComponentInChildren<Transform>()) {
-			if (fly.name == "PlayerFly") {
+			if (fly.tag == "Fly") {
 				// Check if fly's current position is within the boundaries.
 				if (fly.transform.position.x >= boundsStart.x && fly.transform.position.x <= boundsEnd.x &&
 					fly.transform.position.y >= boundsStart.y && fly.transform.position.y <= boundsEnd.y) {
