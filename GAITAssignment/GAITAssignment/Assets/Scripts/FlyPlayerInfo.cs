@@ -6,7 +6,7 @@ public class FlyPlayerInfo : MonoBehaviour
 {
 	private float resource1;
 	private float resource2;
-	private static bool newGame = false;
+	private static bool newGame = true;
 	private static float flySpawnTracker;
 	private static float score;
 	private static int numFlies;
@@ -28,6 +28,10 @@ public class FlyPlayerInfo : MonoBehaviour
 	public static int PlayerScore { get{return (int)score;} }
 	public static int NumFlies { get{return (int)numFlies;}}
 
+	public static void SetNewGame()
+	{
+		newGame = true;
+	}
 
 	public static int SelectedFliesResource1 
 	{ 
