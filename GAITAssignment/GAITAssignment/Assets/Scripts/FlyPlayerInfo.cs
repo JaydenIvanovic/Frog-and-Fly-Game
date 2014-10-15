@@ -67,6 +67,15 @@ public class FlyPlayerInfo : MonoBehaviour
 			Application.LoadLevel("DeathSplashA2");
 	}
 
+	void Awake()
+	{
+		resourceObjects = null;
+		flies_info = null;
+		flies_mousetarget = null;
+		score = 0;
+		numFlies = 0;
+	}
+
 	void Start()
 	{
 		// Singleton style for the resource trees.

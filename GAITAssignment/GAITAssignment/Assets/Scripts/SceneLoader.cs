@@ -5,6 +5,7 @@ public class SceneLoader : MonoBehaviour
 {
 	public string sceneName;
 	public int difficultyIncrement = 0;
+	public bool ignoreGameMaster = false;
 
 	private GameMaster gameMaster;
 
@@ -23,6 +24,9 @@ public class SceneLoader : MonoBehaviour
 
 	void OnMouseDown()
 	{
+		if (ignoreGameMaster)
+			Application.LoadLevel(sceneName);
+			
 		// Increase the difficulty if required
 		GameObject gameMasterGameObj = GameObject.Find("GameMaster");
 		if (gameMasterGameObj != null) {
