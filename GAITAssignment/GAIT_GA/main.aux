@@ -7,11 +7,12 @@
 \newlabel{sub@fig:no_lightning}{{b}{1}}
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces The effects of lightning on the scene.\relax }}{1}}
 \newlabel{fig:lightning_compare}{{1}{1}}
-\@writefile{toc}{\contentsline {section}{\numberline {2}Genetic Algorithms}{2}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Overview, Design and Intention}{2}}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Objectives}{2}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Genetic Algorithms}{2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Overview, Design and Intention}{2}}
 \@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces A standard Genetic Algorithm\relax }}{2}}
 \newlabel{GA_alg}{{1}{2}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Tree Placement}{2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Tree Placement}{3}}
 \newlabel{fig:ga_step1}{{2a}{3}}
 \newlabel{sub@fig:ga_step1}{{a}{3}}
 \newlabel{fig:ga_step2}{{2b}{3}}
@@ -20,17 +21,18 @@
 \newlabel{sub@fig:ga_step3}{{c}{3}}
 \newlabel{fig:ga_step4}{{2d}{3}}
 \newlabel{sub@fig:ga_step4}{{d}{3}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces The steps to implementing an appropriate fitness function. In 2a\hbox {} the trees are placed outside of the game border. If we left the GA to run for 100,000 iterations, the trees were much further away and to see them the scene must be zoomed out. In 2b\hbox {} we remedied this problem , yet created a new one. Here the trees remained in the four corners of the map as the GA found an optimal solution which maximised this fitness function. To prevent this behaviour, we needed to take the distance to other gameobjects into consideration which adds some extra overhead. Figure 2c\hbox {} shows the inclusion of flower positions. As one can see there is quite a lot which are clustered. Removing the number of flowers generated did not solve this issue. Instead, the fitness function needed to be clarified. Figure 2d\hbox {} shows the final fitness function and GA parameter set. Here the flowers and trees are spread out far more. Additionally, this iteration of the GA gives a better amount of randomization on subsequent runs.\relax }}{3}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces The steps to implementing an appropriate fitness function. In 2a\hbox {} the trees are placed outside of the game border. If we left the GA to run for 100,000 iterations, the trees were much further away and to see them the scene must be zoomed out. In 2b\hbox {} we remedied this problem , yet created a new one. Here the trees remained in the four corners of the map as the GA found an optimal solution which maximised this fitness function. To prevent this behaviour, we needed to take the distance to other gameobjects into consideration which adds some extra overhead. Figure 2c\hbox {} shows the inclusion of flower positions. As one can see there is quite a lot which are clustered. Removing the number of flowers generated did not solve this issue. Instead, the fitness function needed minor alterations in regards to the required distance a gameobject should be from another. Figure 2d\hbox {} shows the final fitness function and GA parameter set. Here the flowers and trees are spread out far more. Additionally, this iteration of the GA gives a better amount of randomization on subsequent runs.\relax }}{3}}
 \newlabel{fig:GA_Trees}{{2}{3}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Challenges}{3}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.3.1}Fitness Function and Parameters}{3}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.3.2}Generating Positions at Runtime}{4}}
-\newlabel{sec:runtimeIssues}{{2.3.2}{4}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Outcome}{4}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Challenges}{3}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.1}Tournament Selection}{4}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.2}Fitness Function and Parameters}{4}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.3}Generating Positions at Runtime}{4}}
+\newlabel{sec:runtimeIssues}{{3.3.3}{4}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Outcome}{4}}
 \@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Final parameter settings for object placement.\relax }}{4}}
 \newlabel{table:params}{{1}{4}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Fitness of the population over 1500 Epochs.\relax }}{4}}
-\newlabel{fig:fitnessOverTime}{{3}{4}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Fitness of the fittest individual over 1500 Epochs.\relax }}{5}}
+\newlabel{fig:fitnessOverTime}{{3}{5}}
 \newlabel{fig:ga_outcome_1}{{4a}{5}}
 \newlabel{sub@fig:ga_outcome_1}{{a}{5}}
 \newlabel{fig:ga_outcome_2}{{4b}{5}}
@@ -45,25 +47,26 @@
 \newlabel{sub@fig:ga_outcome_6}{{f}{5}}
 \@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces A subset of solutions generated by the final fitness function and parameter set.\relax }}{5}}
 \newlabel{fig:GA_Final}{{4}{5}}
-\@writefile{toc}{\contentsline {section}{\numberline {3}Neuroevolution}{6}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Overview}{6}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Neuroevolution}{6}}
+\newlabel{sec:neuro}{{4}{6}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Overview}{6}}
 \@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces A crossover operation applied to neural networks. Here, there are two genes crossed over.\relax }}{6}}
 \newlabel{fig:netCrossover}{{5}{6}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Neuroevolution in Our Game}{6}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.1}Network Architecture}{7}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Neuroevolution in Our Game}{6}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.1}Network Architecture}{7}}
 \@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces In the frog's co-ordinate system, these scenarios are different and require different responses. The frog has to learn different behaviours for every orientation it is in. World co-ordinates are no better, since the frog must learn different behaviours for every rotation of the vector to the snake.\relax }}{7}}
 \newlabel{fig:NormalisationProblem}{{6}{7}}
 \newlabel{eqn:1}{{1}{7}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.2}Fitness function}{8}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.2}Fitness function}{8}}
 \newlabel{eqn:2}{{2}{8}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.3}Challenges}{8}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.4}Smart, Yet Undesirable Behaviour}{8}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.5}Training Time}{8}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.3}Challenges}{8}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.4}Smart, Yet Undesirable Behaviour}{8}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.5}Training Time}{8}}
 \@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces The training pens we set up to train several frogs simulataneously.\relax }}{9}}
 \newlabel{fig:TrainingPens}{{7}{9}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.6}Obstacle Avoidance}{9}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.7}Shooting Bubbles}{9}}
-\newlabel{sec:bubbles}{{3.2.7}{9}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Outcome}{9}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.6}Obstacle Avoidance}{9}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.7}Shooting Bubbles}{9}}
+\newlabel{sec:bubbles}{{4.2.7}{9}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Outcome}{9}}
 \@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces The total population fitness of the frogs versus the epoch count over 2000 epochs. The training time per epoch was 2 minutes.\relax }}{10}}
 \newlabel{fig:FrogFitness}{{8}{10}}

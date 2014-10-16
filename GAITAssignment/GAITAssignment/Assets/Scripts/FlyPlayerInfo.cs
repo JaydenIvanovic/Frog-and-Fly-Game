@@ -140,8 +140,7 @@ public class FlyPlayerInfo : MonoBehaviour
 		}
 	}
 
-	// At the moment all flies need to be near
-	// the main tree to start updating the score from resources.
+	// Update the player score based on this flies gathered resources.
 	private void UpdateScore()
 	{
 		// Start scoring from the resources earned.
@@ -158,6 +157,7 @@ public class FlyPlayerInfo : MonoBehaviour
 		}
 	}
 
+	// Check if a new fly is to be spawned.
 	private void SpawnNewFly()
 	{
 		if(flySpawnTracker >= flySpawnRate) {

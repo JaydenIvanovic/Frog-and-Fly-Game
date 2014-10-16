@@ -7,9 +7,9 @@ Finally, we discuss the challenges faced in using the GA to solve this particula
 
 
 \subsection{Overview, Design and Intention}
-Algorithm \ref{GA_alg} is our implementation of the standard GA. For a background please see [CITE]. Methods such as \textbf{SelectParent()}, \textbf{CrossOver()}, \textbf{Mutate()} and \textbf{CalculateFitness()} are abstract and implemented by the subclass.
+Algorithm \ref{GA_alg} is our implementation of the standard GA. Methods such as \textbf{SelectParent()}, \textbf{CrossOver()}, \textbf{Mutate()} and \textbf{CalculateFitness()} are abstract and implemented by the subclass.
 In doing this, it was trivial to use the GA for two different problems. Additionally, it allowed us to experiment with 
-different selection methods, such as proportional roulette, tournament and ranked roulette [CITE PAPER] by simply 
+different selection methods, such as proportional roulette, tournament and ranked roulette by simply 
 overriding \textbf{SelectParent()}. Similarly, the same can be said for crossover and mutation.
 \begin{algorithm}[h]
 \begin{algorithmic}
@@ -88,7 +88,7 @@ of ranked roulette isn't worth it).
         to see them the scene must be zoomed out. In \ref{fig:ga_step2} we remedied this problem , yet created a new one. 
         Here the trees remained in the four corners of the map as the GA found an optimal solution which maximised this 
         fitness function. To prevent this behaviour, we needed to take the distance to other gameobjects into consideration which adds some extra overhead. Figure \ref{fig:ga_step3} shows 
-        the inclusion of flower positions. As one can see there is quite a lot which are clustered. Removing the number of flowers generated did not solve this issue. Instead, the fitness function needed to be clarified. Figure 
+        the inclusion of flower positions. As one can see there is quite a lot which are clustered. Removing the number of flowers generated did not solve this issue. Instead, the fitness function needed minor alterations in regards to the required distance a gameobject should be from another. Figure 
         \ref{fig:ga_step4} shows the final fitness function and GA parameter set. Here the flowers and trees are spread out 
         far more. Additionally, this iteration of the GA gives a better amount of randomization on subsequent 
         runs.}
@@ -99,7 +99,15 @@ of ranked roulette isn't worth it).
 \subsection{Challenges}
 In this section we highlight the challenges we faced for the specific problem of randomizing
 the placement of objects in the game world. We leave discussion of the challenges related to evolving weights
-for a neural net to train a frog controller for section \ref{sec:neural}.
+for a neural net to train a frog controller for section \ref{sec:neuro}.
+
+\subsubsection{Tournament Selection}
+A minor issue we faced with tournament selection was that it was initially selecting too many
+chromsomes with a low fitness value to breed children for subsequent populations. The inital tournament
+size was 2 and when randomly selecting chromosomes to take part in such a small tournament, the majority of the 
+population was being filled with poor solutions. We changed the tournament size to be half of the total 
+population and witnessed immense improvements in the solutions that were being generated, as the chromsomes with 
+a low fitness value were unlikely to be present or have offspring in the next population.
 
 \subsubsection{Fitness Function and Parameters}
 Briefly, we note the common issue that the fitness function and parameters of a GA often requires a 
@@ -119,7 +127,8 @@ have the luxury of running the algorithm offline and then plugging in the result
 we had to get the right balance of parameters (number of trees/flowers, epochs, crossover rate, mutation rate 
 and mutation amount) to generate the solution in an acceptable time frame. We found that running for less epochs 
 wasn't too much of an issue as it gives us a better random selection of map layouts. However, in some
-rare circumstances, trees/flowers may overlap.
+rare circumstances, trees/flowers may overlap or be placed in the middle of the lake with a poor initial
+population.
 
 The problem was further exaggerated by the fact that there was objects which were already statically placed on 
 the map. In this instance, we could solve this simply by placing an invisible boundary around the center
@@ -128,6 +137,7 @@ in an attempt to speed up generating an acceptable solution, we check for the fo
 \begin{itemize}
 \item Overlapping trees/flowers
 \item Trees/Flowers outside boundaries of map
+\item Trees/Flowers in the lake
 \end{itemize}
 and if they exist, assign a fitness of 0 as we never want them to occur. Therefore, during selection, there is
 a very low probability that they will see future generations.
@@ -136,7 +146,7 @@ a very low probability that they will see future generations.
 Figure \ref{fig:GA_Final} shows several different solutions generated by the final fitness functions and 
 parameter set (Table \ref{table:params}).
 It's interesting to note the variations in each. Lastly, Figure \ref{fig:fitnessOverTime} shows
-how the fitness of the population increases over time.
+how the largest individual fitness value changes over the course of 1500 epochs.
 
 \begin{table}[h]
 	\centering
@@ -157,7 +167,7 @@ how the fitness of the population increases over time.
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.7\linewidth]{./timeFitness}
-\caption{Fitness of the population over 1500 Epochs.}
+\caption{Fitness of the fittest individual over 1500 Epochs.}
 \label{fig:fitnessOverTime}
 \end{figure}
 
