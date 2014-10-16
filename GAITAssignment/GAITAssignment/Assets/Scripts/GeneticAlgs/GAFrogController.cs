@@ -84,6 +84,7 @@ public class GAFrogController : GAController<NeuralNet> {
 
 	public GameObject trainingSnakePrefab;
 	public string LoadPath = "";
+	public int LoadEpoch = 0;
 	public int FrogsOnScreen = 8;
 	public int CurrentEpoch = 0;
 	public int CurrentBatch = 0;
@@ -152,18 +153,8 @@ public class GAFrogController : GAController<NeuralNet> {
 		currentParams = (GAParameters)bf.Deserialize(paramsFile);
 		paramsFile.Close();
 
-		// Find the last epoch that was saved and load it
-		string saveFilename;
-		int fileNum = -1;
-
-		// Determine the latest epoch in the directory specified
-		do {
-			fileNum++;
-			saveFilename = "SaveData/" + LoadPath + "/population" + fileNum + ".bin";
-		} while (File.Exists(saveFilename));
-
-		CurrentEpoch = fileNum - 1;
-		saveFilename = "SaveData/" + LoadPath + "/population" + CurrentEpoch + ".bin";
+		CurrentEpoch = LoadEpoch;
+		string saveFilename = "SaveData/" + LoadPath + "/population" + LoadEpoch + ".bin";
 
 		FileStream popFile = File.Open(saveFilename, FileMode.Open);
 		population = (List<NeuralNet>)bf.Deserialize(popFile);
@@ -701,7 +692,6 @@ public class GAFrogController : GAController<NeuralNet> {
 		NeuralNet child2 = (NeuralNet)(parent2.Clone());
 
 		int crossOverPoint = child1.GetRandomCrossOverIndex();
-		int counter = 0;
 		float tempWeight;
 
 		//Debug.Log("Crossover index chosen was " + crossOverPoint);
