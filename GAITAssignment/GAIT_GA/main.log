@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9) (preloaded format=pdflatex 2014.7.21)  15 OCT 2014 11:05
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9) (preloaded format=pdflatex 2014.7.21)  16 OCT 2014 11:48
 entering extended mode
 **C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/main.tex
 (C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/main.tex
@@ -207,19 +207,22 @@ LaTeX Font Info:    Redeclaring font encoding OMS on input line 567.
 LaTeX Info: Redefining \[ on input line 2665.
 LaTeX Info: Redefining \] on input line 2666.
 )
+(C:\Users\mchld_000\AppData\Roaming\MiKTeX\2.9\tex\latex\was\gensymb.sty
+Package: gensymb 2003/07/02 v1.0 (WaS)
+)
 (C:\Users\mchld_000\Documents\gait_team3\GAITAssignment\GAIT_GA\main.aux)
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
 
 (C:\Users\mchld_000\AppData\Roaming\MiKTeX\2.9\tex\context\base\supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
@@ -273,10 +276,21 @@ Package caption Info: End \AtBeginDocument code.
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
+LaTeX Info: Redefining \celsius on input line 19.
+Package gensymb Info: Faking symbols for \degree and \celsius on input line 19.
+
+
+Package gensymb Warning: Not defining \perthousand.
+
+LaTeX Info: Redefining \ohm on input line 19.
+Package gensymb Info: Using \Omega for \ohm on input line 19.
+
+Package gensymb Warning: Not defining \micro.
+
 <./splash.png, id=1, 746.03719pt x 411.78844pt>
 File: ./splash.png Graphic file (type png)
  <use ./splash.png>
-Package pdftex.def Info: ./splash.png used on input line 21.
+Package pdftex.def Info: ./splash.png used on input line 24.
 (pdftex.def)             Requested size: 315.14594pt x 173.949pt.
 
 (C:\Users\mchld_000\Documents\gait_team3\GAITAssignment\GAIT_GA\genetic_algs_ga
@@ -406,54 +420,61 @@ Package pdftex.def Info: Figs/Crossover.png used on input line 12.
 [6
 
  <C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/Figs/Crossover
-.png>] <Figs/NormalisationProblem.png, id=49, 503.8825pt x 154.5775pt>
+.png>] <Figs/NormalisationProblem.png, id=49, 667.49374pt x 154.5775pt>
 File: Figs/NormalisationProblem.png Graphic file (type png)
 
 <use Figs/NormalisationProblem.png>
 Package pdftex.def Info: Figs/NormalisationProblem.png used on input line 29.
-(pdftex.def)             Requested size: 302.33183pt x 92.7472pt.
-
-Underfull \hbox (badness 10000) in paragraph at lines 58--59
+(pdftex.def)             Requested size: 400.49934pt x 92.7472pt.
+ [7 <C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/Figs/Normal
+isationProblem.png>]
+Underfull \hbox (badness 10000) in paragraph at lines 68--69
 
  []
 
-[7 <C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/Figs/Normali
-sationProblem.png>]
-Underfull \hbox (badness 2521) in paragraph at lines 66--67
-[]\OT1/cmr/m/n/10.95 Making the flies sta-tion-ary dur-ing
+
+Underfull \hbox (badness 1292) in paragraph at lines 76--77
+[]\OT1/cmr/m/n/10.95 We made the flies sta-tion-ary dur-ing
  []
 
-<Figs/TrainingPens.png, id=59, 1462.46375pt x 698.61pt>
+
+Underfull \hbox (badness 6575) in paragraph at lines 78--79
+[]\OT1/cmr/m/n/10.95 We in-tro-duced a ``wa-ter camp-ing''
+ []
+
+[8] <Figs/TrainingPens.png, id=63, 1462.46375pt x 698.61pt>
 File: Figs/TrainingPens.png Graphic file (type png)
 
 <use Figs/TrainingPens.png>
-Package pdftex.def Info: Figs/TrainingPens.png used on input line 79.
+Package pdftex.def Info: Figs/TrainingPens.png used on input line 89.
 (pdftex.def)             Requested size: 438.74251pt x 209.58461pt.
- [8]
-Underfull \hbox (badness 10000) in paragraph at lines 95--96
+ [9 <C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/Figs/Traini
+ngPens.png>]
+Underfull \hbox (badness 10000) in paragraph at lines 106--107
 
  []
 
+<Figs/FrogFitness.png, id=67, 921.4425pt x 711.65875pt>
+File: Figs/FrogFitness.png Graphic file (type png)
 
-Underfull \hbox (badness 10000) in paragraph at lines 97--98
-
- []
-
-) [9 <C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/Figs/Train
-ingPens.png>]
+<use Figs/FrogFitness.png>
+Package pdftex.def Info: Figs/FrogFitness.png used on input line 110.
+(pdftex.def)             Requested size: 506.79495pt x 391.41353pt.
+) [10 <C:/Users/mchld_000/Documents/gait_team3/GAITAssignment/GAIT_GA/Figs/Frog
+Fitness.png>]
 (C:\Users\mchld_000\Documents\gait_team3\GAITAssignment\GAIT_GA\main.aux)
 
 LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 4109 strings out of 493921
- 61770 string characters out of 3144864
- 126200 words of memory out of 3000000
- 7347 multiletter control sequences out of 15000+200000
- 12120 words of font info for 43 fonts, out of 3000000 for 9000
+ 4168 strings out of 493921
+ 62622 string characters out of 3144864
+ 127441 words of memory out of 3000000
+ 7400 multiletter control sequences out of 15000+200000
+ 12465 words of font info for 44 fonts, out of 3000000 for 9000
  841 hyphenation exceptions out of 8191
- 36i,10n,38p,1212b,477s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 36i,11n,38p,1212b,475s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx10.pfb>
 <C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C
 :/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/
@@ -466,10 +487,11 @@ s (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Program Files (x
 MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr9.pfb><C:/Program Files (x86)/MiKT
 eX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Program Files (x86)/MiKTeX
  2.9/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Program Files (x86)/MiKTeX 2.
-9/fonts/type1/public/amsfonts/cm/cmti10.pfb>
-Output written on main.pdf (9 pages, 3421442 bytes).
+9/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Program Files (x86)/MiKTeX 2.9/
+fonts/type1/public/amsfonts/cm/cmti9.pfb>
+Output written on main.pdf (10 pages, 3469869 bytes).
 PDF statistics:
- 107 PDF objects out of 1000 (max. 8388607)
+ 115 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
- 86 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 91 words of extra memory for PDF output out of 10000 (max. 10000000)
 
