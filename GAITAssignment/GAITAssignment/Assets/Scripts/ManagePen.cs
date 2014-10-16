@@ -27,6 +27,7 @@ public class ManagePen : MonoBehaviour {
 	private static bool initialised = false;
 	public int currentSpawnPosition = 0;
 
+	// Reset the fly spawn locations (shared between pens)
 	public void ResetSpawnPositions(int listLen) {
 
 		sharedSpawnPositions = new List<Vector3>();
@@ -48,6 +49,11 @@ public class ManagePen : MonoBehaviour {
 		obstacleLayerNum = LayerMask.NameToLayer("Obstacles");
 	}
 
+	// The GetComponent calls in the below methods aren't TOO bad since the methods only get called
+	// when the frog changes steering (every 0.2 seconds). It would be a serious pain to write a data
+	// structure that holds and maintains the references to avoid these calls.
+
+	// Since we already have a priority queue, it's easy to do a heap sort for getting the nearest obstacles
 	public PriorityQueue<float, GameObject> getObstaclesSortedByDistance(Vector2 position) {
 
 		PriorityQueue<float, GameObject> pq = new PriorityQueue<float, GameObject>();
@@ -69,6 +75,7 @@ public class ManagePen : MonoBehaviour {
 		return pq;
 	}
 
+	// Each lake contains a few "lake markers" so that the frog gets sent the closest point
 	public PriorityQueue<float, GameObject> getLakeMarkersSortedByDistance(Vector2 position) {
 		
 		PriorityQueue<float, GameObject> pq = new PriorityQueue<float, GameObject>();
@@ -89,7 +96,7 @@ public class ManagePen : MonoBehaviour {
 		return pq;
 	}
 
-	// TO DO: Make this like the above? Although insertion sort might be ok for small lists
+	// There's not that many flies so an insertion sort is OK (although it might be good to rewrite this function to be like those above)
 	public List<GameObject> getFliesSortedByDistance(Vector2 position) {
 
 		float currentDistance;
@@ -127,14 +134,6 @@ public class ManagePen : MonoBehaviour {
 			}
 		}
 
-		/*
-		Debug.Log("Printing distances");
-		foreach (GameObject fly in sortedFlies) {
-			currentDistance = (frogMouthPos - (Vector2)(fly.transform.position)).magnitude;
-			Debug.Log(fly.transform.position.x + ", " + fly.transform.position.y + ": " + currentDistance);
-		}
-		*/
-
 		return sortedFlies;
 	}
 
@@ -158,13 +157,13 @@ public class ManagePen : MonoBehaviour {
 	
 	void Update () {
 
+		// Respawn flies when they're eaten
 		int flyCount = 0;
 		foreach (Transform child in transform) {
 			if (child.gameObject.tag == "Fly") {
 				flyCount++;
 			}
 		}
-
 		if (spawnFlies && (flyCount < minFlies)) {
 			CreateFly(flySpawnPoint.transform.position + sharedSpawnPositions[currentSpawnPosition]);
 			currentSpawnPosition++;
